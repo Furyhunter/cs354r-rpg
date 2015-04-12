@@ -1,7 +1,6 @@
 package rpg.scene.systems;
 
 import rpg.scene.Node;
-import rpg.scene.components.Component;
 import rpg.scene.components.Steppable;
 
 /**
@@ -10,16 +9,18 @@ import rpg.scene.components.Steppable;
 public class GameLogicSystem extends AbstractSceneSystem {
 
     @Override
-    public void processComponent(Component c, float deltaTime) {
-        // This could probably be optimized.
-        if (c instanceof Steppable) {
-            Steppable s = (Steppable) c;
-            s.step(deltaTime);
-        }
+    public void enterNode(Node n, float deltaTime) {
+
     }
 
     @Override
     public void processNode(Node n, float deltaTime) {
+        n.findComponents(c -> c instanceof Steppable)
+                .forEach(s -> ((Steppable) s).step(deltaTime));
+    }
+
+    @Override
+    public void exitNode(Node n, float deltaTime) {
 
     }
 }

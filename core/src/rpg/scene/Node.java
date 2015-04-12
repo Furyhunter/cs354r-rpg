@@ -193,8 +193,9 @@ public class Node {
     }
 
     public void process(SceneSystem system, float deltaTime) {
+        system.enterNode(this, deltaTime);
         system.processNode(this, deltaTime);
-        components.forEach(c -> system.processComponent(c, deltaTime));
         children.forEach(n -> n.process(system, deltaTime));
+        system.exitNode(this, deltaTime);
     }
 }
