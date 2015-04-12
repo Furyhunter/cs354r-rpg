@@ -5,6 +5,12 @@
 *.ear
 hs_err_pid*
 
+## Server daemon
+
+*.pid
+*.fifo
+log.txt
+
 ## GWT
 war/
 html/war/gwt_bree/

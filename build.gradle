@@ -90,10 +90,34 @@ project(":server") {
         }
     }
 
-    mainClassName = "rpg.server.Main"
+    mainClassName = "rpg.server.GameServerDaemonController"
 
     dependencies {
         compile project(":core")
+        compile files("../deps/daemon-0.7.jar")
+    }
+
+    run {
+        args "poke"
+    }
+
+    task(stop, type: JavaExec) {
+        main mainClassName
+        classpath sourceSets.main.runtimeClasspath
+        args "shutdown"
+    }
+
+    task(runDirect, type: JavaExec) {
+        main "rpg.server.GameServerDaemon"
+        classpath sourceSets.main.runtimeClasspath
+    }
+
+    jar {
+        manifest {
+            attributes "Main-Class": "rpg.server.GameServerDaemonController",
+                    "Implementation-Title": "RPG server daemon",
+                    "Implementation-Version": version
+        }
     }
 }
 
