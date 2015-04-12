@@ -1,0 +1,1 @@
+include 'annotationProcessors', 'server', 'desktop', 'core'
