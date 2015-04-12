@@ -12,7 +12,10 @@ allprojects {
     apply plugin: "eclipse"
     apply plugin: "idea"
 
-    rootProject.idea.project.languageLevel = '1.8'
+    rootProject.idea.project {
+        jdkName = '1.8'
+        languageLevel = '1.8'
+    }
 
     version = '0.1'
     ext {
@@ -37,6 +40,11 @@ project(":annotationProcessors") {
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
 
+    eclipse.jdt {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+
     sourceSets {
         main {
             java {
@@ -55,6 +63,11 @@ project(":desktop") {
     apply plugin: "java"
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
+
+    eclipse.jdt {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
 
     sourceSets {
         main {
@@ -82,6 +95,11 @@ project(":server") {
     apply plugin: "application"
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
+
+    eclipse.jdt {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
 
     sourceSets {
         main {
@@ -131,6 +149,11 @@ project(":core") {
     apply plugin: "java"
     sourceCompatibility = '1.8'
     targetCompatibility = '1.8'
+
+    eclipse.jdt {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
 
     sourceSets {
         main {
