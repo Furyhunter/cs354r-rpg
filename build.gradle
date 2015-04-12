@@ -12,6 +12,11 @@ allprojects {
     apply plugin: "eclipse"
     apply plugin: "idea"
 
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = "1.8"
+        targetCompatibility = "1.8"
+    }
+
     rootProject.idea.project {
         jdkName = '1.8'
         languageLevel = '1.8'
@@ -37,8 +42,6 @@ allprojects {
 
 project(":annotationProcessors") {
     apply plugin: "java"
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
 
     eclipse.jdt {
         sourceCompatibility = '1.8'
@@ -61,8 +64,6 @@ project(":annotationProcessors") {
 
 project(":desktop") {
     apply plugin: "java"
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
 
     eclipse.jdt {
         sourceCompatibility = '1.8'
@@ -93,8 +94,6 @@ project(":desktop") {
 project(":server") {
     apply plugin: "java"
     apply plugin: "application"
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
 
     eclipse.jdt {
         sourceCompatibility = '1.8'
@@ -147,8 +146,6 @@ project(":server") {
 
 project(":core") {
     apply plugin: "java"
-    sourceCompatibility = '1.8'
-    targetCompatibility = '1.8'
 
     eclipse.jdt {
         sourceCompatibility = '1.8'
@@ -171,11 +168,14 @@ project(":core") {
     dependencies {
         compile project(":annotationProcessors")
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
+        compile "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
 
-        compile group: "kryonet", name: "kryonet", version: "2.21"
+        compile group: "kryonet", name: "kryonet", version: "2.+"
         compile group: "org.reflections", name: "reflections", version: "0.9.9"
         testCompile group: "junit", name: "junit", version: "4.11"
+        testCompile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+        testCompile "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
     }
 }
 
