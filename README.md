@@ -2,6 +2,8 @@
 
 A bullet hell action RPG with a pretty awesome replication framework.
 
+[![Build Status](http://ci.idolagames.com/buildStatus/icon?job=cs354r-rpg)](http://ci.idolagames.com/job/cs354r-rpg/)
+
 ## Build instructions
 
 1. Install JDK 8
