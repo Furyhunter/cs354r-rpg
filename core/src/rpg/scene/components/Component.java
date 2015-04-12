@@ -20,7 +20,7 @@ public abstract class Component {
         return parent;
     }
 
-    void setParent(Node n) {
+    public void setParent(Node n) {
         parent = n;
     }
 }
