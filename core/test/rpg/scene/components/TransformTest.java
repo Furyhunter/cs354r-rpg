@@ -10,6 +10,7 @@ import org.junit.Test;
 import static com.badlogic.gdx.math.Matrix3.M00;
 import static com.badlogic.gdx.math.Matrix3.M02;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TransformTest {
 
@@ -85,7 +86,9 @@ public class TransformTest {
         t.setRotation(MathUtils.PI); // 180 degree counter-clockwise
 
         t.applyTransform(mat);
-        assertEquals(new Vector2(-68, 68), new Vector2(1, 1).mul(mat));
+        Vector2 actual = new Vector2(1, 1).mul(mat);
+        Vector2 expected = new Vector2(-52, -52);
+        assertTrue("Transforms not applied correctly, expected " + expected + " but actual " + actual, expected.epsilonEquals(actual, 0.00001f));
     }
 
     @Test

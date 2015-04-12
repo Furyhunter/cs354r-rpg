@@ -22,9 +22,9 @@ public class Transform extends Component {
      * @param in
      */
     public void applyTransform(Matrix3 in) {
-        in.mulLeft(new Matrix3().translate(position));
-        in.mulLeft(new Matrix3().rotateRad(rotation));
         in.mulLeft(new Matrix3().scale(scale));
+        in.mulLeft(new Matrix3().rotateRad(rotation));
+        in.mulLeft(new Matrix3().translate(position));
     }
 
     /**
@@ -33,9 +33,9 @@ public class Transform extends Component {
      * @param in
      */
     public void inverseApplyTransform(Matrix3 in) {
-        in.mulLeft(new Matrix3().translate(position.cpy().scl(-1)));
-        in.mulLeft(new Matrix3().rotateRad(-rotation));
         in.mulLeft(new Matrix3().scale(new Vector2(1.0f / scale.x, 1.0f / scale.y)));
+        in.mulLeft(new Matrix3().rotateRad(-rotation));
+        in.mulLeft(new Matrix3().translate(position.cpy().scl(-1)));
     }
 
     public Vector2 getPosition() {
