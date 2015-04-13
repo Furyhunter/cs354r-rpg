@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface RPC {
-    RPCType type();
+    Context type();
 
     boolean validate() default false;
 }

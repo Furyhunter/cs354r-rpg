@@ -1,6 +1,6 @@
 package rpg.scene.replication;
 
-public enum RPCType {
+public enum Context {
     Server,
     Client
 }
