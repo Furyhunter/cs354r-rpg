@@ -47,6 +47,10 @@ public class Scene {
     }
 
     public void update(float deltaTime) {
-        systems.forEach(s -> root.process(s, deltaTime));
+        systems.forEach(s -> {
+            s.beginProcessing();
+            root.process(s, deltaTime);
+            s.endProcessing();
+        });
     }
 }

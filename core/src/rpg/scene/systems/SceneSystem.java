@@ -8,6 +8,11 @@ import rpg.scene.Scene;
  */
 public interface SceneSystem {
 
+    /**
+     * Called at the start of graph processing.
+     */
+    void beginProcessing();
+
     void enterNode(Node n, float deltaTime);
 
     /**
@@ -23,4 +28,9 @@ public interface SceneSystem {
     void setParent(Scene parent);
 
     Scene getParent();
+
+    /**
+     * Called after all nodes have been processed.
+     */
+    void endProcessing();
 }

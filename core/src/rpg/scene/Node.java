@@ -92,6 +92,12 @@ public class Node {
         return components.stream().filter(predicate).collect(Collectors.toList());
     }
 
+    public <T> List<T> findComponents(Class<T> type) {
+        List<T> ret = new ArrayList<T>();
+        components.stream().filter(type::isInstance).forEach(c -> ret.add((T) c));
+        return ret;
+    }
+
     public int getNumChildren() {
         return children.stream().mapToInt(Node::getNumChildren).sum() + children.size();
     }
