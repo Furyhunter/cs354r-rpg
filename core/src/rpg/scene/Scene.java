@@ -4,6 +4,7 @@ import rpg.scene.systems.SceneSystem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Scene {
     private Node root;
@@ -23,26 +24,20 @@ public class Scene {
     }
 
     public void addSystem(SceneSystem s) {
-        if (s == null) {
-            throw new NullPointerException();
-        }
+        Objects.requireNonNull(s);
 
         systems.add(s);
         s.setParent(this);
     }
 
     public void removeSystem(SceneSystem s) {
-        if (s == null) {
-            throw new NullPointerException();
-        }
+        Objects.requireNonNull(s);
 
         systems.remove(s);
     }
 
     public <T extends SceneSystem> void removeSystem(Class<T> type) {
-        if (type == null) {
-            throw new NullPointerException();
-        }
+        Objects.requireNonNull(type);
         systems.removeIf(type::isInstance);
     }
 

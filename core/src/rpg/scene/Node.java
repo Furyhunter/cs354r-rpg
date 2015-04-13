@@ -8,6 +8,7 @@ import rpg.scene.systems.SceneSystem;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -107,9 +108,7 @@ public class Node {
     }
 
     public void addChild(Node n) {
-        if (n == null) {
-            throw new NullPointerException();
-        }
+        Objects.requireNonNull(n);
         if (n.getParent() != null) {
             throw new RuntimeException("node already has a parent, remove from previous parent first");
         }
@@ -118,9 +117,7 @@ public class Node {
     }
 
     public void addComponent(Component c) {
-        if (c == null) {
-            throw new NullPointerException();
-        }
+        Objects.requireNonNull(c);
         if (c.getParent() != null) {
             throw new RuntimeException("component already has a parent, remove from previous parent first");
         }
@@ -129,18 +126,14 @@ public class Node {
     }
 
     public void removeChild(Node n) {
-        if (n == null) {
-            throw new NullPointerException();
-        }
+        Objects.requireNonNull(n);
         if (children.remove(n)) {
             n.setParent(null);
         }
     }
 
     public void removeComponent(Component c) {
-        if (c == null) {
-            throw new NullPointerException();
-        }
+        Objects.requireNonNull(c);
         if (components.remove(c)) {
             c.setParent(null);
         }
