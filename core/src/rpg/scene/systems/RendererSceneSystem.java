@@ -19,11 +19,36 @@ public class RendererSceneSystem extends AbstractSceneSystem {
 
     private List<RenderItem> renderItems;
 
+    private Node viewTarget = null;
+
     @Override
     public void beginProcessing() {
         renderItems = new ArrayList<>();
         modelMatrixStack.clear();
         modelMatrixStack.push(new Matrix4());
+
+        viewMatrix = new Matrix4();
+        if (viewTarget != null) {
+            // check that either we have a parent, or that we are the scene root
+            // note: this could result in infinite loop/dumb behavior if the scene graph is not actually a DAG
+            // we do not verify integrity at all... oh well!
+            if (viewTarget.getParent() != null | (viewTarget.getParent() == null && viewTarget.getScene() != null)) {
+                Node visitor = viewTarget;
+                Deque<Node> visitors = new ArrayDeque<>();
+
+                // find our way to the top of the tree, stacking nodes along the way
+                while (visitor != null) {
+                    visitors.push(visitor);
+                    visitor = visitor.getParent();
+                }
+
+                // go through from root to our node, applying transforms
+                while (!visitors.isEmpty()) {
+                    Node n = visitors.pop();
+                    n.findComponent(Transform.class).inverseApplyTransform(viewMatrix);
+                }
+            }
+        }
     }
 
     @Override
@@ -68,12 +93,30 @@ public class RendererSceneSystem extends AbstractSceneSystem {
                 r.getTextureToBind().bind(0);
                 currentlyBoundTexture = r.getTextureToBind();
             }
-            r.getShader().setUniformMatrix4fv("projectionMatrix", r.getModelMatrix().getValues(), 0, 16);
-            r.getShader().setUniformMatrix4fv("viewMatrix", r.getModelMatrix().getValues(), 0, 16);
-            r.getShader().setUniformMatrix4fv("modelMatrix", r.getModelMatrix().getValues(), 0, 16);
+            r.getShader().setUniformMatrix("projectionMatrix", projectionMatrix);
+            r.getShader().setUniformMatrix("viewMatrix", viewMatrix);
+            r.getShader().setUniformMatrix("modelMatrix", r.getModelMatrix());
+            r.getShader().setUniformi("m_texture", 0);
             r.getMesh().render(r.getShader(), r.getPrimitiveType());
         }
 
+
         renderItems.clear();
+    }
+
+    public void setViewTarget(Node viewTarget) {
+        this.viewTarget = viewTarget;
+    }
+
+    public Node getViewTarget() {
+        return viewTarget;
+    }
+
+    public void setProjectionMatrix(Matrix4 mat) {
+        projectionMatrix = mat;
+    }
+
+    public Matrix4 getProjectionMatrix() {
+        return projectionMatrix;
     }
 }
