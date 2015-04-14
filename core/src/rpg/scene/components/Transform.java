@@ -1,16 +1,17 @@
 package rpg.scene.components;
 
-import com.badlogic.gdx.math.Matrix3;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector3;
 import rpg.scene.replication.Replicated;
 
 public class Transform extends Component {
     @Replicated
-    private Vector2 position = new Vector2();
+    private Vector3 position = new Vector3();
     @Replicated
-    private Vector2 scale = new Vector2(1, 1);
+    private Vector3 scale = new Vector3(1, 1, 1);
     @Replicated
-    private float rotation = 0;
+    private Quaternion rotation = new Quaternion();
 
     public Transform() {
         super();
@@ -21,10 +22,10 @@ public class Transform extends Component {
      *
      * @param in
      */
-    public void applyTransform(Matrix3 in) {
-        in.mulLeft(new Matrix3().scale(scale));
-        in.mulLeft(new Matrix3().rotateRad(rotation));
-        in.mulLeft(new Matrix3().translate(position));
+    public void applyTransform(Matrix4 in) {
+        in.mulLeft(new Matrix4().setToScaling(scale));
+        in.mulLeft(new Matrix4().rotate(rotation));
+        in.mulLeft(new Matrix4().translate(position));
     }
 
     /**
@@ -32,33 +33,33 @@ public class Transform extends Component {
      *
      * @param in
      */
-    public void inverseApplyTransform(Matrix3 in) {
-        in.mulLeft(new Matrix3().scale(new Vector2(1.0f / scale.x, 1.0f / scale.y)));
-        in.mulLeft(new Matrix3().rotateRad(-rotation));
-        in.mulLeft(new Matrix3().translate(position.cpy().scl(-1)));
+    public void inverseApplyTransform(Matrix4 in) {
+        in.mulLeft(new Matrix4().scale(1.0f / scale.x, 1.0f / scale.y, 1.0f / scale.z));
+        in.mulLeft(new Matrix4().rotate(rotation.conjugate()));
+        in.mulLeft(new Matrix4().translate(position.cpy().scl(-1)));
     }
 
-    public Vector2 getPosition() {
+    public Vector3 getPosition() {
         return position;
     }
 
-    public void setPosition(Vector2 position) {
-        this.position = position;
+    public void setPosition(Vector3 position) {
+        this.position = new Vector3(position);
     }
 
-    public Vector2 getScale() {
+    public Vector3 getScale() {
         return scale;
     }
 
-    public void setScale(Vector2 scale) {
+    public void setScale(Vector3 scale) {
         this.scale = scale;
     }
 
-    public float getRotation() {
+    public Quaternion getRotation() {
         return rotation;
     }
 
-    public void setRotation(float rotation) {
-        this.rotation = rotation;
+    public void setRotation(Quaternion rotation) {
+        this.rotation = new Quaternion(rotation);
     }
 }
