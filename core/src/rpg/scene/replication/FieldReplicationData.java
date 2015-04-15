@@ -6,13 +6,12 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 
 public class FieldReplicationData implements KryoSerializable {
 
-    public BitSet fieldChangeset;
-    public List<Object> fieldData;
+    public BitSet fieldChangeset = new BitSet();
+    public List<Object> fieldData = new ArrayList<>();
 
     @Override
     public void write(Kryo kryo, Output output) {
@@ -27,14 +26,14 @@ public class FieldReplicationData implements KryoSerializable {
     public void read(Kryo kryo, Input input) {
         fieldChangeset = kryo.readObject(input, BitSet.class);
         fieldData = new ArrayList<>();
-        for (int i = 0; i < fieldChangeset.length(); i++) {
+        for (int i = 0; i < fieldChangeset.cardinality(); i++) {
             fieldData.add(kryo.readClassAndObject(input));
         }
     }
 
     public FieldReplicationData diff(FieldReplicationData recent) {
         FieldReplicationData frd = new FieldReplicationData();
-        if (recent.fieldChangeset.length() != fieldChangeset.length()) {
+        if (recent.fieldChangeset.getSize() != fieldChangeset.getSize()) {
             throw new IllegalArgumentException("These rep datas are not the same size and we can't compare them.");
         }
         if (recent.fieldChangeset.cardinality() != recent.fieldData.size()) {
@@ -43,11 +42,11 @@ public class FieldReplicationData implements KryoSerializable {
         if (fieldChangeset.cardinality() != fieldData.size()) {
             throw new RuntimeException("This (old) bitset cardinality != data list size");
         }
-        frd.fieldChangeset = new BitSet(fieldChangeset.length());
+        frd.fieldChangeset = new BitSet(fieldChangeset.getSize());
 
-        for (int i = 0; i < fieldChangeset.length(); i++) {
+        for (int i = 0; i < fieldChangeset.getSize() && i < fieldData.size(); i++) {
             Object ours = fieldData.get(i);
-            Object theirs = fieldData.get(i);
+            Object theirs = recent.fieldData.get(i);
 
             if (!ours.equals(theirs)) {
                 frd.fieldChangeset.set(i, true);
@@ -56,5 +55,25 @@ public class FieldReplicationData implements KryoSerializable {
         }
 
         return frd;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof FieldReplicationData)) {
+            return false;
+        }
+        FieldReplicationData o = (FieldReplicationData) obj;
+
+        if (!o.fieldChangeset.equals(fieldChangeset)) {
+            return false;
+        }
+        if (!o.fieldData.equals(fieldData)) {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -22,7 +22,7 @@ public class BitSetTest {
     }
 
     @Test
-    public void testSetMultiple() throws Exception {
+    public void testSetRange() throws Exception {
         BitSet bitSet = new BitSet(16);
 
         bitSet.set(0, 4, true);
@@ -32,6 +32,38 @@ public class BitSetTest {
         IntStream.range(4, 6).forEach(i -> assertFalse(bitSet.get(i)));
         IntStream.range(6, 14).forEach(i -> assertTrue(bitSet.get(i)));
         IntStream.range(14, 16).forEach(i -> assertFalse(bitSet.get(i)));
+    }
+
+    @Test
+    public void testToggle() throws Exception {
+        BitSet bitSet = new BitSet(8);
+
+        // It should start out with all values set to 'false'.
+
+        bitSet.toggle(0);
+        bitSet.toggle(1);
+
+        assertTrue(bitSet.get(0));
+        assertTrue(bitSet.get(1));
+
+        bitSet.toggle(0);
+        bitSet.toggle(1);
+
+        assertFalse(bitSet.get(0));
+        assertFalse(bitSet.get(1));
+    }
+
+    @Test
+    public void testToggleRange() throws Exception {
+        BitSet bitSet = new BitSet(8);
+
+        bitSet.toggle(0, 4);
+
+        IntStream.range(0, 4).forEach(i -> assertTrue(bitSet.get(i)));
+
+        bitSet.toggle(0, 4);
+
+        IntStream.range(0, 4).forEach(i -> assertFalse(bitSet.get(i)));
     }
 
     @Test

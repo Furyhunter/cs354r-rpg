@@ -2,7 +2,6 @@ package rpg.scene.replication;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.BitSet;
 import java.util.stream.Collectors;
 
 public class RepTable {
@@ -74,7 +73,7 @@ public class RepTable {
 
         FieldReplicationData frd = new FieldReplicationData();
         frd.fieldChangeset = new BitSet(fieldsToSerialize.size());
-        frd.fieldChangeset.set(0, frd.fieldChangeset.length(), true);
+        frd.fieldChangeset.set(0, fieldsToSerialize.size(), true);
         frd.fieldData = fieldsToSerialize.stream().map(f -> {
             try {
                 return f.get(o);

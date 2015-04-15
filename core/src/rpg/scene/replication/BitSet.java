@@ -97,6 +97,37 @@ public class BitSet implements KryoSerializable {
         return numSections * 8;
     }
 
+    /**
+     * @return the number of set bits
+     */
+    public int cardinality() {
+        int num = 0;
+        for (int i = 0; i < numSections * 8; i++) {
+            if (get(i)) {
+                num++;
+            }
+        }
+
+        return num;
+    }
+
+    public void toggle(int bit) {
+        if (bit < 0) {
+            throw new IndexOutOfBoundsException("bit < 0");
+        }
+        if (bit >= numSections * 8) {
+            throw new IndexOutOfBoundsException("bit > numSections * 8");
+        }
+        int actualBit = bit % 8;
+        int section = bit / 8;
+
+        sections[section] ^= (1 << actualBit);
+    }
+
+    public void toggle(int from, int to) {
+        IntStream.range(from, to).forEach(i -> toggle(i));
+    }
+
     @Override
     public void write(Kryo kryo, Output output) {
         output.writeByte(numSections);
