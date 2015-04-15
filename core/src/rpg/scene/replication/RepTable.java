@@ -2,6 +2,7 @@ package rpg.scene.replication;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.BitSet;
 import java.util.stream.Collectors;
 
 public class RepTable {
