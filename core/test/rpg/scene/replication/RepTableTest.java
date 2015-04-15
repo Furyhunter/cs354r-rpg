@@ -11,12 +11,17 @@ import static org.junit.Assert.assertNotNull;
 
 public class RepTableTest {
 
-    class SimpleReppable {
+    class Reppable {
         @Replicated
-        public Vector2 vec = new Vector2(0, 0);
+        protected Vector2 hiddenVec = new Vector2(0, 0);
+    }
+
+    class SimpleReppable extends Reppable {
+        @Replicated
+        protected Vector2 vec = new Vector2(0, 0);
 
         @Replicated
-        public Vector2 anotherVec = new Vector2(1, 1);
+        protected Vector2 anotherVec = new Vector2(1, 1);
     }
 
     @Test
@@ -36,10 +41,10 @@ public class RepTableTest {
         assertEquals("The changeset BitSet should hold 8 values (1 byte).", 8, frd.fieldChangeset.getSize());
 
         assertEquals("A full replication should have as many data objects as the size of the BitSet",
-                2, frd.fieldData.size());
+                3, frd.fieldData.size());
 
-        assertEquals(simpleReppable.vec, frd.fieldData.get(0));
-        assertEquals(simpleReppable.anotherVec, frd.fieldData.get(1));
+        assertEquals(simpleReppable.vec, frd.fieldData.get(1));
+        assertEquals(simpleReppable.anotherVec, frd.fieldData.get(2));
     }
 
     @Test
