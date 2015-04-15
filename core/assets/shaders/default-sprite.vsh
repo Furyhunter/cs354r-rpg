@@ -1,17 +1,13 @@
-#version 150
+attribute vec3 a_position;
+attribute vec2 a_texCoord0;
 
-in vec3 position;
-in vec2 texcoord;
+varying vec2 v_texCoord0;
 
-out vec2 m_texcoord;
-
-uniform mat4 modelMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 projectionMatrix;
+uniform mat4 u_pvmMatrix;
 
 uniform sampler2D m_texture;
 
 void main() {
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1);
-    m_texcoord = texcoord;
+    gl_Position = u_pvmMatrix * vec4(a_position, 1);
+    v_texCoord0 = a_texCoord0;
 }

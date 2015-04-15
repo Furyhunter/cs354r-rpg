@@ -4,10 +4,11 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Node;
 import rpg.scene.Scene;
+import rpg.scene.components.Component;
 import rpg.scene.components.SpriteRenderer;
+import rpg.scene.components.Steppable;
 import rpg.scene.components.Transform;
 import rpg.scene.systems.GameLogicSystem;
 import rpg.scene.systems.RendererSceneSystem;
@@ -15,7 +16,15 @@ import rpg.scene.systems.RendererSceneSystem;
 public class App extends ApplicationAdapter {
 	Texture img;
 	Scene s;
-	
+
+	class TestC extends Component implements Steppable {
+
+		@Override
+		public void step(float deltaTime) {
+			Transform t = getParent().findComponent(Transform.class);
+			t.getPosition().add(deltaTime / 10f, deltaTime / 10f, 0);
+		}
+	}
 	@Override
 	public void create () {
 		img = new Texture(Gdx.files.internal("badlogic.jpg"));
@@ -30,9 +39,11 @@ public class App extends ApplicationAdapter {
 		n.addComponent(sr);
 		s.getRoot().addChild(n);
 
-		rendererSceneSystem.getProjectionMatrix().setToOrtho2D(-1, -1, 1, 1, .001f, 100f);
+		n.addComponent(new TestC());
 
-		n.findComponent(Transform.class).setPosition(new Vector3(0, 0, 0));
+		//rendererSceneSystem.setViewTarget(n);
+
+		rendererSceneSystem.getProjectionMatrix().setToOrtho2D(0, 0, 4 * (4f / 3f), 4);
 	}
 
 	@Override

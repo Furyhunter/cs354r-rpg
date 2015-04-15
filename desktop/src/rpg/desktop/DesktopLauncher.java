@@ -7,7 +7,6 @@ import rpg.App;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		config.useGL30 = true;
 		new LwjglApplication(new App(), config);
 	}
 }

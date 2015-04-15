@@ -1,6 +1,7 @@
 package rpg.scene.systems;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import rpg.scene.Node;
 import rpg.scene.RenderItem;
@@ -86,6 +87,9 @@ public class RendererSceneSystem extends AbstractSceneSystem {
         // Sort the render item list by GL texture handle (to minimize texture rebinds)
         renderItems.sort(Comparator.comparingInt(r -> r.getTextureToBind().getTextureObjectHandle()));
 
+        // Combine projection and view
+        Matrix4 projview = new Matrix4(viewMatrix).mulLeft(projectionMatrix);
+
         // Draw the draw list
         Texture currentlyBoundTexture = null;
         for (RenderItem r : renderItems) {
@@ -93,11 +97,14 @@ public class RendererSceneSystem extends AbstractSceneSystem {
                 r.getTextureToBind().bind(0);
                 currentlyBoundTexture = r.getTextureToBind();
             }
-            r.getShader().setUniformMatrix("projectionMatrix", projectionMatrix);
-            r.getShader().setUniformMatrix("viewMatrix", viewMatrix);
-            r.getShader().setUniformMatrix("modelMatrix", r.getModelMatrix());
-            r.getShader().setUniformi("m_texture", 0);
-            r.getMesh().render(r.getShader(), r.getPrimitiveType());
+            Matrix4 pvm = new Matrix4(projview).mul(r.getModelMatrix());
+
+            ShaderProgram s = r.getShader();
+            s.begin();
+            s.setUniformMatrix("u_pvmMatrix", pvm);
+            s.setUniformi("m_texture", 0);
+            r.getMesh().render(s, r.getPrimitiveType());
+            s.end();
         }
 
 

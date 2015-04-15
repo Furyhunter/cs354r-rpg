@@ -21,18 +21,17 @@ public class SpriteRenderer extends Component implements Renderable {
             }
         }
         if (mesh == null) {
-            mesh = new Mesh(Mesh.VertexDataType.VertexBufferObject, true, 4, 6,
-                    new VertexAttribute(VertexAttributes.Usage.Position, 3, "position"),
-                    new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "texcoord"));
+            mesh = new Mesh(Mesh.VertexDataType.VertexBufferObject, true, 4, 0,
+                    new VertexAttribute(VertexAttributes.Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE),
+                    new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, ShaderProgram.TEXCOORD_ATTRIBUTE + "0"));
             mesh.setVertices(new float[]{
-                    -.5f, -.5f, 0, 0, 0,
-                    .5f, -5.f, 0, 1, 0,
-                    .5f, .5f, 0, 1, 1,
-                    -.5f, .5f, 0, 0, 1
+                    -.5f, -.5f, 0, 0, 1,
+                    .5f, -.5f, 0, 1, 1,
+                    .5f, .5f, 0, 1, 0,
+                    -.5f, .5f, 0, 0, 0,
             });
         }
-        RenderItem ri = new RenderItem(shader, texture, mesh, null, GL20.GL_TRIANGLE_FAN);
-        return ri;
+        return new RenderItem(shader, texture, mesh, null, GL20.GL_TRIANGLE_FAN);
     }
 
     public Texture getTexture() {
