@@ -3,6 +3,8 @@ package rpg.scene.components;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import rpg.scene.RenderItem;
 
 public class SpriteRenderer extends Component implements Renderable {
@@ -10,6 +12,9 @@ public class SpriteRenderer extends Component implements Renderable {
     private Texture texture;
     private static ShaderProgram shader = null;
     private static Mesh mesh = null;
+
+    private Vector2 dimensions = new Vector2(1, 1);
+    private Vector2 offset = new Vector2();
 
     @Override
     public RenderItem render() {
@@ -31,7 +36,9 @@ public class SpriteRenderer extends Component implements Renderable {
                     -.5f, .5f, 0, 0, 0,
             });
         }
-        return new RenderItem(shader, texture, mesh, null, GL20.GL_TRIANGLE_FAN);
+
+        Matrix4 model = new Matrix4().mulLeft(new Matrix4().setToTranslation(offset.x, offset.y, 0)).mulLeft(new Matrix4().setToScaling(dimensions.x, dimensions.y, 1));
+        return new RenderItem(shader, texture, mesh, model, GL20.GL_TRIANGLE_FAN);
     }
 
     public Texture getTexture() {
@@ -40,5 +47,21 @@ public class SpriteRenderer extends Component implements Renderable {
 
     public void setTexture(Texture texture) {
         this.texture = texture;
+    }
+
+    public Vector2 getDimensions() {
+        return dimensions;
+    }
+
+    public void setDimensions(Vector2 dimensions) {
+        this.dimensions = new Vector2(dimensions);
+    }
+
+    public Vector2 getOffset() {
+        return offset;
+    }
+
+    public void setOffset(Vector2 offset) {
+        this.offset = new Vector2(offset);
     }
 }

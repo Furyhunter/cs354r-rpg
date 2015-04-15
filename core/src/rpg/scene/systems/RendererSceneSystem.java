@@ -69,7 +69,12 @@ public class RendererSceneSystem extends AbstractSceneSystem {
         // Map Renderable to RenderItem with render() method, to get a RenderItem list
         List<RenderItem> items = renderables.stream().map(r -> {
             RenderItem i = r.render();
-            i.setModelMatrix(modelMatrixStack.peek());
+            // Allow the incoming RenderItem have its own model matrix.
+            if (i.getModelMatrix() == null) {
+                i.setModelMatrix(modelMatrixStack.peek());
+            } else {
+                i.getModelMatrix().mulLeft(modelMatrixStack.peek());
+            }
             return i;
         }).collect(Collectors.toList());
 
