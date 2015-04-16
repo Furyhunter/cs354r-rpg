@@ -71,15 +71,6 @@ public class RepTable {
             if (methods.stream().anyMatch(m -> Modifier.isPrivate(m.getModifiers()))) {
                 throw new RuntimeException("RPC methods may not be private.");
             }
-            for (Method m1 : methods) {
-                for (Method m2 : methods) {
-                    if (m1 == m2) continue;
-                    if (m1.equals(m2)) continue;
-                    if (m2.getName().equals(m1.getName())) {
-                        throw new RuntimeException("Duplicate method names?");
-                    }
-                }
-            }
             methods.forEach(m -> rpcMethods.put(m, methodCounter++));
         }
     }

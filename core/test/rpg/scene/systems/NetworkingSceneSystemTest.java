@@ -110,6 +110,6 @@ public class NetworkingSceneSystemTest {
 
         List<RPCMessage> mes = t.messages();
 
-        assertEquals(15, rpcComponent.testValue);
+        assertEquals("The subclass's version of rpcZeroArgs should have been invoked", 15, rpcComponent.testValue);
     }
 }
