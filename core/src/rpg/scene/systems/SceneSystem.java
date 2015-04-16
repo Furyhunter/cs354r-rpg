@@ -2,6 +2,7 @@ package rpg.scene.systems;
 
 import rpg.scene.Node;
 import rpg.scene.Scene;
+import rpg.scene.components.Component;
 
 /**
  * An interface for classes that process events in a system.
@@ -33,4 +34,17 @@ public interface SceneSystem {
      * Called after all nodes have been processed.
      */
     void endProcessing();
+
+
+    void nodeAttached(Node n);
+
+    void nodeReattached(Node n);
+
+    void nodeDetached(Node n);
+
+    void componentAttached(Component c);
+
+    void componentReattached(Component c);
+
+    void componentDetached(Component c);
 }

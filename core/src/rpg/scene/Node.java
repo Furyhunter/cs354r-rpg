@@ -24,8 +24,8 @@ public class Node {
     private Node parent;
     private Scene scene;
 
-    public Node() {
-        this("");
+    public Node(Node parent) {
+        this(parent, "");
     }
 
     Node(Scene scene) {
@@ -38,10 +38,12 @@ public class Node {
         addComponent(new ReplicationComponent());
     }
 
-    public Node(String name) {
+    public Node(Node parent, String name) {
+        Objects.requireNonNull(parent);
         this.name = name;
         networkID = networkIDCounter++;
 
+        parent.addChild(this);
         addComponent(new Transform());
         addComponent(new ReplicationComponent());
     }
@@ -110,25 +112,36 @@ public class Node {
     public void addChild(Node n) {
         Objects.requireNonNull(n);
         if (n.getParent() != null) {
-            throw new RuntimeException("node already has a parent, remove from previous parent first");
+            n.getParent().children.remove(n);
+            n.setParent(this);
+            children.add(n);
+            getScene().nodeReattached(n);
+        } else {
+            n.setParent(this);
+            children.add(n);
+            getScene().nodeAttached(n);
         }
-        children.add(n);
-        n.setParent(this);
     }
 
     public void addComponent(Component c) {
         Objects.requireNonNull(c);
         if (c.getParent() != null) {
-            throw new RuntimeException("component already has a parent, remove from previous parent first");
+            c.getParent().components.remove(c);
+            c.setParent(this);
+            components.add(c);
+            getScene().componentReattached(c);
+        } else {
+            c.setParent(this);
+            components.add(c);
+            getScene().componentAttached(c);
         }
-        components.add(c);
-        c.setParent(this);
     }
 
     public void removeChild(Node n) {
         Objects.requireNonNull(n);
         if (children.remove(n)) {
             n.setParent(null);
+            getScene().nodeDetached(n);
         }
     }
 
@@ -136,6 +149,7 @@ public class Node {
         Objects.requireNonNull(c);
         if (components.remove(c)) {
             c.setParent(null);
+            getScene().componentDetached(c);
         }
     }
 

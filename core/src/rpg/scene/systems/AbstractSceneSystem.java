@@ -2,6 +2,7 @@ package rpg.scene.systems;
 
 import rpg.scene.Node;
 import rpg.scene.Scene;
+import rpg.scene.components.Component;
 
 public abstract class AbstractSceneSystem implements SceneSystem {
     private Scene parent;
@@ -33,6 +34,36 @@ public abstract class AbstractSceneSystem implements SceneSystem {
 
     @Override
     public void endProcessing() {
+
+    }
+
+    @Override
+    public void nodeAttached(Node n) {
+
+    }
+
+    @Override
+    public void nodeDetached(Node n) {
+
+    }
+
+    @Override
+    public void nodeReattached(Node n) {
+
+    }
+
+    @Override
+    public void componentAttached(Component c) {
+
+    }
+
+    @Override
+    public void componentDetached(Component c) {
+
+    }
+
+    @Override
+    public void componentReattached(Component c) {
 
     }
 }

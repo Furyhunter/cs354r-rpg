@@ -39,11 +39,10 @@ public class App extends ApplicationAdapter {
 		s.addSystem(new GameLogicSystem());
 		s.addSystem(rendererSceneSystem);
 
-		Node n = new Node();
+		Node n = new Node(s.getRoot());
 		SpriteRenderer sr = new SpriteRenderer();
 		sr.setTexture(img);
 		n.addComponent(sr);
-		s.getRoot().addChild(n);
 
 		n.addComponent(new TestC());
 

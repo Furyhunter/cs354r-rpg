@@ -15,18 +15,20 @@ public class NodeTest {
 
     @Test
     public void testGetNumChildren() throws Exception {
-        Node n = new Node();
-        IntStream.range(0, 10).forEach(a -> n.addChild(new Node(Integer.toString(a))));
+        Scene s = new Scene();
+        Node n = new Node(s.getRoot());
+        IntStream.range(0, 10).forEach(a -> n.addChild(new Node(n, Integer.toString(a))));
         assertEquals(10, n.getNumChildren());
 
-        n.getChildren().stream().forEach(node -> IntStream.range(0, 10).forEach(a -> node.addChild(new Node(Integer.toString(a)))));
+        n.getChildren().stream().forEach(node -> IntStream.range(0, 10).forEach(a -> node.addChild(new Node(node, Integer.toString(a)))));
         assertEquals(110, n.getNumChildren());
     }
 
     @Test
     public void testUniqueNetworkIDs() throws Exception {
-        Node n = new Node();
-        IntStream.range(0, 100000).forEach(a -> n.addChild(new Node(Integer.toString(a))));
+        Scene s = new Scene();
+        Node n = new Node(s.getRoot());
+        IntStream.range(0, 100000).forEach(a -> n.addChild(new Node(n, Integer.toString(a))));
         Set<Integer> networkIDs = new TreeSet<>();
         n.getChildren().stream().forEach(node -> networkIDs.add(node.getNetworkID()));
         networkIDs.add(n.getNetworkID());
@@ -36,7 +38,8 @@ public class NodeTest {
     @Test
     public void testNewNodeHasDefaultComponents() {
         // Transform and ReplicationComponent are required
-        Node n = new Node();
+        Scene s = new Scene();
+        Node n = new Node(s.getRoot());
         assertNotNull(n.findComponent(Transform.class));
         assertNotNull(n.findComponent(ReplicationComponent.class));
 
