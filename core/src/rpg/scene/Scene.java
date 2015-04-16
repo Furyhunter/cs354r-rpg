@@ -5,11 +5,12 @@ import rpg.scene.systems.SceneSystem;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class Scene {
     private Node root;
 
-    private List<SceneSystem> systems = new ArrayList<SceneSystem>();
+    private List<SceneSystem> systems = new ArrayList<>();
 
     public Scene() {
         root = new Node(this);
@@ -39,6 +40,15 @@ public class Scene {
     public <T extends SceneSystem> void removeSystem(Class<T> type) {
         Objects.requireNonNull(type);
         systems.removeIf(type::isInstance);
+    }
+
+    public <T extends SceneSystem> T findSystem(Class<T> type) {
+        Objects.requireNonNull(type);
+        Optional<SceneSystem> o = systems.stream().filter(type::isInstance).findFirst();
+        if (o.get() != null) {
+            return (T) o.get();
+        }
+        return null;
     }
 
     public void update(float deltaTime) {

@@ -5,6 +5,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import org.junit.Test;
+import rpg.scene.components.Component;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -27,6 +28,15 @@ public class RepTableTest {
     class SimpleHasAPrivateReplicated {
         @Replicated
         private Vector2 thisShouldExcept = new Vector2(0, 0);
+    }
+
+    class HasAnRPC extends Component {
+        @RPC(context = Context.Client)
+        protected void run() {
+            testValue = 5;
+        }
+
+        public int testValue = 0;
     }
 
     @Test
@@ -139,5 +149,26 @@ public class RepTableTest {
     public void testNoPrivateFieldsAllowed() throws Exception {
         RepTable.discardAllRepTables();
         RepTable t = RepTable.getTableForType(SimpleHasAPrivateReplicated.class);
+    }
+
+
+    @Test
+    public void testRPCMethodsExist() throws Exception {
+        RepTable.discardAllRepTables();
+        RepTable t = RepTable.getTableForType(HasAnRPC.class);
+
+        int i = t.getRPCMethodID("run");
+        // An exception will be thrown if it doesn't exist.
+    }
+
+    @Test
+    public void testRPCMethodCreateRPCMessage() throws Exception {
+        RepTable.discardAllRepTables();
+        RepTable t = RepTable.getTableForType(HasAnRPC.class);
+
+        RPCInvocation r = t.getRPCMessage("run");
+        RPCInvocation exp = new RPCInvocation();
+        exp.methodId = 0;
+        assertEquals(r, exp);
     }
 }

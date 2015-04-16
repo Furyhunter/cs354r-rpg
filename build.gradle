@@ -171,6 +171,8 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
         compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
 
+        compile group: "com.google.guava", name: "guava", version: "18.0"
+
         compile group: "kryonet", name: "kryonet", version: "2.+"
         compile group: "de.javakaffee", name: "kryo-serializers", version: "0.29"
         compile group: "org.reflections", name: "reflections", version: "0.9.9"

@@ -1,6 +1,10 @@
 package rpg.scene.replication;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,8 +13,11 @@ public class RepTable {
     private Class<?> type = null;
 
     private List<Field> fieldsToSerialize = new ArrayList<>();
+    private BiMap<Method, Integer> rpcMethods = HashBiMap.create();
 
     private static Map<Class<?>, RepTable> tables = new HashMap<>();
+
+    private int methodCounter = 0;
 
     /**
      * Get a replication table for a type.
@@ -59,8 +66,22 @@ public class RepTable {
                 throw new RuntimeException("Replicated fields may not be private.");
             }
             fieldsToSerialize.addAll(fields);
-        }
 
+            List<Method> methods = Arrays.stream(cc.getDeclaredMethods()).filter(m -> m.getAnnotation(RPC.class) != null).collect(Collectors.toList());
+            if (methods.stream().anyMatch(m -> Modifier.isPrivate(m.getModifiers()))) {
+                throw new RuntimeException("RPC methods may not be private.");
+            }
+            for (Method m1 : methods) {
+                for (Method m2 : methods) {
+                    if (m1 == m2) continue;
+                    if (m1.equals(m2)) continue;
+                    if (m2.getName().equals(m1.getName())) {
+                        throw new RuntimeException("Duplicate method names?");
+                    }
+                }
+            }
+            methods.forEach(m -> rpcMethods.put(m, methodCounter++));
+        }
     }
 
     /**
@@ -121,5 +142,43 @@ public class RepTable {
 
     public Class<?> getType() {
         return type;
+    }
+
+    public Method getRPCMethod(int repID) {
+        return rpcMethods.inverse().get(repID);
+    }
+
+    public Method getRPCMethod(String methodName) {
+        Optional<Method> s = rpcMethods.keySet().stream().filter(m -> m.getName().equals(methodName)).findFirst();
+        if (s.get() != null) {
+            return s.get();
+        } else {
+            throw new RuntimeException("no registered RPC with that name exists");
+        }
+    }
+
+    public int getRPCMethodID(Method m) {
+        return rpcMethods.get(m);
+    }
+
+    public int getRPCMethodID(String methodName) {
+        Optional<Method> s = rpcMethods.keySet().stream().filter(m -> m.getName().equals(methodName)).findFirst();
+        if (s.get() != null) {
+            return getRPCMethodID(s.get());
+        } else {
+            throw new RuntimeException("no registered RPC with that name exists");
+        }
+    }
+
+    public RPCInvocation getRPCMessage(String methodName, Object... arguments) {
+        int id = getRPCMethodID(methodName);
+        RPCInvocation r = new RPCInvocation();
+        r.methodId = id;
+        r.arguments = Arrays.asList(arguments);
+        return r;
+    }
+
+    public Context getRPCContext(String methodName) {
+        return getRPCMethod(methodName).getAnnotation(RPC.class).context();
     }
 }
