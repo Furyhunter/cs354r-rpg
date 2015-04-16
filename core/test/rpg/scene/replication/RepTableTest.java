@@ -31,7 +31,7 @@ public class RepTableTest {
     }
 
     class HasAnRPC extends Component {
-        @RPC(context = Context.Client)
+        @RPC(target = RPC.Target.Client)
         protected void run() {
             testValue = 5;
         }
@@ -166,7 +166,7 @@ public class RepTableTest {
         RepTable.discardAllRepTables();
         RepTable t = RepTable.getTableForType(HasAnRPC.class);
 
-        RPCInvocation r = t.getRPCMessage("run");
+        RPCInvocation r = t.getRPCInvocation("run");
         RPCInvocation exp = new RPCInvocation();
         exp.methodId = 0;
         assertEquals(r, exp);

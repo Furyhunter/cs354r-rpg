@@ -161,7 +161,7 @@ public class RepTable {
         }
     }
 
-    public RPCInvocation getRPCMessage(String methodName, Object... arguments) {
+    public RPCInvocation getRPCInvocation(String methodName, Object... arguments) {
         int id = getRPCMethodID(methodName);
         RPCInvocation r = new RPCInvocation();
         r.methodId = id;
@@ -169,7 +169,7 @@ public class RepTable {
         return r;
     }
 
-    public Context getRPCContext(String methodName) {
-        return getRPCMethod(methodName).getAnnotation(RPC.class).context();
+    public RPC.Target getRPCTarget(String methodName) {
+        return getRPCMethod(methodName).getAnnotation(RPC.class).target();
     }
 }

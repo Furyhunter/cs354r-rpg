@@ -22,6 +22,21 @@ public class NetworkingSceneSystemTest {
         }
 
         @Override
+        public void processRPC(RPCMessage m) {
+
+        }
+
+        @Override
+        public void processMulticastRPC(RPCMessage m) {
+
+        }
+
+        @Override
+        public boolean canProcessRPCs() {
+            return true;
+        }
+
+        @Override
         public void processNode(Node n, float deltaTime) {
 
         }
@@ -32,12 +47,12 @@ public class NetworkingSceneSystemTest {
     }
 
     public class RPCComponent extends Component {
-        @RPC(context = Context.Client)
+        @RPC(target = RPC.Target.Client)
         public void rpcZeroArgs() {
             testValue = 5;
         }
 
-        @RPC(context = Context.Server)
+        @RPC(target = RPC.Target.Server)
         public void rpcZeroArgsServer() {
             testValue = 10;
         }
@@ -46,7 +61,7 @@ public class NetworkingSceneSystemTest {
     }
 
     public class SubRPCComponent extends RPCComponent {
-        @RPC(context = Context.Client)
+        @RPC(target = RPC.Target.Client)
         public void rpcZeroArgs() {
             testValue = 15;
         }

@@ -13,7 +13,22 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface RPC {
-    Context context();
+    Target target();
 
     boolean validate() default false;
+
+    enum Target {
+        /**
+         * Executed on the server. Invokable by the owning client.
+         */
+        Server,
+        /**
+         * Executed on the owning client. Only invokable by the server.
+         */
+        Client,
+        /**
+         * Executed on the server and all clients. Only invokable by the server.
+         */
+        Multicast
+    }
 }

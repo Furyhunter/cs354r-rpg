@@ -1,13 +1,11 @@
 package rpg.scene.components;
 
 import rpg.scene.Node;
-import rpg.scene.replication.Context;
-import rpg.scene.replication.RPCInvocation;
-import rpg.scene.replication.RPCMessage;
-import rpg.scene.replication.RepTable;
+import rpg.scene.replication.*;
 import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Objects;
 
 public abstract class Component {
@@ -34,25 +32,63 @@ public abstract class Component {
         Objects.requireNonNull(arguments);
         NetworkingSceneSystem net = getParent().getScene().findSystem(NetworkingSceneSystem.class);
         RepTable repTable = RepTable.getTableForType(getClass());
-        Context context = repTable.getRPCContext(rpcName);
+        RPC.Target target = repTable.getRPCTarget(rpcName);
         Method m = repTable.getRPCMethod(rpcName);
+        Class<?> actualClassOfThis = m.getDeclaringClass();
 
-        if (net == null || context.equals(net.getContext())) {
-            // invoke the method since the context matches
+        if (net == null) {
+            // always invoke
             try {
-                m = repTable.getRPCMethod(rpcName);
-                Class<?> c = m.getDeclaringClass();
-                m.invoke(c.cast(this), arguments);
+                m.invoke(actualClassOfThis.cast(this), arguments);
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return;
         }
 
-        // otherwise, tell the networking system to queue an RPCMessage
-        RPCInvocation rpc = new RPCInvocation();
-        rpc.methodId = repTable.getRPCMethodID(m);
-        net.addRPCMessage(new RPCMessage(networkID, rpc));
+        // check context
+        Context context = net.getContext();
+        if (context == Context.Server) {
+            if (target == RPC.Target.Multicast) {
+                // invoke
+                try {
+                    m.invoke(actualClassOfThis.cast(this), arguments);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                RPCInvocation rpc = new RPCInvocation();
+                rpc.methodId = repTable.getRPCMethodID(m);
+                rpc.arguments = Arrays.asList(arguments);
+                net.addMulticastRPCMessage(new RPCMessage(networkID, rpc));
+            } else if (target == RPC.Target.Client) {
+                RPCInvocation rpc = new RPCInvocation();
+                rpc.methodId = repTable.getRPCMethodID(m);
+                rpc.arguments = Arrays.asList(arguments);
+                net.addRPCMessage(new RPCMessage(networkID, rpc));
+            } else {
+                // invoke
+                try {
+                    m.invoke(actualClassOfThis.cast(this), arguments);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        } else if (context == Context.Client) {
+            if (target == RPC.Target.Client) {
+                // invoke
+                try {
+                    m.invoke(actualClassOfThis.cast(this), arguments);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else if (target == RPC.Target.Server) {
+                RPCInvocation rpc = new RPCInvocation();
+                rpc.methodId = repTable.getRPCMethodID(m);
+                rpc.arguments = Arrays.asList(arguments);
+                net.addRPCMessage(new RPCMessage(networkID, rpc));
+            }
+        }
     }
 
     public Node getParent() {
