@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * Marks a field as replicated.
+ * Note: <b>You cannot mark private fields for replication.</b>
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})

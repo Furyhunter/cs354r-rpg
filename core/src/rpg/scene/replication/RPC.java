@@ -8,11 +8,27 @@ import java.lang.annotation.Target;
 /**
  * Marks a method as an RPC. This will mark it to be added with an RPC ID in the
  * component's replication table.
+ * Note: <b>You cannot mark private methods as RPCs.</b>
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface RPC {
-    Context type();
+    Target target();
 
     boolean validate() default false;
+
+    enum Target {
+        /**
+         * Executed on the server. Invokable by the owning client.
+         */
+        Server,
+        /**
+         * Executed on the owning client. Only invokable by the server.
+         */
+        Client,
+        /**
+         * Executed on the server and all clients. Only invokable by the server.
+         */
+        Multicast
+    }
 }
