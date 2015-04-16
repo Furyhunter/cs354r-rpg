@@ -1,6 +1,7 @@
 package rpg.scene.replication;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -54,6 +55,9 @@ public class RepTable {
         while (!classes.isEmpty()) {
             Class<?> cc = classes.pop();
             List<Field> fields = Arrays.stream(cc.getDeclaredFields()).filter(f -> f.getAnnotation(Replicated.class) != null).collect(Collectors.toList());
+            if (fields.stream().anyMatch(f -> Modifier.isPrivate(f.getModifiers()))) {
+                throw new RuntimeException("Replicated fields may not be private.");
+            }
             fieldsToSerialize.addAll(fields);
         }
 

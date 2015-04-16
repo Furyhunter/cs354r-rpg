@@ -24,6 +24,11 @@ public class RepTableTest {
         protected Vector2 anotherVec = new Vector2(1, 1);
     }
 
+    class SimpleHasAPrivateReplicated {
+        @Replicated
+        private Vector2 thisShouldExcept = new Vector2(0, 0);
+    }
+
     @Test
     public void testSimpleReplication() {
         RepTable.discardAllRepTables();
@@ -128,5 +133,11 @@ public class RepTableTest {
         FieldReplicationData frdSerial = k.readObject(input, FieldReplicationData.class);
 
         assertEquals(frdDelta, frdSerial);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testNoPrivateFieldsAllowed() throws Exception {
+        RepTable.discardAllRepTables();
+        RepTable t = RepTable.getTableForType(SimpleHasAPrivateReplicated.class);
     }
 }
