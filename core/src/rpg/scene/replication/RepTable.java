@@ -17,6 +17,9 @@ public class RepTable {
 
     private static Map<Class<?>, RepTable> tables = new HashMap<>();
 
+    private static BiMap<Class<?>, Integer> classIDs = HashBiMap.create();
+    private static int classIDsIncrement = 0;
+
     private int methodCounter = 0;
 
     /**
@@ -30,8 +33,13 @@ public class RepTable {
         if (t == null) {
             t = new RepTable(type);
             tables.put(type, t);
+            classIDs.put(type, type.getName().hashCode());
         }
         return t;
+    }
+
+    public static int getClassIDForType(Class<?> type) {
+        return classIDs.get(type);
     }
 
     /**
