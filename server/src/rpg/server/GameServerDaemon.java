@@ -10,7 +10,10 @@ import rpg.scene.Node;
 import rpg.scene.Scene;
 import rpg.scene.systems.GameLogicSystem;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 
 public class GameServerDaemon implements IDaemon, ApplicationListener {
 
@@ -26,6 +29,24 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     @Override
     public void start(String daemonName) {
+        Log.setLogger(new Log.Logger() {
+            private PrintStream printStream = null;
+
+            @Override
+            protected void print(String message) {
+                if (printStream == null) {
+                    try {
+                        printStream = new PrintStream(new FileOutputStream(new File("log-" + daemonName + ".txt")));
+                    } catch (IOException e) {
+                        printStream = System.out;
+                    }
+                }
+                printStream.println(message);
+                if (printStream != System.out) {
+                    System.out.println(message);
+                }
+            }
+        });
         Log.info("server", "Starting server daemon " + daemonName);
         HeadlessApplicationConfiguration config = new HeadlessApplicationConfiguration();
         config.renderInterval = 1f / 60f;

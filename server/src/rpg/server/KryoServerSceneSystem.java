@@ -51,6 +51,11 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
             oldRelevantSets.put(player, new TreeSet<>(Comparator.comparingInt(Node::getNetworkID)));
             // when next we send a tick, we'll get a "new" relevant set
+
+            Log.info(getClass().getSimpleName(), "Player "
+                    + player.kryoConnection.getID()
+                    + " at " + player.kryoConnection.getRemoteAddressTCP().toString()
+                    + " connected.");
         }
 
         @Override
@@ -64,6 +69,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             oldRelevantSets.remove(p);
 
             p.possessedNode.getParent().removeChild(p.possessedNode);
+
+            Log.info(getClass().getSimpleName(), "Player "
+                    + p.kryoConnection.getID() + " disconnected.");
 
         }
     }

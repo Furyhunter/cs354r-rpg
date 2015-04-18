@@ -10,6 +10,7 @@ hs_err_pid*
 *.pid
 *.fifo
 log.txt
+log-*.txt
 
 ## GWT
 war/
