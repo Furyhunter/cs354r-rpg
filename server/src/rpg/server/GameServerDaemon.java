@@ -7,11 +7,17 @@ import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
 import com.esotericsoftware.minlog.Log;
 import org.cloudcoder.daemon.IDaemon;
 import rpg.scene.Scene;
+import rpg.scene.systems.GameLogicSystem;
+
+import java.io.IOException;
 
 public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     private Scene s;
     private HeadlessApplication app;
+
+    private GameLogicSystem gameLogicSystem;
+    private KryoServerSceneSystem kryoServerSceneSystem;
 
     public GameServerDaemon() {
 
@@ -44,6 +50,15 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
     @Override
     public void create() {
         s = new Scene();
+        gameLogicSystem = new GameLogicSystem();
+        s.addSystem(gameLogicSystem);
+        try {
+            kryoServerSceneSystem = new KryoServerSceneSystem();
+            s.addSystem(kryoServerSceneSystem);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Gdx.app.exit();
+        }
     }
 
     @Override

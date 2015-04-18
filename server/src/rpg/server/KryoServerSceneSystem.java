@@ -4,16 +4,19 @@ import com.badlogic.gdx.Gdx;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
+import com.esotericsoftware.minlog.Log;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
 import rpg.scene.kryo.*;
-import rpg.scene.systems.AbstractSceneSystem;
+import rpg.scene.replication.Context;
+import rpg.scene.replication.RPCMessage;
+import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class KryoServerSceneSystem extends AbstractSceneSystem {
+public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
     private Server server;
     private ServerListener listener = new ServerListener();
@@ -67,7 +70,7 @@ public class KryoServerSceneSystem extends AbstractSceneSystem {
         server = new Server();
         KryoClassRegisterUtil.registerAll(server.getKryo()); // register all known classes for serialization
         server.addListener(listener);
-        server.bind(12523, 12524);
+        server.bind(31425, 31426);
     }
 
     @Override
@@ -106,11 +109,33 @@ public class KryoServerSceneSystem extends AbstractSceneSystem {
     }
 
     @Override
+    public Context getContext() {
+        return Context.Server;
+    }
+
+    @Override
+    public void processRPC(RPCMessage m) {
+        // do nothing, we'll handle this otherwise
+    }
+
+    @Override
+    public void processMulticastRPC(RPCMessage m) {
+        // do nothing, we'll handle this otherwise
+    }
+
+    @Override
+    public boolean canProcessRPCs() {
+        // we aren't calling super.endProcessing
+        return true;
+    }
+
+    @Override
     public void endProcessing() {
         float deltaTime = Gdx.graphics.getRawDeltaTime();
         timeBuffer += deltaTime;
 
         if (timeBuffer > (1f / replicationRate)) {
+            Log.info(getClass().getSimpleName(), "Network tick " + currentTick);
 
             /* During this processing step, the scene is considered "immutable", so we can
              * process the scene in parallel for all connected clients. Below is the general
@@ -220,8 +245,6 @@ public class KryoServerSceneSystem extends AbstractSceneSystem {
 
             nodesToReattach.clear();
         }
-
-
     }
 
     public float getReplicationRate() {
