@@ -28,11 +28,11 @@ public class NodeTest {
     public void testUniqueNetworkIDs() throws Exception {
         Scene s = new Scene();
         Node n = new Node(s.getRoot());
-        IntStream.range(0, 1000000).forEach(a -> new Node(n, Integer.toString(a)));
+        IntStream.range(0, 10000).forEach(a -> new Node(n, Integer.toString(a)));
         Set<Integer> networkIDs = new TreeSet<>();
         n.getChildren().stream().forEach(node -> networkIDs.add(node.getNetworkID()));
         networkIDs.add(n.getNetworkID());
-        assertEquals(1000001, networkIDs.size());
+        assertEquals(10001, networkIDs.size());
     }
 
     @Test
