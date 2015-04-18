@@ -63,6 +63,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             players.remove(p);
             oldRelevantSets.remove(p);
 
+            p.possessedNode.getParent().removeChild(p.possessedNode);
+
         }
     }
 

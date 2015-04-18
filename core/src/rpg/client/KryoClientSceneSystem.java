@@ -5,6 +5,8 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.minlog.Log;
 import rpg.scene.Node;
+import rpg.scene.kryo.BeginTick;
+import rpg.scene.kryo.EndTick;
 import rpg.scene.kryo.KryoClassRegisterUtil;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.RPCMessage;
@@ -37,6 +39,9 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
 
         @Override
         public void received(Connection connection, Object o) {
+            if (o instanceof BeginTick || o instanceof EndTick) {
+                return;
+            }
             Log.info(getClass().getSimpleName(), "Received " + o);
         }
     }
