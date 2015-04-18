@@ -3,7 +3,7 @@ package rpg.server;
 import rpg.scene.Node;
 import rpg.scene.Scene;
 
-import java.util.List;
+import java.util.Set;
 
 public interface RelevantSetDecider {
     /**
@@ -18,5 +18,5 @@ public interface RelevantSetDecider {
      * @param target the target "source" node
      * @return a list of relevant nodes for the target node.
      */
-    List<Node> getRelevantSetForNode(Scene s, Node target);
+    Set<Node> getRelevantSetForNode(Scene s, Node target);
 }

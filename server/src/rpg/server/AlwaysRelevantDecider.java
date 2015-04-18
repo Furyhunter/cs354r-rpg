@@ -3,20 +3,21 @@ package rpg.server;
 import rpg.scene.Node;
 import rpg.scene.Scene;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class AlwaysRelevantDecider implements RelevantSetDecider {
 
     @Override
-    public List<Node> getRelevantSetForNode(Scene s, Node target) {
-        ArrayList<Node> ret = new ArrayList<>();
+    public Set<Node> getRelevantSetForNode(Scene s, Node target) {
+        Set<Node> ret = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
         recurseNode(ret, s.getRoot());
 
         return ret;
     }
 
-    private void recurseNode(List<Node> list, Node n) {
+    private void recurseNode(Set<Node> list, Node n) {
         list.add(n);
         n.getChildren().forEach(nn -> recurseNode(list, nn));
     }

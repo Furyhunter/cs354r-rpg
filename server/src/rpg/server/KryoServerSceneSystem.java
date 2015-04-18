@@ -33,8 +33,7 @@ public class KryoServerSceneSystem extends AbstractSceneSystem {
     private List<Player> players = new ArrayList<>();
     private Map<Connection, Player> connectionPlayerMap;
 
-    private Map<Player, List<Node>> oldRelevantSets;
-    private Map<Player, List<Node>> newRelevantSets;
+    private Map<Player, Set<Node>> oldRelevantSets;
 
     private float timeBuffer = 0;
     private float replicationRate = 10;
@@ -48,7 +47,7 @@ public class KryoServerSceneSystem extends AbstractSceneSystem {
             players.add(player);
             connectionPlayerMap.put(connection, player);
 
-            oldRelevantSets.put(player, new ArrayList<>());
+            oldRelevantSets.put(player, new TreeSet<>(Comparator.comparingInt(Node::getNetworkID)));
             // when next we send a tick, we'll get a "new" relevant set
         }
 
@@ -71,7 +70,6 @@ public class KryoServerSceneSystem extends AbstractSceneSystem {
         connectionPlayerMap = new TreeMap<>(Comparator.comparingInt(Connection::getID));
 
         oldRelevantSets = new TreeMap<>(Comparator.comparingInt(p -> p.kryoConnection.getID()));
-        newRelevantSets = new TreeMap<>(Comparator.comparingInt(p -> p.kryoConnection.getID()));
     }
 
     @Override
@@ -133,15 +131,15 @@ public class KryoServerSceneSystem extends AbstractSceneSystem {
                 p.kryoConnection.sendTCP(bt);
 
                 // New relevant set
-                List<Node> newRelevantSet = relevantSetDecider.getRelevantSetForNode(getParent(), p.possessedNode);
-                List<Node> oldRelevantSet = oldRelevantSets.get(p);
+                Set<Node> newRelevantSet = relevantSetDecider.getRelevantSetForNode(getParent(), p.possessedNode);
+                Set<Node> oldRelevantSet = oldRelevantSets.get(p);
 
                 // All nodes which were not in oldRelevantSet and are in newRelevantSet
-                List<Node> newlyRelevant = new ArrayList<>(newRelevantSet);
+                Set<Node> newlyRelevant = new TreeSet<>(newRelevantSet);
                 newlyRelevant.removeAll(oldRelevantSet);
 
                 // All nodes which were not in newRelevantSet and are in oldRelevantSet
-                List<Node> newlyNonRelevant = new ArrayList<>(oldRelevantSet);
+                Set<Node> newlyNonRelevant = new TreeSet<>(oldRelevantSet);
                 newlyNonRelevant.removeAll(newRelevantSet);
 
                 // For a player that has yet to receive a tick,
