@@ -131,11 +131,16 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
     @Override
     public void endProcessing() {
-        float deltaTime = Gdx.graphics.getRawDeltaTime();
+        try {
+            server.update(0);
+        } catch (IOException e) {
+            Log.error(getClass().getSimpleName(), e);
+        }
+
+        float deltaTime = Gdx.graphics.getDeltaTime();
         timeBuffer += deltaTime;
 
         if (timeBuffer > (1f / replicationRate)) {
-            Log.info(getClass().getSimpleName(), "Network tick " + currentTick);
 
             /* During this processing step, the scene is considered "immutable", so we can
              * process the scene in parallel for all connected clients. Below is the general
@@ -164,7 +169,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
                 // Remove nodes whose parents aren't relevant from relevant set.
                 List<Node> notActuallyRelevant = newRelevantSet.parallelStream()
-                        .filter(n -> !newRelevantSet.contains(n.getParent()))
+                        .filter(n -> (n.getParent() == null || !newRelevantSet.contains(n.getParent())))
                         .collect(Collectors.toList());
                 newRelevantSet.removeAll(notActuallyRelevant);
 
@@ -233,6 +238,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
                 EndTick endTick = new EndTick();
                 endTick.tickID = currentTick;
+                p.kryoConnection.sendTCP(endTick);
 
                 oldRelevantSets.put(p, newRelevantSet);
             });
