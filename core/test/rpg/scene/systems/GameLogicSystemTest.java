@@ -40,11 +40,10 @@ public class GameLogicSystemTest {
         Scene s = new Scene();
         GameLogicSystem gameLogicSystem = new GameLogicSystem();
         s.addSystem(gameLogicSystem);
-        Node n = new Node();
+        Node n = new Node(s.getRoot());
         GameLogicComponentTestComponent c1 = new GameLogicComponentTestComponent();
         GameLogicComponentTestComponent c2 = new GameLogicComponentTestComponent();
         s.getRoot().addComponent(c1);
-        s.getRoot().addChild(n);
 
         s.update(1);
 

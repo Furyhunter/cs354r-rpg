@@ -1,5 +1,6 @@
 package rpg.scene;
 
+import rpg.scene.components.Component;
 import rpg.scene.systems.SceneSystem;
 
 import java.util.ArrayList;
@@ -57,5 +58,33 @@ public class Scene {
             root.process(s, deltaTime);
             s.endProcessing();
         });
+    }
+
+    public void nodeAttached(Node n) {
+        systems.forEach(s -> s.nodeAttached(n));
+    }
+
+    public void nodeDetached(Node n) {
+        systems.forEach(s -> s.nodeDetached(n));
+    }
+
+    public void nodeReattached(Node n) {
+        systems.forEach(s -> s.nodeReattached(n));
+
+    }
+
+    public void componentAttached(Component c) {
+        systems.forEach(s -> s.componentAttached(c));
+
+    }
+
+    public void componentReattached(Component c) {
+        systems.forEach(s -> s.componentReattached(c));
+
+    }
+
+    public void componentDetached(Component c) {
+        systems.forEach(s -> s.componentDetached(c));
+
     }
 }

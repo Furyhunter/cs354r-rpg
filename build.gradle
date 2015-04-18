@@ -118,6 +118,7 @@ project(":server") {
     dependencies {
         compile project(":core")
         compile files("../deps/daemon-0.7.jar")
+        compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
     }
 
     run {

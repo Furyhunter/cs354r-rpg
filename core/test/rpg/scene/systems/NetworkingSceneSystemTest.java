@@ -72,10 +72,9 @@ public class NetworkingSceneSystemTest {
         Scene s = new Scene();
         TestingNetworkingSceneSystem t = new TestingNetworkingSceneSystem();
 
-        Node n = new Node();
+        Node n = new Node(s.getRoot());
         RPCComponent rpcComponent = new RPCComponent();
         n.addComponent(rpcComponent);
-        s.getRoot().addChild(n);
 
         s.addSystem(t);
 
@@ -93,10 +92,9 @@ public class NetworkingSceneSystemTest {
         Scene s = new Scene();
         TestingNetworkingSceneSystem t = new TestingNetworkingSceneSystem();
 
-        Node n = new Node();
+        Node n = new Node(s.getRoot());
         RPCComponent rpcComponent = new RPCComponent();
         n.addComponent(rpcComponent);
-        s.getRoot().addChild(n);
 
         s.addSystem(t);
 
@@ -114,10 +112,9 @@ public class NetworkingSceneSystemTest {
         Scene s = new Scene();
         TestingNetworkingSceneSystem t = new TestingNetworkingSceneSystem();
 
-        Node n = new Node();
+        Node n = new Node(s.getRoot());
         RPCComponent rpcComponent = new SubRPCComponent();
         n.addComponent(rpcComponent);
-        s.getRoot().addChild(n);
 
         s.addSystem(t);
 

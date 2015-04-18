@@ -21,29 +21,82 @@ public class Node {
 
     private static int networkIDCounter = 0;
 
+    public static final int ROOT_NODE_NETWORK_ID = -1;
+
     private Node parent;
     private Scene scene;
 
+    private Transform myTransform;
+    private ReplicationComponent myReplicationComponent;
+
+    /**
+     * Creates a node, without attaching the node to a parent.
+     */
     public Node() {
         this("");
     }
 
+    /**
+     * Creates a node, attaching it to the given parent node, with no name.
+     *
+     * @param parent the parent Node
+     */
+    public Node(Node parent) {
+        this(parent, "");
+    }
+
+    /**
+     * Used by Scene when creating the root node.
+     *
+     * @param scene
+     */
     Node(Scene scene) {
         this.scene = scene;
 
-        this.name = name;
-        networkID = networkIDCounter++;
+        networkID = ROOT_NODE_NETWORK_ID;
 
-        addComponent(new Transform());
-        addComponent(new ReplicationComponent());
+        myTransform = new Transform();
+        myReplicationComponent = new ReplicationComponent();
+
+        addComponent(myTransform);
+        addComponent(myReplicationComponent);
     }
 
-    public Node(String name) {
+    /**
+     * Creates a node, attaching it to the given parent node.
+     *
+     * @param parent the parent Node
+     * @param name the name of this node
+     */
+    public Node(Node parent, String name) {
+        Objects.requireNonNull(parent);
         this.name = name;
         networkID = networkIDCounter++;
 
-        addComponent(new Transform());
-        addComponent(new ReplicationComponent());
+        parent.addChild(this);
+        myTransform = new Transform();
+        myReplicationComponent = new ReplicationComponent();
+
+        addComponent(myTransform);
+        addComponent(myReplicationComponent);
+    }
+
+    /**
+     * Creates a node without attaching the node to a parent.
+     *
+     * @param name the name of this node
+     */
+    public Node(String name) {
+        Objects.requireNonNull(name);
+        this.name = name;
+        networkID = networkIDCounter++;
+
+
+        myTransform = new Transform();
+        myReplicationComponent = new ReplicationComponent();
+
+        addComponent(myTransform);
+        addComponent(myReplicationComponent);
     }
 
     /**
@@ -110,25 +163,36 @@ public class Node {
     public void addChild(Node n) {
         Objects.requireNonNull(n);
         if (n.getParent() != null) {
-            throw new RuntimeException("node already has a parent, remove from previous parent first");
+            n.getParent().children.remove(n);
+            n.setParent(this);
+            children.add(n);
+            getScene().nodeReattached(n);
+        } else {
+            n.setParent(this);
+            children.add(n);
+            getScene().nodeAttached(n);
         }
-        children.add(n);
-        n.setParent(this);
     }
 
     public void addComponent(Component c) {
         Objects.requireNonNull(c);
         if (c.getParent() != null) {
-            throw new RuntimeException("component already has a parent, remove from previous parent first");
+            c.getParent().components.remove(c);
+            c.setParent(this);
+            components.add(c);
+            getScene().componentReattached(c);
+        } else {
+            c.setParent(this);
+            components.add(c);
+            getScene().componentAttached(c);
         }
-        components.add(c);
-        c.setParent(this);
     }
 
     public void removeChild(Node n) {
         Objects.requireNonNull(n);
         if (children.remove(n)) {
             n.setParent(null);
+            getScene().nodeDetached(n);
         }
     }
 
@@ -136,6 +200,7 @@ public class Node {
         Objects.requireNonNull(c);
         if (components.remove(c)) {
             c.setParent(null);
+            getScene().componentDetached(c);
         }
     }
 
@@ -173,15 +238,20 @@ public class Node {
 
     /**
      * Gets the scene this node belongs to. This will traverse up the tree if it has to,
-     * so make sure to store the result.
+     * but the result will be memoized, so future calls will be faster. The memo will be
+     * invalidated if the containment of this node changes.
      *
      * @return the Scene this node belongs to
      */
     public Scene getScene() {
+        if (scene != null) {
+            return scene;
+        }
         if (parent == null) {
             return scene;
         }
-        return findRoot().getScene();
+        scene = findRoot().getScene();
+        return scene;
     }
 
     public void setScene(Scene scene) {
@@ -196,5 +266,13 @@ public class Node {
         system.processNode(this, deltaTime);
         children.forEach(n -> n.process(system, deltaTime));
         system.exitNode(this, deltaTime);
+    }
+
+    public Transform getTransform() {
+        return myTransform;
+    }
+
+    public ReplicationComponent getReplicationComponent() {
+        return myReplicationComponent;
     }
 }
