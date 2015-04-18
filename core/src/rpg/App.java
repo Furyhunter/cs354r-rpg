@@ -26,7 +26,7 @@ public class App extends ApplicationAdapter {
 
 		@Override
 		public void step(float deltaTime) {
-			Transform t = getParent().findComponent(Transform.class);
+			Transform t = getParent().getTransform();
 			t.getPosition().add(deltaTime / 10f, deltaTime / 10f, 0);
 			t.getRotation().mulLeft(new Quaternion(Vector3.Z, deltaTime * 10 * MathUtils.PI));
 		}

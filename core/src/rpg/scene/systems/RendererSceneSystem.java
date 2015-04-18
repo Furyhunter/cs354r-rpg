@@ -46,7 +46,7 @@ public class RendererSceneSystem extends AbstractSceneSystem {
                 // go through from root to our node, applying transforms
                 while (!visitors.isEmpty()) {
                     Node n = visitors.pop();
-                    n.findComponent(Transform.class).inverseApplyTransform(viewMatrix);
+                    n.getTransform().inverseApplyTransform(viewMatrix);
                 }
             }
         }
@@ -54,7 +54,7 @@ public class RendererSceneSystem extends AbstractSceneSystem {
 
     @Override
     public void enterNode(Node n, float deltaTime) {
-        Transform t = n.findComponent(Transform.class);
+        Transform t = n.getTransform();
         Matrix4 newModel = new Matrix4(modelMatrixStack.peek());
         t.applyTransform(newModel);
         modelMatrixStack.push(newModel);
