@@ -1,5 +1,6 @@
 package rpg.scene.kryo;
 
+import com.badlogic.gdx.math.*;
 import com.esotericsoftware.kryo.Kryo;
 import rpg.scene.replication.BitSet;
 import rpg.scene.replication.FieldReplicationData;
@@ -16,6 +17,12 @@ public final class KryoClassRegisterUtil {
 
     public static void registerAll(Kryo k) {
         Class<?>[] classes = new Class<?>[]{
+
+                Vector2.class,
+                Vector3.class,
+                Quaternion.class,
+                Matrix3.class,
+                Matrix4.class,
 
                 BitSet.class,
                 RPCInvocation.class,
