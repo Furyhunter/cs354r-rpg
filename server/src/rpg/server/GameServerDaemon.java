@@ -14,6 +14,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class GameServerDaemon implements IDaemon, ApplicationListener {
 
@@ -45,6 +48,48 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                 if (printStream != System.out) {
                     System.out.println(message);
                 }
+            }
+
+            @Override
+            public void log(int level, String category, String message, Throwable ex) {
+                String logLevel;
+                switch (level) {
+                    case Log.LEVEL_DEBUG:
+                        logLevel = "DEBUG";
+                        break;
+                    case Log.LEVEL_ERROR:
+                        logLevel = "ERROR";
+                        break;
+                    case Log.LEVEL_INFO:
+                        logLevel = " INFO";
+                        break;
+                    case Log.LEVEL_TRACE:
+                        logLevel = "TRACE";
+                        break;
+                    case Log.LEVEL_WARN:
+                        logLevel = " WARN";
+                        break;
+                    case Log.LEVEL_NONE:
+                        logLevel = "     ";
+                        break;
+                    default:
+                        logLevel = "UNKNO";
+                        break;
+                }
+                StringBuilder b = new StringBuilder();
+                b.append(LocalDateTime.now(Clock.systemDefaultZone()).format(DateTimeFormatter.ISO_LOCAL_TIME));
+                b.append(" [");
+                b.append(logLevel);
+                b.append("] [");
+                b.append(category);
+                b.append("] ");
+                b.append(message);
+                if (ex != null) {
+                    b.append("\n");
+                    b.append(ex.toString());
+                }
+
+                print(b.toString());
             }
         });
         Log.info("server", "Starting server daemon " + daemonName);
