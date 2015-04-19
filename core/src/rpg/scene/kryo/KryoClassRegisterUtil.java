@@ -27,6 +27,8 @@ public final class KryoClassRegisterUtil {
                 BitSet.class,
                 RPCInvocation.class,
 
+                FieldReplicationData.class,
+
                 // Messages
                 BeginTick.class,
                 EndTick.class,
@@ -40,8 +42,6 @@ public final class KryoClassRegisterUtil {
                 ComponentReattach.class,
 
                 FieldReplicateMessage.class,
-
-                FieldReplicationData.class,
                 RPCMessage.class,
         };
 

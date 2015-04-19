@@ -1,8 +1,7 @@
 package rpg.scene.replication;
 
-import rpg.scene.components.Transform;
-
-import java.util.Arrays;
+import org.reflections.Reflections;
+import rpg.scene.components.Component;
 
 public final class RepTableInitializeUtil {
     private RepTableInitializeUtil() {
@@ -10,10 +9,6 @@ public final class RepTableInitializeUtil {
     }
 
     public static void initializeRepTables() {
-        Class<?>[] classes = new Class<?>[]{
-                Transform.class,
-        };
-
-        Arrays.stream(classes).forEach(RepTable::getTableForType);
+        new Reflections("").getSubTypesOf(Component.class).stream().forEach(RepTable::getTableForType);
     }
 }

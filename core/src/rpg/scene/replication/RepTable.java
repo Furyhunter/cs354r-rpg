@@ -102,6 +102,7 @@ public class RepTable {
             throw new IllegalArgumentException("Wrong type, got " + o.getClass().getName() + ", expected " + type.getName());
         }
 
+        List<Boolean> illegalAccessExceptions = new ArrayList<>();
         FieldReplicationData frd = new FieldReplicationData();
         frd.fieldChangeset = new BitSet(fieldsToSerialize.size());
         frd.fieldChangeset.set(0, fieldsToSerialize.size(), true);
@@ -111,11 +112,12 @@ public class RepTable {
                 return f.get(o);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
+                illegalAccessExceptions.add(true);
                 return null;
             }
         }).collect(Collectors.toList());
 
-        if (frd.fieldData.stream().anyMatch(obj -> obj == null)) {
+        if (illegalAccessExceptions.size() > 0) {
             throw new RuntimeException("at some point, IllegalAccessException was thrown.");
         }
         return frd;
@@ -136,6 +138,7 @@ public class RepTable {
 
         for (int i = 0; i < fieldsToSerialize.size(); i++) {
             Field f = fieldsToSerialize.get(i);
+            f.setAccessible(true);
             if (data.fieldChangeset.get(i)) {
                 try {
                     f.set(destination, data.fieldData.get(0));

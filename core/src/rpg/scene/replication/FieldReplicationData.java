@@ -7,6 +7,7 @@ import com.esotericsoftware.kryo.io.Output;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class FieldReplicationData implements KryoSerializable {
 
@@ -48,7 +49,7 @@ public class FieldReplicationData implements KryoSerializable {
             Object ours = fieldData.get(i);
             Object theirs = recent.fieldData.get(i);
 
-            if (!ours.equals(theirs)) {
+            if (Objects.equals(ours, theirs)) {
                 frd.fieldChangeset.set(i, true);
                 frd.fieldData.add(theirs);
             }

@@ -66,7 +66,22 @@ public class Node {
      * @param networkID the network ID to use.
      */
     public Node(int networkID) {
+        this(networkID, true);
+    }
+
+    /**
+     * Create a node, optionally preventing default component creation, and with the specified network ID.
+     * <p>
+     * You are expected to add your own {@link Transform} and call {@link #setTransform(Transform)} to it.
+     * If you don't, <b>bad things will happen.</b>
+     *
+     * @param networkID      the network ID to use.
+     * @param createDefaults true to create default components when attached to a parent.
+     */
+    public Node(int networkID, boolean createDefaults) {
         this.networkID = networkID;
+
+        defaultComponentsAttached = !createDefaults;
     }
 
     private void addDefaultComponents() {
@@ -264,6 +279,11 @@ public class Node {
 
     public Transform getTransform() {
         return myTransform;
+    }
+
+    public void setTransform(Transform t) {
+        Objects.requireNonNull(t);
+        myTransform = t;
     }
 
     public boolean isReplicated() {
