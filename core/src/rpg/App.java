@@ -46,15 +46,25 @@ public class App extends ApplicationAdapter {
 		s.addSystem(kryoClientSceneSystem);
 		s.addSystem(new GameLogicSystem());
 		s.addSystem(rendererSceneSystem);
+
+		setProjectionMatrix();
 	}
 
 	@Override
 	public void render() {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-		float aspect = (float)Gdx.graphics.getWidth() / (float)Gdx.graphics.getHeight();
-		rendererSceneSystem.getProjectionMatrix().setToOrtho2D(0, 0, 4 * (aspect), 4).translate(2, 2, 0);
 		s.update(Gdx.graphics.getRawDeltaTime());
+	}
+
+	@Override
+	public void resize(int width, int height) {
+		setProjectionMatrix();
+	}
+
+	private void setProjectionMatrix() {
+		float aspect = (float) Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight();
+		rendererSceneSystem.getProjectionMatrix().setToOrtho2D(0, 0, 4 * (aspect), 4).translate(2 * aspect, 2, 0);
 	}
 
 	public List<String> getRunArguments() {
