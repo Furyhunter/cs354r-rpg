@@ -93,7 +93,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
     }
 
     @Override
-    public void endProcessing() {
-
+    public boolean doesProcessNodes() {
+        return false;
     }
 }

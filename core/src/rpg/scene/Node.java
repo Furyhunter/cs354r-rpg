@@ -5,15 +5,12 @@ import rpg.scene.components.ReplicationComponent;
 import rpg.scene.components.Transform;
 import rpg.scene.systems.SceneSystem;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Node {
-    private List<Node> children = new ArrayList<>();
+    private Set<Node> children = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
     private int networkID = 0;
     private String name = "";
 
@@ -104,8 +101,8 @@ public class Node {
      *
      * @return
      */
-    public List<Node> getChildren() {
-        return Collections.unmodifiableList(children);
+    public Set<Node> getChildren() {
+        return Collections.unmodifiableSet(children);
     }
 
     /**
@@ -263,8 +260,26 @@ public class Node {
 
     public void process(SceneSystem system, float deltaTime) {
         system.enterNode(this, deltaTime);
+
         system.processNode(this, deltaTime);
-        children.forEach(n -> n.process(system, deltaTime));
+
+        Set<Node> childrenCopy = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
+        childrenCopy.addAll(children);
+
+        Iterator<Node> itr = childrenCopy.iterator();
+        while (itr.hasNext()) {
+            Node n = itr.next();
+            if (!children.contains(n)) {
+                itr.remove();
+                continue;
+            }
+            n.process(system, deltaTime);
+            if (!children.contains(n)) {
+                itr.remove();
+                continue;
+            }
+        }
+
         system.exitNode(this, deltaTime);
     }
 

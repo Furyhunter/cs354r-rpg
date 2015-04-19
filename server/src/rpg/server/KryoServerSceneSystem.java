@@ -131,17 +131,14 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
     @Override
     public void processRPC(RPCMessage m) {
-        // do nothing, we'll handle this otherwise
     }
 
     @Override
     public void processMulticastRPC(RPCMessage m) {
-        // do nothing, we'll handle this otherwise
     }
 
     @Override
     public boolean canProcessRPCs() {
-        // we aren't calling super.endProcessing
         return true;
     }
 
@@ -327,5 +324,10 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
     public void setReplicationRate(float replicationRate) {
         this.replicationRate = replicationRate;
+    }
+
+    @Override
+    public boolean doesProcessNodes() {
+        return false;
     }
 }
