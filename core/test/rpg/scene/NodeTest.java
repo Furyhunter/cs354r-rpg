@@ -17,10 +17,10 @@ public class NodeTest {
     public void testGetNumChildren() throws Exception {
         Scene s = new Scene();
         Node n = new Node(s.getRoot());
-        IntStream.range(0, 10).forEach(a -> n.addChild(new Node(n, Integer.toString(a))));
+        IntStream.range(0, 10).forEach(a -> n.addChild(new Node(n)));
         assertEquals(10, n.getNumChildren());
 
-        n.getChildren().stream().forEach(node -> IntStream.range(0, 10).forEach(a -> new Node(node, Integer.toString(a))));
+        n.getChildren().stream().forEach(node -> IntStream.range(0, 10).forEach(a -> new Node(node)));
         assertEquals(110, n.getNumChildren());
     }
 
@@ -28,7 +28,7 @@ public class NodeTest {
     public void testUniqueNetworkIDs() throws Exception {
         Scene s = new Scene();
         Node n = new Node(s.getRoot());
-        IntStream.range(0, 10000).forEach(a -> new Node(n, Integer.toString(a)));
+        IntStream.range(0, 10000).forEach(a -> new Node(n));
         Set<Integer> networkIDs = new TreeSet<>();
         n.getChildren().stream().forEach(node -> networkIDs.add(node.getNetworkID()));
         networkIDs.add(n.getNetworkID());

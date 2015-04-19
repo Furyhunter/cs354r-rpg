@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 public class Node {
     private Set<Node> children = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
     private int networkID = 0;
-    private String name = "";
 
     private List<Component> components = new ArrayList<>();
 
@@ -26,21 +25,7 @@ public class Node {
     private Transform myTransform;
     private ReplicationComponent myReplicationComponent;
 
-    /**
-     * Creates a node, without attaching the node to a parent.
-     */
-    public Node() {
-        this("");
-    }
-
-    /**
-     * Creates a node, attaching it to the given parent node, with no name.
-     *
-     * @param parent the parent Node
-     */
-    public Node(Node parent) {
-        this(parent, "");
-    }
+    private boolean defaultComponentsAttached = false;
 
     /**
      * Used by Scene when creating the root node.
@@ -63,37 +48,38 @@ public class Node {
      * Creates a node, attaching it to the given parent node.
      *
      * @param parent the parent Node
-     * @param name the name of this node
      */
-    public Node(Node parent, String name) {
+    public Node(Node parent) {
+        this();
         Objects.requireNonNull(parent);
-        this.name = name;
-        networkID = networkIDCounter++;
 
         parent.addChild(this);
-        myTransform = new Transform();
-        myReplicationComponent = new ReplicationComponent();
-
-        addComponent(myTransform);
-        addComponent(myReplicationComponent);
     }
 
     /**
      * Creates a node without attaching the node to a parent.
-     *
-     * @param name the name of this node
      */
-    public Node(String name) {
-        Objects.requireNonNull(name);
-        this.name = name;
+    public Node() {
         networkID = networkIDCounter++;
+    }
 
+    /**
+     * Create a node, explicitly setting its network ID. If you use this, you better be damn sure
+     * the node has a unique network ID, because <b>bad things will happen otherwise.</b>
+     *
+     * @param networkID the network ID to use.
+     */
+    public Node(int networkID) {
+        this.networkID = networkID;
+    }
 
+    private void addDefaultComponents() {
         myTransform = new Transform();
         myReplicationComponent = new ReplicationComponent();
 
         addComponent(myTransform);
         addComponent(myReplicationComponent);
+        defaultComponentsAttached = true;
     }
 
     /**
@@ -151,10 +137,6 @@ public class Node {
 
     public int getNumChildren() {
         return children.stream().mapToInt(Node::getNumChildren).sum() + children.size();
-    }
-
-    public String getName() {
-        return name;
     }
 
     public void addChild(Node n) {
@@ -230,6 +212,9 @@ public class Node {
         this.parent = parent;
         if (parent != null) {
             scene = null;
+            if (!defaultComponentsAttached) {
+                addDefaultComponents();
+            }
         }
     }
 
