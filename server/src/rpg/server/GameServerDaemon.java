@@ -6,7 +6,6 @@ import com.badlogic.gdx.backends.headless.HeadlessApplication;
 import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
 import com.esotericsoftware.minlog.Log;
 import org.cloudcoder.daemon.IDaemon;
-import rpg.scene.Node;
 import rpg.scene.Scene;
 import rpg.scene.systems.GameLogicSystem;
 
@@ -17,6 +16,7 @@ import java.io.PrintStream;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 
 public class GameServerDaemon implements IDaemon, ApplicationListener {
 
@@ -77,10 +77,10 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                         break;
                 }
                 StringBuilder b = new StringBuilder();
-                b.append(LocalDateTime.now(Clock.systemDefaultZone()).format(DateTimeFormatter.ISO_LOCAL_TIME));
-                b.append(" [");
+                b.append(LocalDateTime.now(Clock.systemDefaultZone()).format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)));
+                b.append(" ");
                 b.append(logLevel);
-                b.append("] [");
+                b.append(": [");
                 b.append(category);
                 b.append("] ");
                 b.append(message);
@@ -126,8 +126,6 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
             e.printStackTrace();
             Gdx.app.exit();
         }
-
-        Node n = new Node(s.getRoot());
     }
 
     @Override
