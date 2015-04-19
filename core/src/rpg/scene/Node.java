@@ -27,6 +27,8 @@ public class Node {
 
     private boolean defaultComponentsAttached = false;
 
+    private boolean replicated = true;
+
     /**
      * Used by Scene when creating the root node.
      *
@@ -274,5 +276,13 @@ public class Node {
 
     public ReplicationComponent getReplicationComponent() {
         return myReplicationComponent;
+    }
+
+    public boolean isReplicated() {
+        return replicated;
+    }
+
+    public void setReplicated(boolean replicated) {
+        this.replicated = replicated;
     }
 }

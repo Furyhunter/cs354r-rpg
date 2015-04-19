@@ -195,6 +195,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                         n -> n.getParent() == null
                                 || (n.getParent().getNetworkID() >= 0 && !newRelevantSet.contains(n.getParent())));
 
+                // Remove nodes who aren't set to replicate.
+                newRelevantSet.removeIf(n -> !n.isReplicated());
+
                 // The relevant.
                 Set<Node> newlyRelevant = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
                 newlyRelevant.addAll(newRelevantSet);
