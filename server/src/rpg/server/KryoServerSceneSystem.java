@@ -7,6 +7,8 @@ import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
+import rpg.scene.components.PansUpComponent;
+import rpg.scene.components.RectangleRenderer;
 import rpg.scene.kryo.*;
 import rpg.scene.replication.*;
 import rpg.scene.systems.NetworkingSceneSystem;
@@ -48,6 +50,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         @Override
         public void connected(Connection connection) {
             Node playerNode = new Node(getParent().getRoot());
+            playerNode.addComponent(new RectangleRenderer());
+            playerNode.addComponent(new PansUpComponent());
             Player player = new Player(playerNode, connection);
             players.add(player);
             connectionPlayerMap.put(connection, player);
@@ -311,11 +315,6 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     p.kryoConnection.sendTCP(cr);
                 });
 
-
-                EndTick endTick = new EndTick();
-                endTick.tickID = currentTick;
-                p.kryoConnection.sendTCP(endTick);
-
                 oldRelevantSets.put(p, newRelevantSet);
 
 
@@ -350,6 +349,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                         return;
                     }
                     m.componentID = c.getNetworkID();
+                    int sent = p.kryoConnection.sendTCP(m);
                 });
 
 
@@ -365,6 +365,11 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     Component c = componentMap.get(r.targetNetworkID);
                     return c != null && c.getParent() == p.possessedNode && newRelevantSet.contains(c.getParent());
                 }).forEach(p.kryoConnection::sendTCP);
+
+
+                EndTick endTick = new EndTick();
+                endTick.tickID = currentTick;
+                p.kryoConnection.sendTCP(endTick);
             });
 
             timeBuffer = 0;

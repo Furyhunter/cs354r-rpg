@@ -85,7 +85,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                 processingTick = true;
                 currentTick = t.tickID;
                 tickObjectBuffer.clear();
-
+                return;
             }
             if (o instanceof EndTick) {
                 EndTick t = (EndTick) o;
@@ -106,6 +106,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     newTickAvailable = true;
                 }
                 processingTick = false;
+                return;
             }
 
             if (processingTick) {
@@ -167,6 +168,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                 List<ComponentReattach> componentReattachList = new ArrayList<>();
                 List<FieldReplicateMessage> fieldReplicateMessageList = new ArrayList<>();
                 List<RPCMessage> rpcMessageList = new ArrayList<>();
+
                 synchronized (objectsFromServer) {
                     objectsFromServer.stream().filter(o -> o instanceof NodeAttach).forEach(o -> nodeAttachList.add((NodeAttach) o));
                     objectsFromServer.stream().filter(o -> o instanceof NodeDetach).forEach(o -> nodeDetachList.add((NodeDetach) o));
