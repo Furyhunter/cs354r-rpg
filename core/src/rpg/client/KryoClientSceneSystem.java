@@ -15,6 +15,7 @@ import rpg.scene.replication.RepTableInitializeUtil;
 import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.*;
 
@@ -350,7 +351,8 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                             return;
                         }
                         try {
-                            RepTable.getTableForType(c.getClass()).getRPCMethod(m.invocation.methodId).invoke(c, m.invocation.arguments);
+                            Method method = RepTable.getTableForType(c.getClass()).getRPCMethod(m.invocation.methodId);
+                            method.invoke(c, m.invocation.arguments.toArray());
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }

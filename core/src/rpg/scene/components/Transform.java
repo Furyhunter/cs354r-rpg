@@ -3,7 +3,13 @@ package rpg.scene.components;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.esotericsoftware.minlog.Log;
+import rpg.scene.Scene;
+import rpg.scene.replication.Context;
+import rpg.scene.replication.RPC;
 import rpg.scene.replication.Replicated;
+import rpg.scene.systems.NetworkingSceneSystem;
+import rpg.scene.systems.RendererSceneSystem;
 
 public class Transform extends Component {
     @Replicated
@@ -61,5 +67,18 @@ public class Transform extends Component {
 
     public void setRotation(Quaternion rotation) {
         this.rotation = new Quaternion(rotation);
+    }
+
+    @RPC(target = RPC.Target.Client)
+    public void possessNode() {
+        Scene s = getParent().getScene();
+        NetworkingSceneSystem nss = s.findSystem(NetworkingSceneSystem.class);
+        if (nss == null || nss.getContext() == Context.Client) {
+            Log.info(getClass().getSimpleName(), "Possessing node " + getParent().getNetworkID());
+            RendererSceneSystem r = s.findSystem(RendererSceneSystem.class);
+            if (r != null) {
+                r.setViewTarget(getParent());
+            }
+        }
     }
 }

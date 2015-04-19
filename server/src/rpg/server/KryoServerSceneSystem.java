@@ -55,6 +55,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             Player player = new Player(playerNode, connection);
             players.add(player);
             connectionPlayerMap.put(connection, player);
+            playerNode.getTransform().sendRPC("possessNode");
 
             oldRelevantSets.put(player, new TreeSet<>(Comparator.comparingInt(Node::getNetworkID)));
             // when next we send a tick, we'll get a "new" relevant set
@@ -383,6 +384,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             componentsToAttach.clear();
             componentsToDetach.clear();
             componentsToReattach.clear();
+
+            clientRPCs.clear();
+            multicastRPCs.clear();
 
             oldReplicationState = newReplicationState;
         }
