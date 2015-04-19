@@ -1,7 +1,6 @@
 package rpg.scene;
 
 import rpg.scene.components.Component;
-import rpg.scene.components.ReplicationComponent;
 import rpg.scene.components.Transform;
 import rpg.scene.systems.SceneSystem;
 
@@ -23,7 +22,6 @@ public class Node {
     private Scene scene;
 
     private Transform myTransform;
-    private ReplicationComponent myReplicationComponent;
 
     private boolean defaultComponentsAttached = false;
 
@@ -39,11 +37,7 @@ public class Node {
 
         networkID = ROOT_NODE_NETWORK_ID;
 
-        myTransform = new Transform();
-        myReplicationComponent = new ReplicationComponent();
-
-        addComponent(myTransform);
-        addComponent(myReplicationComponent);
+        addDefaultComponents();
     }
 
     /**
@@ -77,10 +71,8 @@ public class Node {
 
     private void addDefaultComponents() {
         myTransform = new Transform();
-        myReplicationComponent = new ReplicationComponent();
 
         addComponent(myTransform);
-        addComponent(myReplicationComponent);
         defaultComponentsAttached = true;
     }
 
@@ -272,10 +264,6 @@ public class Node {
 
     public Transform getTransform() {
         return myTransform;
-    }
-
-    public ReplicationComponent getReplicationComponent() {
-        return myReplicationComponent;
     }
 
     public boolean isReplicated() {

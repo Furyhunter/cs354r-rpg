@@ -1,7 +1,6 @@
 package rpg.scene;
 
 import org.junit.Test;
-import rpg.scene.components.ReplicationComponent;
 import rpg.scene.components.Transform;
 
 import java.util.Set;
@@ -37,11 +36,10 @@ public class NodeTest {
 
     @Test
     public void testNewNodeHasDefaultComponents() {
-        // Transform and ReplicationComponent are required
+        // Transform is required
         Scene s = new Scene();
         Node n = new Node(s.getRoot());
         assertNotNull(n.findComponent(Transform.class));
-        assertNotNull(n.findComponent(ReplicationComponent.class));
 
     }
 }
