@@ -7,11 +7,11 @@ import rpg.scene.replication.Replicated;
 
 public class Transform extends Component {
     @Replicated
-    private Vector3 position = new Vector3();
+    protected Vector3 position = new Vector3();
     @Replicated
-    private Vector3 scale = new Vector3(1, 1, 1);
+    protected Vector3 scale = new Vector3(1, 1, 1);
     @Replicated
-    private Quaternion rotation = new Quaternion();
+    protected Quaternion rotation = new Quaternion();
 
     public Transform() {
         super();

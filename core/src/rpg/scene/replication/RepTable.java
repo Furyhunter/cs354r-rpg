@@ -39,7 +39,14 @@ public class RepTable {
     }
 
     public static int getClassIDForType(Class<?> type) {
+        if (!classIDs.containsKey(type)) {
+            classIDs.put(type, type.getName().hashCode());
+        }
         return classIDs.get(type);
+    }
+
+    public static Class<?> getClassForClassID(int id) {
+        return classIDs.inverse().get(id);
     }
 
     /**
@@ -99,6 +106,7 @@ public class RepTable {
         frd.fieldChangeset = new BitSet(fieldsToSerialize.size());
         frd.fieldChangeset.set(0, fieldsToSerialize.size(), true);
         frd.fieldData = fieldsToSerialize.stream().map(f -> {
+            f.setAccessible(true);
             try {
                 return f.get(o);
             } catch (IllegalAccessException e) {
