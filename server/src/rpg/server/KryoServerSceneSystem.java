@@ -41,6 +41,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
     private Map<Integer, FieldReplicateMessage> oldReplicationState = new TreeMap<>();
 
+    private List<RPCMessage> multicastRPCs = new ArrayList<>();
+    private List<RPCMessage> clientRPCs = new ArrayList<>();
+
     class ServerListener extends Listener {
         @Override
         public void connected(Connection connection) {
@@ -129,16 +132,15 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     }
 
     @Override
-    public void processRPC(RPCMessage m) {
+    public void addRPCMessage(RPCMessage m) {
+        Objects.requireNonNull(m);
+        clientRPCs.add(m);
     }
 
     @Override
-    public void processMulticastRPC(RPCMessage m) {
-    }
-
-    @Override
-    public boolean canProcessRPCs() {
-        return true;
+    public void addMulticastRPCMessage(RPCMessage m) {
+        Objects.requireNonNull(m);
+        multicastRPCs.add(m);
     }
 
     @Override
@@ -349,17 +351,16 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
 
                 // Multicast RPCs (only if component is in relevant set)
-                multicastRPCMessages.stream().filter(r -> {
+                multicastRPCs.stream().filter(r -> {
                     Component c = componentMap.get(r.targetNetworkID);
                     return c != null && newRelevantSet.contains(c.getParent());
                 }).forEach(p.kryoConnection::sendTCP);
 
-                // Regular RPCS
-                // Handling of multicast and regular RPCs is exactly the same...
-                // Maybe we could just merge these??
-                rpcMessages.stream().filter(r -> {
+                // Client RPCS
+                // These should only be sent to the possessing client.
+                clientRPCs.stream().filter(r -> {
                     Component c = componentMap.get(r.targetNetworkID);
-                    return c != null && newRelevantSet.contains(c.getParent());
+                    return c != null && c.getParent() == p.possessedNode && newRelevantSet.contains(c.getParent());
                 }).forEach(p.kryoConnection::sendTCP);
             });
 

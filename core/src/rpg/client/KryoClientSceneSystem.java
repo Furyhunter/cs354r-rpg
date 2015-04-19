@@ -61,18 +61,13 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
     }
 
     @Override
-    public void processRPC(RPCMessage m) {
+    public void addRPCMessage(RPCMessage m) {
 
     }
 
     @Override
-    public void processMulticastRPC(RPCMessage m) {
+    public void addMulticastRPCMessage(RPCMessage m) {
 
-    }
-
-    @Override
-    public boolean canProcessRPCs() {
-        return false;
     }
 
     @Override

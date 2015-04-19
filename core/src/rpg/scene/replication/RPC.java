@@ -19,15 +19,15 @@ public @interface RPC {
 
     enum Target {
         /**
-         * Executed on the server. Invokable by the owning client.
+         * Executed on the server. Invokable by owning client.
          */
         Server,
         /**
-         * Executed on the owning client. Only invokable by the server.
+         * Executed on the owning client. Invokable by all, sent only by server.
          */
         Client,
         /**
-         * Executed on the server and all clients. Only invokable by the server.
+         * Executed on the server and all clients. Invokable by all, broadcast only by server.
          */
         Multicast
     }

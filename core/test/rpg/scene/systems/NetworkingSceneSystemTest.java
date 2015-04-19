@@ -8,7 +8,9 @@ import rpg.scene.replication.Context;
 import rpg.scene.replication.RPC;
 import rpg.scene.replication.RPCMessage;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 
@@ -16,24 +18,22 @@ public class NetworkingSceneSystemTest {
 
     public class TestingNetworkingSceneSystem extends NetworkingSceneSystem {
 
+        List<RPCMessage> messages = new ArrayList<>();
         @Override
         public Context getContext() {
             return Context.Client;
         }
 
         @Override
-        public void processRPC(RPCMessage m) {
-
+        public void addRPCMessage(RPCMessage m) {
+            Objects.requireNonNull(m);
+            messages.add(m);
         }
 
         @Override
-        public void processMulticastRPC(RPCMessage m) {
-
-        }
-
-        @Override
-        public boolean canProcessRPCs() {
-            return true;
+        public void addMulticastRPCMessage(RPCMessage m) {
+            Objects.requireNonNull(m);
+            messages.add(m);
         }
 
         @Override
@@ -42,7 +42,7 @@ public class NetworkingSceneSystemTest {
         }
 
         public List<RPCMessage> messages() {
-            return rpcMessages;
+            return messages;
         }
     }
 
