@@ -7,14 +7,15 @@ A bullet hell action RPG with a pretty awesome replication framework.
 ## Build instructions
 
 1. Install JDK 8
-2. Set up your PATH to use JDK 8 (lab machine note: `export JAVA_HOME=/lusr/opt/jdk8`)
-3. `./gradlew build run`
+2. Set up your PATH to use JDK 8 (lab machine note: `export JAVA_HOME=/lusr/opt/jdk1.8`)
+3. `./gradlew build test`
+4. `./gradlew :desktop:run` -- this will connect to the testing server.
 
 ## Project structure
 
-* **`core`** -- Core game code
-* **`desktop`** -- Desktop launcher and specific code (we won't support any other platform except maybe HTML5?)
-* **`server`** -- Headless server code
+* **`core`** -- Core game code. Includes client code, replication framework, and most of the unit tests.
+* **`desktop`** -- Desktop launcher code.
+* **`server`** -- Headless server code. The server is separated out so the client isn't distributed with it.
 * **`annotationProcessors`** -- dependency of `core`, used for appending replication information to methods and fields.
 
 ## Using an IDE
@@ -33,6 +34,11 @@ to generate the project files for them.
 Do not push to master. Do not commit class files or project metadata (the .gitignore will already handle this for you.)
 Use topic branches to work on individual issues until they're ready to commit.
 
+Before committing, it's recommended that you run the unit tests by starting the `test` gradle task. This will bail out
+if the code itself won't compile, and will tell you what tests are currently failing.
+
 ## Continuous integration
 
-Not currently setup. Ideally when `master` gets pushed to, it will automatically update a testing server on a VPS.
+The master branch is automatically pulled by a continuous integration server to handle builds and to start up an
+instance of the game server. If you start the `:desktop:run` task in gradle, the client will start and automatically
+connect to the game server.
