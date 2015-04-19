@@ -136,13 +136,14 @@ public class RepTable {
             throw new IllegalArgumentException("destination is not of type " + type.getName() + ", instead it is " + destination.getClass());
         }
 
+        List<Object> fieldData = new LinkedList<>(data.fieldData);
         for (int i = 0; i < fieldsToSerialize.size(); i++) {
             Field f = fieldsToSerialize.get(i);
-            f.setAccessible(true);
             if (data.fieldChangeset.get(i)) {
+                f.setAccessible(true);
                 try {
-                    f.set(destination, data.fieldData.get(0));
-                    data.fieldData.remove(0);
+                    f.set(destination, fieldData.get(0));
+                    fieldData.remove(0);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }

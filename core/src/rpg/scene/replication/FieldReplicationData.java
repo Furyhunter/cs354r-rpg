@@ -49,7 +49,7 @@ public class FieldReplicationData implements KryoSerializable {
             Object ours = fieldData.get(i);
             Object theirs = recent.fieldData.get(i);
 
-            if (Objects.equals(ours, theirs)) {
+            if (!Objects.equals(ours, theirs)) {
                 frd.fieldChangeset.set(i, true);
                 frd.fieldData.add(theirs);
             }
