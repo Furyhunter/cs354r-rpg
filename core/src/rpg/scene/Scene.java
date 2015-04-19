@@ -3,10 +3,7 @@ package rpg.scene;
 import rpg.scene.components.Component;
 import rpg.scene.systems.SceneSystem;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class Scene {
     private Node root;
@@ -53,11 +50,27 @@ public class Scene {
     }
 
     public void update(float deltaTime) {
-        systems.forEach(s -> {
+        List<SceneSystem> systemsCopy = new ArrayList<>(systems);
+        Iterator<SceneSystem> itr = systemsCopy.iterator();
+        while (itr.hasNext()) {
+            SceneSystem s = itr.next();
+            if (!systems.contains(s)) {
+                itr.remove();
+                continue;
+            }
+
             s.beginProcessing();
-            root.process(s, deltaTime);
+
+            if (s.doesProcessNodes()) {
+                root.process(s, deltaTime);
+            }
+
             s.endProcessing();
-        });
+
+            if (!systems.contains(s)) {
+                itr.remove();
+            }
+        }
     }
 
     public void nodeAttached(Node n) {

@@ -1,21 +1,16 @@
 package rpg.scene;
 
 import rpg.scene.components.Component;
-import rpg.scene.components.ReplicationComponent;
 import rpg.scene.components.Transform;
 import rpg.scene.systems.SceneSystem;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Node {
-    private List<Node> children = new ArrayList<>();
+    private Set<Node> children = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
     private int networkID = 0;
-    private String name = "";
 
     private List<Component> components = new ArrayList<>();
 
@@ -27,23 +22,10 @@ public class Node {
     private Scene scene;
 
     private Transform myTransform;
-    private ReplicationComponent myReplicationComponent;
 
-    /**
-     * Creates a node, without attaching the node to a parent.
-     */
-    public Node() {
-        this("");
-    }
+    private boolean defaultComponentsAttached = false;
 
-    /**
-     * Creates a node, attaching it to the given parent node, with no name.
-     *
-     * @param parent the parent Node
-     */
-    public Node(Node parent) {
-        this(parent, "");
-    }
+    private boolean replicated = true;
 
     /**
      * Used by Scene when creating the root node.
@@ -55,48 +37,43 @@ public class Node {
 
         networkID = ROOT_NODE_NETWORK_ID;
 
-        myTransform = new Transform();
-        myReplicationComponent = new ReplicationComponent();
-
-        addComponent(myTransform);
-        addComponent(myReplicationComponent);
+        addDefaultComponents();
     }
 
     /**
      * Creates a node, attaching it to the given parent node.
      *
      * @param parent the parent Node
-     * @param name the name of this node
      */
-    public Node(Node parent, String name) {
+    public Node(Node parent) {
+        this();
         Objects.requireNonNull(parent);
-        this.name = name;
-        networkID = networkIDCounter++;
 
         parent.addChild(this);
-        myTransform = new Transform();
-        myReplicationComponent = new ReplicationComponent();
-
-        addComponent(myTransform);
-        addComponent(myReplicationComponent);
     }
 
     /**
      * Creates a node without attaching the node to a parent.
-     *
-     * @param name the name of this node
      */
-    public Node(String name) {
-        Objects.requireNonNull(name);
-        this.name = name;
+    public Node() {
         networkID = networkIDCounter++;
+    }
 
+    /**
+     * Create a node, explicitly setting its network ID. If you use this, you better be damn sure
+     * the node has a unique network ID, because <b>bad things will happen otherwise.</b>
+     *
+     * @param networkID the network ID to use.
+     */
+    public Node(int networkID) {
+        this.networkID = networkID;
+    }
 
+    private void addDefaultComponents() {
         myTransform = new Transform();
-        myReplicationComponent = new ReplicationComponent();
 
         addComponent(myTransform);
-        addComponent(myReplicationComponent);
+        defaultComponentsAttached = true;
     }
 
     /**
@@ -104,8 +81,8 @@ public class Node {
      *
      * @return
      */
-    public List<Node> getChildren() {
-        return Collections.unmodifiableList(children);
+    public Set<Node> getChildren() {
+        return Collections.unmodifiableSet(children);
     }
 
     /**
@@ -154,10 +131,6 @@ public class Node {
 
     public int getNumChildren() {
         return children.stream().mapToInt(Node::getNumChildren).sum() + children.size();
-    }
-
-    public String getName() {
-        return name;
     }
 
     public void addChild(Node n) {
@@ -233,6 +206,9 @@ public class Node {
         this.parent = parent;
         if (parent != null) {
             scene = null;
+            if (!defaultComponentsAttached) {
+                addDefaultComponents();
+            }
         }
     }
 
@@ -263,8 +239,26 @@ public class Node {
 
     public void process(SceneSystem system, float deltaTime) {
         system.enterNode(this, deltaTime);
+
         system.processNode(this, deltaTime);
-        children.forEach(n -> n.process(system, deltaTime));
+
+        Set<Node> childrenCopy = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
+        childrenCopy.addAll(children);
+
+        Iterator<Node> itr = childrenCopy.iterator();
+        while (itr.hasNext()) {
+            Node n = itr.next();
+            if (!children.contains(n)) {
+                itr.remove();
+                continue;
+            }
+            n.process(system, deltaTime);
+            if (!children.contains(n)) {
+                itr.remove();
+                continue;
+            }
+        }
+
         system.exitNode(this, deltaTime);
     }
 
@@ -272,7 +266,11 @@ public class Node {
         return myTransform;
     }
 
-    public ReplicationComponent getReplicationComponent() {
-        return myReplicationComponent;
+    public boolean isReplicated() {
+        return replicated;
+    }
+
+    public void setReplicated(boolean replicated) {
+        this.replicated = replicated;
     }
 }

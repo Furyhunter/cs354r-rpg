@@ -39,6 +39,8 @@ public final class KryoClassRegisterUtil {
                 ComponentDetach.class,
                 ComponentReattach.class,
 
+                FieldReplicateMessage.class,
+
                 FieldReplicationData.class,
                 RPCMessage.class,
         };

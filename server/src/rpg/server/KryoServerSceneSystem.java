@@ -8,8 +8,7 @@ import com.esotericsoftware.minlog.Log;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
 import rpg.scene.kryo.*;
-import rpg.scene.replication.Context;
-import rpg.scene.replication.RPCMessage;
+import rpg.scene.replication.*;
 import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
@@ -25,10 +24,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     private Map<Integer, Component> componentMap = new TreeMap<>();
 
     private Set<Node> nodesToReattach = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
-
-    private List<Component> componentsToAttach = new ArrayList<>();
-    private List<Component> componentsToDetach = new ArrayList<>();
-    private List<Component> componentsToReattach = new ArrayList<>();
+    private Set<Component> componentsToAttach = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
+    private Set<Component> componentsToReattach = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
+    private Set<Component> componentsToDetach = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
 
     private RelevantSetDecider relevantSetDecider = new AlwaysRelevantDecider();
 
@@ -40,6 +38,11 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     private float timeBuffer = 0;
     private float replicationRate = 10;
     private int currentTick = 0;
+
+    private Map<Integer, FieldReplicateMessage> oldReplicationState = new TreeMap<>();
+
+    private List<RPCMessage> multicastRPCs = new ArrayList<>();
+    private List<RPCMessage> clientRPCs = new ArrayList<>();
 
     class ServerListener extends Listener {
         @Override
@@ -81,6 +84,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         KryoClassRegisterUtil.registerAll(server.getKryo()); // register all known classes for serialization
         server.addListener(listener);
         server.bind(31425, 31426);
+
+        RepTableInitializeUtil.initializeRepTables();
     }
 
     @Override
@@ -97,11 +102,14 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     public void componentAttached(Component c) {
         componentMap.put(c.getNetworkID(), c);
         componentsToAttach.add(c);
+        componentsToDetach.remove(c);
     }
 
     @Override
     public void componentDetached(Component c) {
+        componentMap.remove(c.getNetworkID());
         componentsToDetach.add(c);
+        componentsToAttach.remove(c);
     }
 
     @Override
@@ -124,19 +132,15 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     }
 
     @Override
-    public void processRPC(RPCMessage m) {
-        // do nothing, we'll handle this otherwise
+    public void addRPCMessage(RPCMessage m) {
+        Objects.requireNonNull(m);
+        clientRPCs.add(m);
     }
 
     @Override
-    public void processMulticastRPC(RPCMessage m) {
-        // do nothing, we'll handle this otherwise
-    }
-
-    @Override
-    public boolean canProcessRPCs() {
-        // we aren't calling super.endProcessing
-        return true;
+    public void addMulticastRPCMessage(RPCMessage m) {
+        Objects.requireNonNull(m);
+        multicastRPCs.add(m);
     }
 
     @Override
@@ -151,6 +155,16 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         timeBuffer += deltaTime;
 
         if (timeBuffer > (1f / replicationRate)) {
+
+            Map<Integer, FieldReplicateMessage> newReplicationState = new TreeMap<>();
+
+            // First, we need to get all the new component replication states.
+            componentMap.values().forEach(c -> {
+                RepTable t = RepTable.getTableForType(c.getClass());
+                FieldReplicationData frd = t.replicateFull(c);
+                FieldReplicateMessage frm = new FieldReplicateMessage(c.getNetworkID(), frd);
+                newReplicationState.put(c.getNetworkID(), frm);
+            });
 
             /* During this processing step, the scene is considered "immutable", so we can
              * process the scene in parallel for all connected clients. Below is the general
@@ -178,10 +192,12 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 Set<Node> oldRelevantSet = oldRelevantSets.get(p);
 
                 // Remove nodes whose parents aren't relevant from relevant set.
-                List<Node> notActuallyRelevant = newRelevantSet.parallelStream()
-                        .filter(n -> (n.getParent() == null || !newRelevantSet.contains(n.getParent())))
-                        .collect(Collectors.toList());
-                newRelevantSet.removeAll(notActuallyRelevant);
+                newRelevantSet.removeIf(
+                        n -> n.getParent() == null
+                                || (n.getParent().getNetworkID() >= 0 && !newRelevantSet.contains(n.getParent())));
+
+                // Remove nodes who aren't set to replicate.
+                newRelevantSet.removeIf(n -> !n.isReplicated());
 
                 // The relevant.
                 Set<Node> newlyRelevant = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
@@ -199,7 +215,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 inBoth.retainAll(oldRelevantSet);
 
                 // Ensure that any reattached nodes get reattach messages IF AND ONLY IF their new parent is relevant.
-                notActuallyRelevant = inBoth.parallelStream()
+                List<Node> notActuallyRelevant = inBoth.parallelStream()
                         .filter(nodesToReattach::contains)
                         .filter(n -> !newRelevantSet.contains(n))
                         .collect(Collectors.toList());
@@ -214,12 +230,10 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
                 // Reattach nodes that need to be sent reattachments.
                 nodesForReattachment.forEach(n -> {
-                    if (n.getNetworkID() > 0) {
-                        NodeReattach nodeReattach = new NodeReattach();
-                        nodeReattach.nodeID = n.getNetworkID();
-                        nodeReattach.parentID = n.getParent().getNetworkID();
-                        p.kryoConnection.sendTCP(nodeReattach);
-                    }
+                    NodeReattach nodeReattach = new NodeReattach();
+                    nodeReattach.nodeID = n.getNetworkID();
+                    nodeReattach.parentID = n.getParent().getNetworkID();
+                    p.kryoConnection.sendTCP(nodeReattach);
                 });
 
 
@@ -227,30 +241,127 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 // newlyRelevant == newRelevantSet (everything)
                 // newlyIrrelevant == oldRelevantSet (nothing)
                 newlyRelevant.forEach(n -> {
-                    if (n.getNetworkID() > 0) {
-                        NodeAttach nodeAttach = new NodeAttach();
-                        nodeAttach.nodeID = n.getNetworkID();
-                        nodeAttach.parentID = n.getParent().getNetworkID();
-                        p.kryoConnection.sendTCP(nodeAttach);
-                    }
+                    NodeAttach nodeAttach = new NodeAttach();
+                    nodeAttach.nodeID = n.getNetworkID();
+                    nodeAttach.parentID = n.getParent().getNetworkID();
+                    p.kryoConnection.sendTCP(nodeAttach);
                 });
 
                 // Now, get all of the irrelevant nodes to detach.
                 newlyNonRelevant.forEach(n -> {
-                    if (n.getNetworkID() > 0) {
-                        NodeDetach nodeDetach = new NodeDetach();
-                        nodeDetach.nodeID = n.getNetworkID();
-                        p.kryoConnection.sendTCP(nodeDetach);
-                    }
+                    NodeDetach nodeDetach = new NodeDetach();
+                    nodeDetach.nodeID = n.getNetworkID();
+                    p.kryoConnection.sendTCP(nodeDetach);
                 });
 
-                // Now, again for all of the now-relevant nodes, create and replicate all components.
+                /* Components!
+                 * 1. All components of newly relevant nodes are newly relevant.
+                 * 2. Components of newly irrelevant nodes are implicitly removed, so no message is sent.
+                 * 3. Components attached, detached, reattached whose parents are consistently relevant
+                 *    will have messages sent for them.
+                 */
+
+                Set<Component> newlyRelevantComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
+                Set<Component> newlyIrrelevantComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
+                Set<Component> reattachedComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
+                Set<Component> consistantlyRelevantComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
+
+                newlyRelevant.stream().filter(n -> n.getParent() != null).forEach(n -> newlyRelevantComponents.addAll(n.getComponents()));
+
+                inBoth.forEach(n -> {
+                    n.getComponents().forEach(consistantlyRelevantComponents::add);
+                });
+
+                componentMap.values().stream()
+                        .filter(c -> inBoth.contains(c.getParent()))
+                        .filter(c -> !componentsToDetach.contains(c))
+                        .forEach(consistantlyRelevantComponents::add);
+
+                componentsToAttach.stream()
+                        .filter(c -> c.getParent().getNetworkID() >= 0 && inBoth.contains(c.getParent()))
+                        .forEach(newlyRelevantComponents::add);
+                componentsToDetach.stream()
+                        .filter(c -> c.getParent().getNetworkID() >= 0 && inBoth.contains(c.getParent()))
+                        .forEach(newlyIrrelevantComponents::add);
+                componentsToReattach.stream()
+                        .filter(c -> c.getParent().getNetworkID() >= 0 && inBoth.contains(c.getParent()))
+                        .forEach(reattachedComponents::add);
+
+                newlyRelevantComponents.forEach(c -> {
+                    ComponentAttach ca = new ComponentAttach();
+                    ca.componentID = c.getNetworkID();
+                    ca.parentNodeID = c.getParent().getNetworkID();
+                    ca.repClassID = RepTable.getClassIDForType(c.getClass());
+                    p.kryoConnection.sendTCP(ca);
+                });
+
+                newlyIrrelevantComponents.forEach(c -> {
+                    ComponentDetach cd = new ComponentDetach();
+                    cd.componentID = c.getNetworkID();
+                    p.kryoConnection.sendTCP(cd);
+                });
+
+                reattachedComponents.forEach(c -> {
+                    ComponentReattach cr = new ComponentReattach();
+                    cr.componentID = c.getNetworkID();
+                    cr.parentNodeID = c.getParent().getNetworkID();
+                    p.kryoConnection.sendTCP(cr);
+                });
+
 
                 EndTick endTick = new EndTick();
                 endTick.tickID = currentTick;
                 p.kryoConnection.sendTCP(endTick);
 
                 oldRelevantSets.put(p, newRelevantSet);
+
+
+                /* ACTUAL REPLICATION */
+
+                // Field replication
+
+                // Newly relevant components get entire field replication state.
+                newlyRelevantComponents.forEach(c -> {
+                    FieldReplicateMessage m = newReplicationState.get(c.getNetworkID());
+                    if (m.fieldReplicationData.fieldData.size() == 0) return;
+                    p.kryoConnection.sendTCP(m);
+                });
+
+                // Components belonging to nodes in consistent relevancy should get delta field replications
+                consistantlyRelevantComponents.forEach(c -> {
+                    FieldReplicateMessage oldFRM = oldReplicationState.get(c.getNetworkID());
+                    if (oldFRM == null) {
+                        // send entire new replication state since we have no old state...
+                        FieldReplicateMessage m = newReplicationState.get(c.getNetworkID());
+                        p.kryoConnection.sendTCP(m);
+                        return;
+                    }
+                    FieldReplicationData oldFRD = oldFRM.fieldReplicationData;
+                    FieldReplicationData newFRD = newReplicationState.get(c.getNetworkID()).fieldReplicationData;
+
+
+                    FieldReplicateMessage m = new FieldReplicateMessage();
+                    m.fieldReplicationData = oldFRD.diff(newFRD);
+                    if (m.fieldReplicationData.fieldData.size() == 0) {
+                        // nothing has changed. send nothing for optimization.
+                        return;
+                    }
+                    m.componentID = c.getNetworkID();
+                });
+
+
+                // Multicast RPCs (only if component is in relevant set)
+                multicastRPCs.stream().filter(r -> {
+                    Component c = componentMap.get(r.targetNetworkID);
+                    return c != null && newRelevantSet.contains(c.getParent());
+                }).forEach(p.kryoConnection::sendTCP);
+
+                // Client RPCS
+                // These should only be sent to the possessing client.
+                clientRPCs.stream().filter(r -> {
+                    Component c = componentMap.get(r.targetNetworkID);
+                    return c != null && c.getParent() == p.possessedNode && newRelevantSet.contains(c.getParent());
+                }).forEach(p.kryoConnection::sendTCP);
             });
 
             timeBuffer = 0;
@@ -260,6 +371,12 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             // a whole bunch of ticks all at once if there's a long GC pause.
 
             nodesToReattach.clear();
+
+            componentsToAttach.clear();
+            componentsToDetach.clear();
+            componentsToReattach.clear();
+
+            oldReplicationState = newReplicationState;
         }
     }
 
@@ -269,5 +386,10 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
     public void setReplicationRate(float replicationRate) {
         this.replicationRate = replicationRate;
+    }
+
+    @Override
+    public boolean doesProcessNodes() {
+        return false;
     }
 }

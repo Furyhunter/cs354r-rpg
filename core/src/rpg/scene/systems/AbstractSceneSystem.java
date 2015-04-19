@@ -66,4 +66,14 @@ public abstract class AbstractSceneSystem implements SceneSystem {
     public void componentReattached(Component c) {
 
     }
+
+    @Override
+    public void processNode(Node n, float deltaTime) {
+
+    }
+
+    @Override
+    public boolean doesProcessNodes() {
+        return true;
+    }
 }
