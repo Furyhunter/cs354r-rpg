@@ -1,5 +1,6 @@
 package rpg.scene.components;
 
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Scene;
 import rpg.scene.replication.Context;
@@ -17,6 +18,7 @@ public class PansUpComponent extends Component implements Steppable {
         if (predictive || (n != null && n.getContext() == Context.Server) || n == null) {
             Transform t = getParent().getTransform();
             t.setPosition(new Vector3(t.getPosition()).add(0, deltaTime / 10, 0));
+            t.setRotation(new Quaternion(t.getRotation()).mulLeft(new Quaternion(Vector3.Z, deltaTime * 90)));
         }
     }
 }
