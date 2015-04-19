@@ -102,4 +102,8 @@ public abstract class Component {
     public int getNetworkID() {
         return networkID;
     }
+
+    public void setNetworkID(int networkID) {
+        this.networkID = networkID;
+    }
 }
