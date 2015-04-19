@@ -29,7 +29,7 @@ public class Transform extends Component {
      * @param in
      */
     public void applyTransform(Matrix4 in) {
-        in.mulLeft(new Matrix4().setToScaling(scale));
+        in.mulLeft(new Matrix4().scale(scale.x, scale.y, scale.z));
         in.mulLeft(new Matrix4().rotate(rotation));
         in.mulLeft(new Matrix4().translate(position));
     }
@@ -40,9 +40,9 @@ public class Transform extends Component {
      * @param in
      */
     public void inverseApplyTransform(Matrix4 in) {
-        in.mulLeft(new Matrix4().scale(1.0f / scale.x, 1.0f / scale.y, 1.0f / scale.z));
-        in.mulLeft(new Matrix4().rotate(rotation.conjugate()));
         in.mulLeft(new Matrix4().translate(position.cpy().scl(-1)));
+        in.mulLeft(new Matrix4().rotate(new Quaternion(rotation).conjugate()));
+        in.mulLeft(new Matrix4().scale(1.0f / scale.x, 1.0f / scale.y, 1.0f / scale.z));
     }
 
     public Vector3 getPosition() {
