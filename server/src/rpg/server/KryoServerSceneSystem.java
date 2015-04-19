@@ -8,10 +8,7 @@ import com.esotericsoftware.minlog.Log;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
 import rpg.scene.kryo.*;
-import rpg.scene.replication.Context;
-import rpg.scene.replication.FieldReplicationData;
-import rpg.scene.replication.RPCMessage;
-import rpg.scene.replication.RepTable;
+import rpg.scene.replication.*;
 import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
@@ -84,6 +81,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         KryoClassRegisterUtil.registerAll(server.getKryo()); // register all known classes for serialization
         server.addListener(listener);
         server.bind(31425, 31426);
+
+        RepTableInitializeUtil.initializeRepTables();
     }
 
     @Override
@@ -263,8 +262,18 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 Set<Component> newlyRelevantComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
                 Set<Component> newlyIrrelevantComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
                 Set<Component> reattachedComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
+                Set<Component> consistantlyRelevantComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
 
                 newlyRelevant.stream().filter(n -> n.getParent() != null).forEach(n -> newlyRelevantComponents.addAll(n.getComponents()));
+
+                inBoth.forEach(n -> {
+                    n.getComponents().forEach(consistantlyRelevantComponents::add);
+                });
+
+                componentMap.values().stream()
+                        .filter(c -> inBoth.contains(c.getParent()))
+                        .filter(c -> !componentsToDetach.contains(c))
+                        .forEach(consistantlyRelevantComponents::add);
 
                 componentsToAttach.stream()
                         .filter(c -> c.getParent().getNetworkID() >= 0 && inBoth.contains(c.getParent()))
@@ -303,6 +312,55 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 p.kryoConnection.sendTCP(endTick);
 
                 oldRelevantSets.put(p, newRelevantSet);
+
+
+                /* ACTUAL REPLICATION */
+
+                // Field replication
+
+                // Newly relevant components get entire field replication state.
+                newlyRelevantComponents.forEach(c -> {
+                    FieldReplicateMessage m = newReplicationState.get(c.getNetworkID());
+                    if (m.fieldReplicationData.fieldData.size() == 0) return;
+                    p.kryoConnection.sendTCP(m);
+                });
+
+                // Components belonging to nodes in consistent relevancy should get delta field replications
+                consistantlyRelevantComponents.forEach(c -> {
+                    FieldReplicateMessage oldFRM = oldReplicationState.get(c.getNetworkID());
+                    if (oldFRM == null) {
+                        // send entire new replication state since we have no old state...
+                        FieldReplicateMessage m = newReplicationState.get(c.getNetworkID());
+                        p.kryoConnection.sendTCP(m);
+                        return;
+                    }
+                    FieldReplicationData oldFRD = oldFRM.fieldReplicationData;
+                    FieldReplicationData newFRD = newReplicationState.get(c.getNetworkID()).fieldReplicationData;
+
+
+                    FieldReplicateMessage m = new FieldReplicateMessage();
+                    m.fieldReplicationData = oldFRD.diff(newFRD);
+                    if (m.fieldReplicationData.fieldData.size() == 0) {
+                        // nothing has changed. send nothing for optimization.
+                        return;
+                    }
+                    m.componentID = c.getNetworkID();
+                });
+
+
+                // Multicast RPCs (only if component is in relevant set)
+                multicastRPCMessages.stream().filter(r -> {
+                    Component c = componentMap.get(r.targetNetworkID);
+                    return c != null && newRelevantSet.contains(c.getParent());
+                }).forEach(p.kryoConnection::sendTCP);
+
+                // Regular RPCS
+                // Handling of multicast and regular RPCs is exactly the same...
+                // Maybe we could just merge these??
+                rpcMessages.stream().filter(r -> {
+                    Component c = componentMap.get(r.targetNetworkID);
+                    return c != null && newRelevantSet.contains(c.getParent());
+                }).forEach(p.kryoConnection::sendTCP);
             });
 
             timeBuffer = 0;

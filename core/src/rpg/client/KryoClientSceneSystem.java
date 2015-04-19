@@ -10,6 +10,7 @@ import rpg.scene.kryo.EndTick;
 import rpg.scene.kryo.KryoClassRegisterUtil;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.RPCMessage;
+import rpg.scene.replication.RepTableInitializeUtil;
 import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
@@ -50,6 +51,8 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
         client = new Client();
         KryoClassRegisterUtil.registerAll(client.getKryo());
         client.addListener(new ClientListener());
+
+        RepTableInitializeUtil.initializeRepTables();
     }
 
     @Override

@@ -76,4 +76,14 @@ public class FieldReplicationData implements KryoSerializable {
 
         return true;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("FieldReplicationData: ");
+        sb.append(fieldChangeset);
+        sb.append(" ");
+        sb.append(fieldData.toString());
+        return sb.toString();
+    }
 }

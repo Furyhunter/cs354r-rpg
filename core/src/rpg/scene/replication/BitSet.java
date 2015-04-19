@@ -165,12 +165,10 @@ public class BitSet implements KryoSerializable {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
-        b.append("{ ");
-        for (int i = 0; i < getNumSections() * 8; i++) {
-            b.append(get(i));
-            b.append(", ");
+        int size = getSize();
+        for (int i = size - 1; i >= 0; i--) {
+            b.append(get(i) ? "1" : "0");
         }
-        b.append("}");
         return b.toString();
     }
 }
