@@ -190,6 +190,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 // Get the relevant set
                 Set<Node> newRelevantSet = relevantSetDecider.getRelevantSetForNode(getParent(), p.possessedNode);
                 Set<Node> oldRelevantSet = oldRelevantSets.get(p);
+                if (oldRelevantSet == null) {
+                    oldRelevantSet = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
+                }
 
                 // Remove nodes whose parents aren't relevant from relevant set.
                 newRelevantSet.removeIf(
