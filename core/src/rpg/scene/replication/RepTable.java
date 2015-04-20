@@ -2,6 +2,7 @@ package rpg.scene.replication;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import rpg.scene.components.Component;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -136,6 +137,11 @@ public class RepTable {
             throw new IllegalArgumentException("destination is not of type " + type.getName() + ", instead it is " + destination.getClass());
         }
 
+        if (destination instanceof Component) {
+            Component component = (Component) destination;
+            component.onPreApplyReplicateFields();
+        }
+
         List<Object> fieldData = new LinkedList<>(data.fieldData);
         for (int i = 0; i < fieldsToSerialize.size(); i++) {
             Field f = fieldsToSerialize.get(i);
@@ -148,6 +154,11 @@ public class RepTable {
                     e.printStackTrace();
                 }
             }
+        }
+
+        if (destination instanceof Component) {
+            Component component = (Component) destination;
+            component.onPostApplyReplicatedFields();
         }
     }
 

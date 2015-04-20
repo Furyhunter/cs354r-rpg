@@ -120,6 +120,17 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                     t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / MOVE_UPDATE_THRESHOLD));
                 }
             }
+        } else if (nss.getContext() == Context.Client) {
+            Transform t = getParent().getTransform();
+
+            moveTimer += deltaTime;
+            if (lerpTargetChanged) {
+                newPosition = t.getPosition().cpy();
+                moveTimer = 0;
+                lerpTargetChanged = false;
+            }
+
+            t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / nss.getTickDeltaTime()));
         }
     }
 
@@ -133,5 +144,19 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         oldPosition = t.getPosition().cpy();
         newPosition = vec.cpy();
         moveTimer = 0;
+    }
+
+    @Override
+    public void onPreApplyReplicateFields() {
+        Transform t = getParent().getTransform();
+        oldPosition = newPosition == null ? t.getPosition().cpy() : newPosition;
+        // The transform has already been updated by now.
+        newPosition = t.getPosition().cpy();
+        lerpTargetChanged = true;
+    }
+
+    @Override
+    public boolean isAlwaysFieldReplicated() {
+        return true;
     }
 }

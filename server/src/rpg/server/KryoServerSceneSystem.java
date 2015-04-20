@@ -181,6 +181,11 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     }
 
     @Override
+    public float getTickDeltaTime() {
+        return 0;
+    }
+
+    @Override
     public void endProcessing() {
         try {
             server.update(0);
@@ -377,7 +382,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
                     FieldReplicateMessage m = new FieldReplicateMessage();
                     m.fieldReplicationData = oldFRD.diff(newFRD);
-                    if (m.fieldReplicationData.fieldData.size() == 0) {
+                    if (m.fieldReplicationData.fieldData.size() == 0 && !c.isAlwaysFieldReplicated()) {
                         // nothing has changed. send nothing for optimization.
                         return;
                     }

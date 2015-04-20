@@ -1,5 +1,6 @@
 package rpg.client;
 
+import com.badlogic.gdx.Gdx;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -53,6 +54,10 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
 
     private Map<Integer, Node> nodeMap = new TreeMap<>();
     private Map<Integer, Component> componentMap = new TreeMap<>();
+
+    private float lastTickTime = 0;
+    private float tickDeltaTime = 0;
+    private float time = 0;
 
     public void setHostAddress(InetAddress hostAddress) {
         this.hostAddress = hostAddress;
@@ -141,12 +146,18 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
     }
 
     @Override
+    public float getTickDeltaTime() {
+        return tickDeltaTime - lastTickTime;
+    }
+
+    @Override
     public void processNode(Node n, float deltaTime) {
 
     }
 
     @Override
     public void beginProcessing() {
+        time += Gdx.graphics.getRawDeltaTime();
         if (!connecting) {
             client.start();
             new Thread(() -> {
@@ -161,6 +172,10 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
 
         if (client.isConnected()) {
             if (newTickAvailable) {
+                // Set tick delta times.
+                lastTickTime = tickDeltaTime;
+                tickDeltaTime = time;
+
                 List<NodeAttach> nodeAttachList = new ArrayList<>();
                 List<NodeDetach> nodeDetachList = new ArrayList<>();
                 List<NodeReattach> nodeReattachList = new ArrayList<>();

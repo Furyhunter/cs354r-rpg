@@ -106,4 +106,30 @@ public abstract class Component {
     public void setNetworkID(int networkID) {
         this.networkID = networkID;
     }
+
+    /**
+     * Called before replication fields are applied. (On the client, basically.)
+     */
+    public void onPreApplyReplicateFields() {
+
+    }
+
+    /**
+     * Called after replication fields are applied.
+     */
+    public void onPostApplyReplicatedFields() {
+
+    }
+
+    /**
+     * Whether or not this component will always have a {@link rpg.scene.kryo.FieldReplicateMessage} sent, even if the
+     * fields haven't changed at all. This will force {@link #onPreApplyReplicateFields()} and family to be called
+     * every tick. An empty FieldReplicateMessage will add a minimum of 6 bytes to the tick, based on the number of
+     * replicated fields.
+     *
+     * @return whether or not to always sent field replication information.
+     */
+    public boolean isAlwaysFieldReplicated() {
+        return false;
+    }
 }
