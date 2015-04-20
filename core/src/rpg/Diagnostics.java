@@ -12,15 +12,18 @@ public final class Diagnostics {
     static class TimeTracker {
         String trackingName;
         Stopwatch stopwatch;
+        long lastTotalTimeMicroseconds;
         long totalTimeMicroseconds;
     }
 
     private static Map<String, TimeTracker> timeTrackerMap = new TreeMap<>();
 
+    public static final String FRAME_TOTAL_TIME = "frameTotalTime";
     public static final String RENDER_TOTAL_TIME = "renderTotalTime";
     public static final String REPLICATE_TOTAL_TIME = "replicateTotalTime";
     public static final String GAMELOGIC_TOTAL_TIME = "gamelogicTotalTime";
     public static final String STEPPABLE_TOTAL_TIME = "steppableTotalTime";
+    public static final String PROCESSCOMPONENTS_TOTAL_TIME = "processComponentsTotalTime";
 
     private Diagnostics() {
 
@@ -35,7 +38,8 @@ public final class Diagnostics {
             timeTrackerMap.put(trackingName, t);
         }
         if (t.stopwatch != null) {
-            t.totalTimeMicroseconds += t.stopwatch.stop().elapsed(TimeUnit.MICROSECONDS);
+            if (t.stopwatch.isRunning()) t.stopwatch.stop();
+            t.totalTimeMicroseconds += t.stopwatch.elapsed(TimeUnit.MICROSECONDS);
         }
         t.stopwatch = Stopwatch.createStarted();
     }
@@ -62,6 +66,18 @@ public final class Diagnostics {
     }
 
     public static void resetTimes() {
-        timeTrackerMap.values().forEach(t -> t.totalTimeMicroseconds = 0);
+        timeTrackerMap.values().forEach(t -> {
+            t.lastTotalTimeMicroseconds = t.totalTimeMicroseconds;
+            t.totalTimeMicroseconds = 0;
+        });
+    }
+
+    public static long getLastTotalTime(String trackingName) {
+        Objects.requireNonNull(trackingName);
+        TimeTracker t = timeTrackerMap.get(trackingName);
+        if (t == null) {
+            return 0;
+        }
+        return t.lastTotalTimeMicroseconds;
     }
 }
