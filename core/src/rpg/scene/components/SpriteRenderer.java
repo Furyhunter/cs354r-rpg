@@ -38,7 +38,7 @@ public class SpriteRenderer extends Component implements Renderable {
         }
 
         Matrix4 model = new Matrix4().mulLeft(new Matrix4().setToTranslation(offset.x, offset.y, 0)).mulLeft(new Matrix4().setToScaling(dimensions.x, dimensions.y, 1));
-        return new RenderItem(shader, texture, mesh, model, GL20.GL_TRIANGLE_FAN);
+        return new RenderItem(shader, new Texture[]{texture}, mesh, model, GL20.GL_TRIANGLE_FAN);
     }
 
     public Texture getTexture() {

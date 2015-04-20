@@ -5,16 +5,55 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 
+import java.util.Arrays;
+
 public class RenderItem {
     private ShaderProgram shader;
-    private Texture textureToBind;
+    private Texture[] texturesToBind = new Texture[8];
     private Mesh mesh;
     private Matrix4 modelMatrix;
     private int primitiveType;
+    private UniformSetFunction uniformSetFunction;
 
-    public RenderItem(ShaderProgram shader, Texture textureToBind, Mesh mesh, Matrix4 modelMatrix, int primitiveType) {
+    private boolean transparent = false;
+
+    public UniformSetFunction getUniformSetFunction() {
+        return uniformSetFunction;
+    }
+
+    public void setUniformSetFunction(UniformSetFunction uniformSetFunction) {
+        this.uniformSetFunction = uniformSetFunction;
+    }
+
+    public boolean isTransparent() {
+        return transparent;
+    }
+
+    public void setTransparent(boolean transparent) {
+        this.transparent = transparent;
+    }
+
+    @FunctionalInterface
+    public interface UniformSetFunction {
+        /**
+         * Set the uniforms on the shader.
+         *
+         * @param shader shader to set uniforms on
+         */
+        void setUniforms(ShaderProgram shader);
+    }
+
+    public RenderItem() {
+
+    }
+
+    public RenderItem(ShaderProgram shader, Texture[] texturesToBind, Mesh mesh, Matrix4 modelMatrix, int primitiveType) {
         this.shader = shader;
-        this.textureToBind = textureToBind;
+        if (texturesToBind.length == 8) {
+            this.texturesToBind = texturesToBind;
+        } else {
+            this.texturesToBind = Arrays.copyOf(texturesToBind, 8);
+        }
         this.mesh = mesh;
         this.modelMatrix = modelMatrix;
         this.primitiveType = primitiveType;
@@ -36,12 +75,12 @@ public class RenderItem {
         this.mesh = mesh;
     }
 
-    public Texture getTextureToBind() {
-        return textureToBind;
+    public Texture getTextureToBind(int index) {
+        return texturesToBind[index];
     }
 
-    public void setTextureToBind(Texture textureToBind) {
-        this.textureToBind = textureToBind;
+    public void setTextureToBind(int index, Texture textureToBind) {
+        this.texturesToBind[index] = textureToBind;
     }
 
     public ShaderProgram getShader() {
