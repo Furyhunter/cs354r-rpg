@@ -1,5 +1,6 @@
 package rpg.scene.kryo;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.*;
 import com.esotericsoftware.kryo.Kryo;
 import rpg.scene.replication.BitSet;
@@ -23,6 +24,7 @@ public final class KryoClassRegisterUtil {
                 Quaternion.class,
                 Matrix3.class,
                 Matrix4.class,
+                Color.class,
 
                 BitSet.class,
                 RPCInvocation.class,
