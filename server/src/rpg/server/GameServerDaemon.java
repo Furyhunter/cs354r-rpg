@@ -8,6 +8,7 @@ import com.esotericsoftware.minlog.Log;
 import org.cloudcoder.daemon.IDaemon;
 import rpg.scene.Scene;
 import rpg.scene.systems.GameLogicSystem;
+import rpg.scene.systems.GdxAssetManagerSystem;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -118,6 +119,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
     public void create() {
         s = new Scene();
         gameLogicSystem = new GameLogicSystem();
+        s.addSystem(GdxAssetManagerSystem.getSingleton());
         s.addSystem(gameLogicSystem);
         try {
             kryoServerSceneSystem = new KryoServerSceneSystem();

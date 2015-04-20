@@ -11,6 +11,8 @@ import rpg.scene.replication.Replicated;
 import rpg.scene.systems.NetworkingSceneSystem;
 import rpg.scene.systems.RendererSceneSystem;
 
+import java.util.Objects;
+
 public class Transform extends Component {
     @Replicated
     protected Vector3 position = new Vector3();
@@ -45,6 +47,11 @@ public class Transform extends Component {
         in.mulLeft(new Matrix4().scale(1.0f / scale.x, 1.0f / scale.y, 1.0f / scale.z));
     }
 
+    /**
+     * Gets the position vector. DO NOT MODIFY!
+     *
+     * @return position vector
+     */
     public Vector3 getPosition() {
         return position;
     }
@@ -53,6 +60,10 @@ public class Transform extends Component {
         this.position = new Vector3(position);
     }
 
+    /**
+     * Gets the scale vector. DO NOT MODIFY!
+     * @return position vector
+     */
     public Vector3 getScale() {
         return scale;
     }
@@ -61,12 +72,44 @@ public class Transform extends Component {
         this.scale = scale;
     }
 
+    /**
+     * Gets the rotation quaternion. DO NOT MODIFY!
+     * @return position vector
+     */
     public Quaternion getRotation() {
         return rotation;
     }
 
     public void setRotation(Quaternion rotation) {
         this.rotation = new Quaternion(rotation);
+    }
+
+    public void translate(Vector3 translation) {
+        Objects.requireNonNull(translation);
+        this.position = this.position.cpy().add(translation);
+    }
+
+    public void translate(float x, float y, float z) {
+        position = position.cpy().add(x, y, z);
+    }
+
+    public void rotate(Quaternion quaternion) {
+        Objects.requireNonNull(quaternion);
+        this.rotation = this.rotation.cpy().mulLeft(quaternion);
+    }
+
+    public void rotate(Vector3 axis, float angleDegrees) {
+        Objects.requireNonNull(axis);
+        this.rotation = this.rotation.cpy().mulLeft(new Quaternion(axis, angleDegrees));
+    }
+
+    public void scale(Vector3 scale) {
+        Objects.requireNonNull(scale);
+        this.scale = this.scale.cpy().scl(scale);
+    }
+
+    public void scale(float s) {
+        scale = scale.cpy().scl(s);
     }
 
     @RPC(target = RPC.Target.Client)

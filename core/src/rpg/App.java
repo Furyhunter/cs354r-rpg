@@ -2,12 +2,19 @@ package rpg;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
 import rpg.client.KryoClientSceneSystem;
+import rpg.scene.Node;
 import rpg.scene.Scene;
+import rpg.scene.components.RectangleRenderer;
 import rpg.scene.systems.GameLogicSystem;
+import rpg.scene.systems.GdxAssetManagerSystem;
 import rpg.scene.systems.InputSystem;
 import rpg.scene.systems.RendererSceneSystem;
 
@@ -15,6 +22,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class App extends ApplicationAdapter {
 	Texture img;
@@ -46,10 +54,37 @@ public class App extends ApplicationAdapter {
 			}
 		}
 		inputSystem = new InputSystem();
-		s.addSystem(kryoClientSceneSystem);
+		if (!runArguments.contains("--local")) s.addSystem(kryoClientSceneSystem);
+		s.addSystem(GdxAssetManagerSystem.getSingleton());
 		s.addSystem(inputSystem);
 		s.addSystem(new GameLogicSystem());
 		s.addSystem(rendererSceneSystem);
+
+		if (runArguments.contains("--local")) {
+			// LOCAL TESTING CODE
+			IntStream.range(0, 100).forEach(i -> {
+				Node n = new Node();
+				RectangleRenderer r = new RectangleRenderer();
+				s.getRoot().addChild(n);
+
+				r.setTransparent(true);
+				r.setSize(new Vector2(0.5f, 0.5f));
+				r.setColor(new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), MathUtils.random()));
+				n.addComponent(r);
+				n.getTransform().setPosition(new Vector3(MathUtils.random() * 2 - 1, MathUtils.random() * 2 - 1, 0));
+			});
+			IntStream.range(0, 100).forEach(i -> {
+				Node n = new Node();
+				RectangleRenderer r = new RectangleRenderer();
+				s.getRoot().addChild(n);
+
+				r.setTransparent(false);
+				r.setSize(new Vector2(0.3f, 0.3f));
+				r.setColor(new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), MathUtils.random()));
+				n.addComponent(r);
+				n.getTransform().setPosition(new Vector3(MathUtils.random() * 2 - 1, MathUtils.random() * 2 - 1, 0));
+			});
+		}
 
 		setProjectionMatrix();
 	}
@@ -59,6 +94,7 @@ public class App extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		s.update(Gdx.graphics.getRawDeltaTime());
+		Gdx.graphics.setTitle(Gdx.graphics.getFramesPerSecond() + "fps");
 	}
 
 	@Override
