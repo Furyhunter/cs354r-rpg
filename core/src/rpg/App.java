@@ -14,6 +14,7 @@ import rpg.scene.Node;
 import rpg.scene.Scene;
 import rpg.scene.components.RectangleRenderer;
 import rpg.scene.systems.GameLogicSystem;
+import rpg.scene.systems.GdxAssetManagerSystem;
 import rpg.scene.systems.InputSystem;
 import rpg.scene.systems.RendererSceneSystem;
 
@@ -54,6 +55,7 @@ public class App extends ApplicationAdapter {
 		}
 		inputSystem = new InputSystem();
 		if (!runArguments.contains("--local")) s.addSystem(kryoClientSceneSystem);
+		s.addSystem(GdxAssetManagerSystem.getSingleton());
 		s.addSystem(inputSystem);
 		s.addSystem(new GameLogicSystem());
 		s.addSystem(rendererSceneSystem);
