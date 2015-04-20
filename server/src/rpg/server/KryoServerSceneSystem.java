@@ -39,7 +39,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     private Map<Player, Set<Node>> oldRelevantSets = new TreeMap<>(Comparator.comparingInt(p -> p.kryoConnection.getID()));
 
     private float timeBuffer = 0;
-    private float replicationRate = 5;
+    private float replicationRate = 10;
     private int currentTick = 0;
 
     private Map<Integer, FieldReplicateMessage> oldReplicationState = new TreeMap<>();
