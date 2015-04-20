@@ -8,6 +8,7 @@ import com.esotericsoftware.minlog.Log;
 import rpg.client.KryoClientSceneSystem;
 import rpg.scene.Scene;
 import rpg.scene.systems.GameLogicSystem;
+import rpg.scene.systems.InputSystem;
 import rpg.scene.systems.RendererSceneSystem;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ public class App extends ApplicationAdapter {
 	Scene s;
 	RendererSceneSystem rendererSceneSystem;
 	KryoClientSceneSystem kryoClientSceneSystem;
+	InputSystem inputSystem;
 
 	private List<String> runArguments = new ArrayList<>();
 
@@ -43,7 +45,9 @@ public class App extends ApplicationAdapter {
 				Gdx.app.exit();
 			}
 		}
+		inputSystem = new InputSystem();
 		s.addSystem(kryoClientSceneSystem);
+		s.addSystem(inputSystem);
 		s.addSystem(new GameLogicSystem());
 		s.addSystem(rendererSceneSystem);
 

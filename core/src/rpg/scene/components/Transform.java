@@ -77,6 +77,7 @@ public class Transform extends Component {
             Log.info(getClass().getSimpleName(), "Possessing node " + getParent().getNetworkID());
             RendererSceneSystem r = s.findSystem(RendererSceneSystem.class);
             if (r != null) {
+                getParent().setPossessed(true);
                 r.setViewTarget(getParent());
             }
         }

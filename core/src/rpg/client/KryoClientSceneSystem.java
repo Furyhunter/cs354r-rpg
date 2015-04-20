@@ -359,6 +359,12 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     });
                 }
             }
+
+            // Send RPC messages
+            if (!rpcsToSend.isEmpty()) {
+                rpcsToSend.forEach(client::sendTCP);
+                rpcsToSend.clear();
+            }
         }
     }
 

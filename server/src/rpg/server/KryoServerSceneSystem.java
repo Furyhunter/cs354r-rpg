@@ -7,13 +7,14 @@ import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
-import rpg.scene.components.PansUpComponent;
 import rpg.scene.components.RectangleRenderer;
+import rpg.scene.components.SimplePlayerComponent;
 import rpg.scene.kryo.*;
 import rpg.scene.replication.*;
 import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,7 +52,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         public void connected(Connection connection) {
             Node playerNode = new Node(getParent().getRoot());
             playerNode.addComponent(new RectangleRenderer());
-            playerNode.addComponent(new PansUpComponent());
+            playerNode.addComponent(new SimplePlayerComponent());
             Player player = new Player(playerNode, connection);
             players.add(player);
             connectionPlayerMap.put(connection, player);
@@ -68,6 +69,37 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
         @Override
         public void received(Connection connection, Object o) {
+            if (o instanceof RPCMessage) {
+                // We can handle it immediately since server update is synchronous with app thread.
+                RPCMessage rpcMessage = (RPCMessage) o;
+                Player p = connectionPlayerMap.get(connection);
+
+                Component target = componentMap.get(rpcMessage.targetNetworkID);
+                if (target == null) {
+                    // Disconnect for security failure.
+                    Log.warn(getClass().getSimpleName(),
+                            "Player " + connection.getID()
+                                    + " is being kicked for trying to execute an RPC on a component that doesn't exist.");
+                    connection.close();
+                    return;
+                }
+                if (target.getParent().getNetworkID() != p.possessedNode.getNetworkID()) {
+                    Log.warn(getClass().getSimpleName(),
+                            "Player " + connection.getID() + " is being kicked for trying to execute an RPC" +
+                                    " on a component not belonging to one of its nodes.");
+                    connection.close();
+                }
+
+                RepTable t = RepTable.getTableForType(target.getClass());
+                Method m = t.getRPCMethod(rpcMessage.invocation.methodId);
+                try {
+                    m.setAccessible(true);
+                    m.invoke(target, rpcMessage.invocation.arguments.toArray());
+                } catch (Exception e) {
+                    Log.error(getClass().getSimpleName(), "Player " + connection.getID()
+                            + " is being kicked because of the following RPC exception", e);
+                }
+            }
         }
 
         @Override
