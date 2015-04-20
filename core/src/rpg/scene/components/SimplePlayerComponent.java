@@ -24,8 +24,8 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     private float moveTimer = 0;
     private static float MOVE_UPDATE_THRESHOLD = 1.f / 30;
 
-    private Vector3 oldPosition = new Vector3();
-    private Vector3 newPosition = new Vector3();
+    private Vector3 oldPosition;
+    private Vector3 newPosition;
 
     private Vector3 clientRealPosition = null;
 
@@ -119,18 +119,23 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                 } else {
                     t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / MOVE_UPDATE_THRESHOLD));
                 }
+            } else if (newPosition != null) {
+                t.setPosition(newPosition);
             }
         } else if (nss.getContext() == Context.Client) {
             Transform t = getParent().getTransform();
 
-            moveTimer += deltaTime;
-            if (lerpTargetChanged) {
-                newPosition = t.getPosition().cpy();
-                moveTimer = 0;
-                lerpTargetChanged = false;
-            }
+            if (oldPosition != null) {
+                moveTimer += deltaTime;
+                if (lerpTargetChanged) {
+                    moveTimer = 0;
+                    lerpTargetChanged = false;
+                }
 
-            t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / nss.getTickDeltaTime()));
+                t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / nss.getTickDeltaTime()));
+            } else if (newPosition != null) {
+                t.setPosition(newPosition);
+            }
         }
     }
 
@@ -149,7 +154,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     @Override
     public void onPreApplyReplicateFields() {
         Transform t = getParent().getTransform();
-        oldPosition = newPosition == null ? t.getPosition().cpy() : newPosition;
+        oldPosition = newPosition == null ? null : newPosition.cpy();
         // The transform has already been updated by now.
         newPosition = t.getPosition().cpy();
         lerpTargetChanged = true;
