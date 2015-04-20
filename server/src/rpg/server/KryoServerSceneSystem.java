@@ -5,6 +5,7 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
+import rpg.Diagnostics;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
 import rpg.scene.components.RectangleRenderer;
@@ -197,16 +198,19 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         timeBuffer += deltaTime;
 
         if (timeBuffer > (1f / replicationRate)) {
+            Diagnostics.beginTime(Diagnostics.REPLICATE_TOTAL_TIME);
 
             Map<Integer, FieldReplicateMessage> newReplicationState = new TreeMap<>();
 
             // First, we need to get all the new component replication states.
+            Diagnostics.beginTime("repStateGen");
             componentMap.values().forEach(c -> {
                 RepTable t = RepTable.getTableForType(c.getClass());
                 FieldReplicationData frd = t.replicateFull(c);
                 FieldReplicateMessage frm = new FieldReplicateMessage(c.getNetworkID(), frd);
                 newReplicationState.put(c.getNetworkID(), frm);
             });
+            Diagnostics.endTime("repStateGen");
 
             /* During this processing step, the scene is considered "immutable", so we can
              * process the scene in parallel for all connected clients. Below is the general
@@ -426,6 +430,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             multicastRPCs.clear();
 
             oldReplicationState = newReplicationState;
+
+            Diagnostics.endTime(Diagnostics.REPLICATE_TOTAL_TIME);
         }
     }
 

@@ -14,9 +14,11 @@ run {
 
 startScripts {
     classpath += files("assets")
+    applicationName = "rpggame"
 }
 
 distZip {
+    baseName = "rpggame"
     from(project.assetsDir, {
         into archiveName.substring(0, archiveName.length() - 4) + "/lib/assets"
     })

@@ -6,6 +6,7 @@ import com.badlogic.gdx.backends.headless.HeadlessApplication;
 import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
 import com.esotericsoftware.minlog.Log;
 import org.cloudcoder.daemon.IDaemon;
+import rpg.Diagnostics;
 import rpg.scene.Scene;
 import rpg.scene.systems.GameLogicSystem;
 import rpg.scene.systems.GdxAssetManagerSystem;
@@ -137,7 +138,10 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     @Override
     public void render() {
+        Diagnostics.beginTime(Diagnostics.FRAME_TOTAL_TIME);
         s.update(Gdx.graphics.getDeltaTime());
+        Diagnostics.endTime(Diagnostics.FRAME_TOTAL_TIME);
+        Diagnostics.resetTimes();
     }
 
     @Override
