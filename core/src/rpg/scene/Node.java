@@ -27,6 +27,8 @@ public class Node {
 
     private boolean replicated = true;
 
+    private boolean possessed = false;
+
     /**
      * Used by Scene when creating the root node.
      *
@@ -292,5 +294,13 @@ public class Node {
 
     public void setReplicated(boolean replicated) {
         this.replicated = replicated;
+    }
+
+    public boolean isPossessed() {
+        return possessed;
+    }
+
+    public void setPossessed(boolean possessed) {
+        this.possessed = possessed;
     }
 }

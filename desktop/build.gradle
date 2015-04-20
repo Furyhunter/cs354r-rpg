@@ -1,12 +1,28 @@
 apply plugin: "java"
+apply plugin: "application"
 
-sourceCompatibility = 1.6
+sourceCompatibility = 1.8
 sourceSets.main.java.srcDirs = [ "src/" ]
 
-project.ext.mainClassName = "rpg.desktop.DesktopLauncher"
+mainClassName = "rpg.desktop.DesktopLauncher"
 project.ext.assetsDir = new File("../core/assets");
 
-task run(dependsOn: classes, type: JavaExec) {
+run {
+    workingDir = project.assetsDir
+    standardInput = System.in
+}
+
+startScripts {
+    classpath += files("assets")
+}
+
+distZip {
+    from(project.assetsDir, {
+        into archiveName.substring(0, archiveName.length() - 4) + "/lib/assets"
+    })
+}
+
+/*task run(dependsOn: classes, type: JavaExec) {
     main = project.mainClassName
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
@@ -25,7 +41,13 @@ task dist(type: Jar) {
     }
 }
 
-dist.dependsOn classes
+dist.dependsOn classes*/
+
+jar {
+    manifest {
+        attributes 'Main-Class': project.mainClassName
+    }
+}
 
 eclipse {
     project {

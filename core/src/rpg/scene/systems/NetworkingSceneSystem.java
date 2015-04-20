@@ -19,4 +19,11 @@ public abstract class NetworkingSceneSystem extends AbstractSceneSystem {
      * @param m the RPCMessage to send.
      */
     public abstract void addMulticastRPCMessage(RPCMessage m);
+
+    /**
+     * The time in seconds between ticks.
+     *
+     * @return the time in seconds between ticks.
+     */
+    public abstract float getTickDeltaTime();
 }

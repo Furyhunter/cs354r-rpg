@@ -33,12 +33,12 @@ public class RendererSceneSystem extends AbstractSceneSystem {
             // check that either we have a parent, or that we are the scene root
             // note: this could result in infinite loop/dumb behavior if the scene graph is not actually a DAG
             // we do not verify integrity at all... oh well!
-            if (viewTarget.getParent() != null | (viewTarget.getParent() == null && viewTarget.getScene() != null)) {
+            if (viewTarget.getParent() != null || (viewTarget.getScene() != null)) {
                 Node visitor = viewTarget;
                 Deque<Node> visitors = new ArrayDeque<>();
 
                 // find our way to the top of the tree, stacking nodes along the way
-                while (visitor != null) {
+                while (visitor != null && visitor.getNetworkID() != Node.ROOT_NODE_NETWORK_ID) {
                     visitors.push(visitor);
                     visitor = visitor.getParent();
                 }

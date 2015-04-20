@@ -1,5 +1,6 @@
 package rpg.client;
 
+import com.badlogic.gdx.Gdx;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
@@ -15,6 +16,7 @@ import rpg.scene.replication.RepTableInitializeUtil;
 import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.*;
 
@@ -52,6 +54,10 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
 
     private Map<Integer, Node> nodeMap = new TreeMap<>();
     private Map<Integer, Component> componentMap = new TreeMap<>();
+
+    private float lastTickTime = 0;
+    private float tickDeltaTime = 0;
+    private float time = 0;
 
     public void setHostAddress(InetAddress hostAddress) {
         this.hostAddress = hostAddress;
@@ -140,12 +146,18 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
     }
 
     @Override
+    public float getTickDeltaTime() {
+        return tickDeltaTime - lastTickTime;
+    }
+
+    @Override
     public void processNode(Node n, float deltaTime) {
 
     }
 
     @Override
     public void beginProcessing() {
+        time += Gdx.graphics.getRawDeltaTime();
         if (!connecting) {
             client.start();
             new Thread(() -> {
@@ -160,6 +172,10 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
 
         if (client.isConnected()) {
             if (newTickAvailable) {
+                // Set tick delta times.
+                lastTickTime = tickDeltaTime;
+                tickDeltaTime = time;
+
                 List<NodeAttach> nodeAttachList = new ArrayList<>();
                 List<NodeDetach> nodeDetachList = new ArrayList<>();
                 List<NodeReattach> nodeReattachList = new ArrayList<>();
@@ -350,12 +366,19 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                             return;
                         }
                         try {
-                            RepTable.getTableForType(c.getClass()).getRPCMethod(m.invocation.methodId).invoke(c, m.invocation.arguments);
+                            Method method = RepTable.getTableForType(c.getClass()).getRPCMethod(m.invocation.methodId);
+                            method.invoke(c, m.invocation.arguments.toArray());
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
                     });
                 }
+            }
+
+            // Send RPC messages
+            if (!rpcsToSend.isEmpty()) {
+                rpcsToSend.forEach(client::sendTCP);
+                rpcsToSend.clear();
             }
         }
     }

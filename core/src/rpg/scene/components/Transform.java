@@ -3,7 +3,13 @@ package rpg.scene.components;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+import com.esotericsoftware.minlog.Log;
+import rpg.scene.Scene;
+import rpg.scene.replication.Context;
+import rpg.scene.replication.RPC;
 import rpg.scene.replication.Replicated;
+import rpg.scene.systems.NetworkingSceneSystem;
+import rpg.scene.systems.RendererSceneSystem;
 
 public class Transform extends Component {
     @Replicated
@@ -23,7 +29,7 @@ public class Transform extends Component {
      * @param in
      */
     public void applyTransform(Matrix4 in) {
-        in.mulLeft(new Matrix4().setToScaling(scale));
+        in.mulLeft(new Matrix4().scale(scale.x, scale.y, scale.z));
         in.mulLeft(new Matrix4().rotate(rotation));
         in.mulLeft(new Matrix4().translate(position));
     }
@@ -34,9 +40,9 @@ public class Transform extends Component {
      * @param in
      */
     public void inverseApplyTransform(Matrix4 in) {
-        in.mulLeft(new Matrix4().scale(1.0f / scale.x, 1.0f / scale.y, 1.0f / scale.z));
-        in.mulLeft(new Matrix4().rotate(rotation.conjugate()));
         in.mulLeft(new Matrix4().translate(position.cpy().scl(-1)));
+        in.mulLeft(new Matrix4().rotate(new Quaternion(rotation).conjugate()));
+        in.mulLeft(new Matrix4().scale(1.0f / scale.x, 1.0f / scale.y, 1.0f / scale.z));
     }
 
     public Vector3 getPosition() {
@@ -61,5 +67,19 @@ public class Transform extends Component {
 
     public void setRotation(Quaternion rotation) {
         this.rotation = new Quaternion(rotation);
+    }
+
+    @RPC(target = RPC.Target.Client)
+    public void possessNode() {
+        Scene s = getParent().getScene();
+        NetworkingSceneSystem nss = s.findSystem(NetworkingSceneSystem.class);
+        if (nss == null || nss.getContext() == Context.Client) {
+            Log.info(getClass().getSimpleName(), "Possessing node " + getParent().getNetworkID());
+            RendererSceneSystem r = s.findSystem(RendererSceneSystem.class);
+            if (r != null) {
+                getParent().setPossessed(true);
+                r.setViewTarget(getParent());
+            }
+        }
     }
 }

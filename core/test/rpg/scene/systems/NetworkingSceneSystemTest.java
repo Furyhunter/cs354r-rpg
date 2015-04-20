@@ -37,6 +37,11 @@ public class NetworkingSceneSystemTest {
         }
 
         @Override
+        public float getTickDeltaTime() {
+            return 0;
+        }
+
+        @Override
         public void processNode(Node n, float deltaTime) {
 
         }

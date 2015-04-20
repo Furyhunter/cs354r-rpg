@@ -9,6 +9,6 @@ public final class RepTableInitializeUtil {
     }
 
     public static void initializeRepTables() {
-        new Reflections("").getSubTypesOf(Component.class).stream().forEach(RepTable::getTableForType);
+        new Reflections("rpg").getSubTypesOf(Component.class).stream().forEach(RepTable::getTableForType);
     }
 }
