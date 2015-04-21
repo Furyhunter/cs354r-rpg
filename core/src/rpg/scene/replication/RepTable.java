@@ -104,6 +104,7 @@ public class RepTable {
         }
 
         List<Boolean> illegalAccessExceptions = new ArrayList<>();
+        boolean excepted;
         FieldReplicationData frd = new FieldReplicationData();
         frd.fieldChangeset = new BitSet(fieldsToSerialize.size());
         frd.fieldChangeset.set(0, fieldsToSerialize.size(), true);
