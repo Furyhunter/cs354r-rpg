@@ -32,6 +32,12 @@ public class BitSetTest {
         IntStream.range(4, 6).forEach(i -> assertFalse(bitSet.get(i)));
         IntStream.range(6, 14).forEach(i -> assertTrue(bitSet.get(i)));
         IntStream.range(14, 16).forEach(i -> assertFalse(bitSet.get(i)));
+
+        bitSet.set(0, 4, false);
+        bitSet.set(6, 14, false);
+        IntStream.range(0, 4).forEach(i -> assertFalse(bitSet.get(i)));
+        IntStream.range(6, 14).forEach(i -> assertFalse(bitSet.get(i)));
+
     }
 
     @Test

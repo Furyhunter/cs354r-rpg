@@ -55,9 +55,12 @@ public class BitSet implements KryoSerializable {
         }
         int actualBit = bit % 8;
         int section = bit / 8;
-        int val = value ? 1 : 0;
 
-        sections[section] |= (val << actualBit);
+        if (value) {
+            sections[section] |= (1 << actualBit);
+        } else {
+            sections[section] &= ~(1 << actualBit);
+        }
     }
 
     /**
