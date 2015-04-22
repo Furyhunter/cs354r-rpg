@@ -17,7 +17,6 @@ import rpg.scene.replication.RepTableInitializeUtil;
 import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.*;
 
@@ -387,12 +386,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                             Log.warn(getClass().getSimpleName(), "The server wants to invoke an RPC on a component that doesn't exist.");
                             return;
                         }
-                        try {
-                            Method method = RepTable.getTableForType(c.getClass()).getRPCMethod(m.invocation.methodId);
-                            method.invoke(c, m.invocation.arguments.toArray());
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+                        RepTable.getTableForType(c.getClass()).invokeMethod(c, m.invocation);
                     });
                 }
                 Diagnostics.endTime(Diagnostics.REPLICATE_TOTAL_TIME);

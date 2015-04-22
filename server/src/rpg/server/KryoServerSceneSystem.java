@@ -16,7 +16,6 @@ import rpg.scene.replication.*;
 import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.*;
 
 public class KryoServerSceneSystem extends NetworkingSceneSystem {
@@ -91,14 +90,12 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     connection.close();
                 }
 
-                RepTable t = RepTable.getTableForType(target.getClass());
-                Method m = t.getRPCMethod(rpcMessage.invocation.methodId);
                 try {
-                    m.setAccessible(true);
-                    m.invoke(target, rpcMessage.invocation.arguments.toArray());
+                    RepTable.getTableForType(target.getClass()).invokeMethod(target, rpcMessage.invocation);
                 } catch (Exception e) {
                     Log.error(getClass().getSimpleName(), "Player " + connection.getID()
                             + " is being kicked because of the following RPC exception", e);
+                    connection.close();
                 }
             }
         }
@@ -204,13 +201,11 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
             // First, we need to get all the new component replication states.
             // Evaluate in parallel, then sequentially put into the map.
-            Diagnostics.beginTime("repStateGen");
             componentMap.values().parallelStream().map(c -> {
                 RepTable t = RepTable.getTableForType(c.getClass());
                 FieldReplicationData frd = t.replicateFull(c);
                 return new FieldReplicateMessage(c.getNetworkID(), frd);
             }).sequential().forEach(f -> newReplicationState.put(f.componentID, f));
-            Diagnostics.endTime("repStateGen");
 
             /* During this processing step, the scene is considered "immutable", so we can
              * process the scene in parallel for all connected clients. Below is the general
@@ -227,7 +222,6 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
              * 5. Replicate components.
              * 6. EndTick
              */
-            Diagnostics.beginTime("updatePlayers");
             players.parallelStream().forEach(p -> {
                 // Send begin tick.
                 BeginTick bt = new BeginTick();
@@ -404,7 +398,6 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 endTick.tickID = currentTick;
                 p.kryoConnection.sendTCP(endTick);
             });
-            Diagnostics.endTime("updatePlayers");
 
             timeBuffer = 0;
 
