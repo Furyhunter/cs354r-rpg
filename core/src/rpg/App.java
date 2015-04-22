@@ -91,13 +91,10 @@ public class App extends ApplicationAdapter {
 
 	@Override
 	public void render() {
-		Diagnostics.beginTime(Diagnostics.FRAME_TOTAL_TIME);
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		s.update(Gdx.graphics.getRawDeltaTime());
 		Gdx.graphics.setTitle(Gdx.graphics.getFramesPerSecond() + "fps");
-		Diagnostics.endTime(Diagnostics.FRAME_TOTAL_TIME);
-		Diagnostics.resetTimes();
 	}
 
 	@Override

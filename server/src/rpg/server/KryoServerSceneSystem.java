@@ -6,7 +6,6 @@ import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 import com.google.common.collect.Sets;
-import rpg.Diagnostics;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
 import rpg.scene.components.RectangleRenderer;
@@ -195,8 +194,6 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         timeBuffer += deltaTime;
 
         if (timeBuffer > (1f / replicationRate)) {
-            Diagnostics.beginTime(Diagnostics.REPLICATE_TOTAL_TIME);
-
             Map<Integer, FieldReplicateMessage> newReplicationState = new TreeMap<>();
 
             // First, we need to get all the new component replication states.
@@ -415,8 +412,6 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             multicastRPCs.clear();
 
             oldReplicationState = newReplicationState;
-
-            Diagnostics.endTime(Diagnostics.REPLICATE_TOTAL_TIME);
         }
     }
 

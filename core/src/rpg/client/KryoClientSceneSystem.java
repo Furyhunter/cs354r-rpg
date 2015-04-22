@@ -5,7 +5,6 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.minlog.Log;
-import rpg.Diagnostics;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
 import rpg.scene.components.Transform;
@@ -183,7 +182,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
 
         if (client.isConnected()) {
             if (newTickAvailable) {
-                Diagnostics.beginTime(Diagnostics.REPLICATE_TOTAL_TIME);
                 // Set tick delta times.
                 lastTickTime = tickDeltaTime;
                 tickDeltaTime = time;
@@ -389,7 +387,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                         RepTable.getTableForType(c.getClass()).invokeMethod(c, m.invocation);
                     });
                 }
-                Diagnostics.endTime(Diagnostics.REPLICATE_TOTAL_TIME);
             }
 
             // Send RPC messages
