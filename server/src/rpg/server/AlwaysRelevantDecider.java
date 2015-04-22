@@ -3,15 +3,14 @@ package rpg.server;
 import rpg.scene.Node;
 import rpg.scene.Scene;
 
-import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class AlwaysRelevantDecider implements RelevantSetDecider {
 
     @Override
     public Set<Node> getRelevantSetForNode(Scene s, Node target) {
-        Set<Node> ret = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
+        Set<Node> ret = new HashSet<>(1024);
         recurseNode(ret, s.getRoot());
 
         return ret;

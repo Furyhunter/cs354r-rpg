@@ -22,13 +22,13 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     private Server server;
     private ServerListener listener = new ServerListener();
 
-    private Map<Integer, Node> nodeMap = new TreeMap<>();
-    private Map<Integer, Component> componentMap = new TreeMap<>();
+    private Map<Integer, Node> nodeMap = new HashMap<>();
+    private Map<Integer, Component> componentMap = new HashMap<>();
 
-    private Set<Node> nodesToReattach = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
-    private Set<Component> componentsToAttach = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
-    private Set<Component> componentsToReattach = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
-    private Set<Component> componentsToDetach = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
+    private Set<Node> nodesToReattach = new HashSet<>();
+    private Set<Component> componentsToAttach = new HashSet<>();
+    private Set<Component> componentsToReattach = new HashSet<>();
+    private Set<Component> componentsToDetach = new HashSet<>();
 
     private RelevantSetDecider relevantSetDecider = new AlwaysRelevantDecider();
 
@@ -41,7 +41,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     private float replicationRate = 10;
     private int currentTick = 0;
 
-    private Map<Integer, FieldReplicateMessage> oldReplicationState = new TreeMap<>();
+    private Map<Integer, FieldReplicateMessage> oldReplicationState = new HashMap<>();
 
     private List<RPCMessage> multicastRPCs = new ArrayList<>();
     private List<RPCMessage> clientRPCs = new ArrayList<>();
@@ -233,7 +233,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     Set<Node> newRelevantSet = relevantSetDecider.getRelevantSetForNode(getParent(), p.possessedNode);
                     Set<Node> oldRelevantSet = oldRelevantSets.get(p);
                     if (oldRelevantSet == null) {
-                        oldRelevantSet = new TreeSet<>(Comparator.comparingInt(Node::getNetworkID));
+                        oldRelevantSet = new HashSet<>(1024);
                     }
 
                     // Remove nodes whose parents aren't relevant from relevant set.
@@ -295,10 +295,10 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                  *    will have messages sent for them.
                  */
 
-                    Set<Component> newlyRelevantComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
-                    Set<Component> newlyIrrelevantComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
-                    Set<Component> reattachedComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
-                    Set<Component> consistentlyRelevantComponents = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
+                    Set<Component> newlyRelevantComponents = new HashSet<>();
+                    Set<Component> newlyIrrelevantComponents = new HashSet<>();
+                    Set<Component> reattachedComponents = new HashSet<>();
+                    Set<Component> consistentlyRelevantComponents = new HashSet<>();
 
                     newlyRelevantNodes.stream().filter(n -> n.getParent() != null).forEach(n -> newlyRelevantComponents.addAll(n.getComponents()));
 
