@@ -303,4 +303,20 @@ public class Node {
     public void setPossessed(boolean possessed) {
         this.possessed = possessed;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Node node = (Node) o;
+
+        return networkID == node.networkID;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return networkID;
+    }
 }

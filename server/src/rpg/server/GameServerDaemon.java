@@ -141,12 +141,12 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
             Gdx.app.exit();
         }
 
-        IntStream.range(-3, 3).forEach(x -> {
-            IntStream.range(-3, 3).forEach(y -> {
+        IntStream.range(-10, 10).forEach(x -> {
+            IntStream.range(-10, 10).forEach(y -> {
                 Node n = new Node();
                 s.getRoot().addChild(n);
                 RectangleRenderer r = new RectangleRenderer();
-                r.setColor(new Color(MathUtils.random(0f, .3f), MathUtils.random(.3f, 1.f), MathUtils.random(0f, .3f), 1));
+                r.setColor(new Color(MathUtils.random(0f, .3f), MathUtils.random(.3f, 1.f), MathUtils.random(0f, .15f), 1));
                 n.addComponent(r);
                 r.setSize(new Vector2(2, 2));
                 n.getTransform().setPosition(new Vector3(x * 2, y * 2, 0));
