@@ -223,7 +223,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
 
                         nodesToAttach.add(node);
                         parents.add(m.parentID);
-                        Log.info("Creating node " + m.nodeID);
                     });
                     for (int i = 0; i < nodesToAttach.size(); i++) {
                         Node node = nodesToAttach.get(i);
@@ -253,7 +252,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                         }
                         nodesToReattach.add(node);
                         parents.add(m.parentID);
-                        Log.info("Reattaching node " + m.nodeID);
                     });
                     for (int i = 0; i < nodesToReattach.size(); i++) {
                         Node node = nodesToReattach.get(i);
@@ -282,7 +280,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                             Log.warn(getClass().getSimpleName(), "The server told us to detach a node but we didn't even know it ever existed.");
                         }
                         nodesToDetach.add(node);
-                        Log.info("Detaching node " + m.nodeID);
                     });
                     nodesToDetach.forEach(n -> n.getParent().removeChild(n));
                 }
@@ -306,7 +303,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                         c.setNetworkID(m.componentID);
                         parents.add(m.parentNodeID);
                         componentMap.put(m.componentID, c);
-                        Log.info("Attaching component " + m.componentID);
                     });
                     for (int i = 0; i < componentsToAttach.size(); i++) {
                         Component c = componentsToAttach.get(i);
@@ -334,7 +330,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                         }
                         componentsToReattach.add(c);
                         parents.add(m.parentNodeID);
-                        Log.info("Reattaching component " + m.componentID);
                     });
                     for (int i = 0; i < componentsToReattach.size(); i++) {
                         Component c = componentsToReattach.get(i);
@@ -360,7 +355,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                             return;
                         }
                         c.getParent().removeComponent(c);
-                        Log.info("Detaching component " + m.componentID);
                     });
                 }
 
