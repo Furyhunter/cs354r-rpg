@@ -1,11 +1,12 @@
 package rpg.scene.components;
 
 import rpg.scene.Node;
-import rpg.scene.replication.*;
+import rpg.scene.replication.Context;
+import rpg.scene.replication.RPC;
+import rpg.scene.replication.RPCMessage;
+import rpg.scene.replication.RepTable;
 import rpg.scene.systems.NetworkingSceneSystem;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Objects;
 
 public abstract class Component {
@@ -33,16 +34,11 @@ public abstract class Component {
         NetworkingSceneSystem net = getParent().getScene().findSystem(NetworkingSceneSystem.class);
         RepTable repTable = RepTable.getTableForType(getClass());
         RPC.Target target = repTable.getRPCTarget(rpcName);
-        Method m = repTable.getRPCMethod(rpcName);
-        Class<?> actualClassOfThis = m.getDeclaringClass();
+        Class<?> actualClassOfThis = getClass();
 
         if (net == null) {
             // always invoke
-            try {
-                m.invoke(actualClassOfThis.cast(this), arguments);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            repTable.invokeMethod(actualClassOfThis.cast(this), rpcName, arguments);
             return;
         }
 
@@ -50,43 +46,18 @@ public abstract class Component {
         Context context = net.getContext();
         if (context == Context.Server) {
             if (target == RPC.Target.Multicast) {
-                // invoke
-                try {
-                    m.invoke(actualClassOfThis.cast(this), arguments);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                RPCInvocation rpc = new RPCInvocation();
-                rpc.methodId = repTable.getRPCMethodID(m);
-                rpc.arguments = Arrays.asList(arguments);
-                net.addMulticastRPCMessage(new RPCMessage(networkID, rpc));
+                repTable.invokeMethod(actualClassOfThis.cast(this), rpcName, arguments);
+                net.addMulticastRPCMessage(new RPCMessage(networkID, repTable.getRPCInvocation(rpcName, arguments)));
             } else if (target == RPC.Target.Client) {
-                RPCInvocation rpc = new RPCInvocation();
-                rpc.methodId = repTable.getRPCMethodID(m);
-                rpc.arguments = Arrays.asList(arguments);
-                net.addRPCMessage(new RPCMessage(networkID, rpc));
+                net.addRPCMessage(new RPCMessage(networkID, repTable.getRPCInvocation(rpcName, arguments)));
             } else {
-                // invoke
-                try {
-                    m.invoke(actualClassOfThis.cast(this), arguments);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                repTable.invokeMethod(actualClassOfThis.cast(this), rpcName, arguments);
             }
         } else if (context == Context.Client) {
             if (target == RPC.Target.Client) {
-                // invoke
-                try {
-                    m.invoke(actualClassOfThis.cast(this), arguments);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                repTable.invokeMethod(actualClassOfThis.cast(this), rpcName, arguments);
             } else if (target == RPC.Target.Server) {
-                RPCInvocation rpc = new RPCInvocation();
-                rpc.methodId = repTable.getRPCMethodID(m);
-                rpc.arguments = Arrays.asList(arguments);
-                net.addRPCMessage(new RPCMessage(networkID, rpc));
+                net.addRPCMessage(new RPCMessage(networkID, repTable.getRPCInvocation(rpcName, arguments)));
             }
         }
     }

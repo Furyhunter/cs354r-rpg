@@ -5,7 +5,6 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.minlog.Log;
-import rpg.Diagnostics;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
 import rpg.scene.components.Transform;
@@ -17,7 +16,6 @@ import rpg.scene.replication.RepTableInitializeUtil;
 import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.*;
 
@@ -184,7 +182,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
 
         if (client.isConnected()) {
             if (newTickAvailable) {
-                Diagnostics.beginTime(Diagnostics.REPLICATE_TOTAL_TIME);
                 // Set tick delta times.
                 lastTickTime = tickDeltaTime;
                 tickDeltaTime = time;
@@ -226,7 +223,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
 
                         nodesToAttach.add(node);
                         parents.add(m.parentID);
-                        Log.info("Creating node " + m.nodeID);
                     });
                     for (int i = 0; i < nodesToAttach.size(); i++) {
                         Node node = nodesToAttach.get(i);
@@ -256,7 +252,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                         }
                         nodesToReattach.add(node);
                         parents.add(m.parentID);
-                        Log.info("Reattaching node " + m.nodeID);
                     });
                     for (int i = 0; i < nodesToReattach.size(); i++) {
                         Node node = nodesToReattach.get(i);
@@ -285,7 +280,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                             Log.warn(getClass().getSimpleName(), "The server told us to detach a node but we didn't even know it ever existed.");
                         }
                         nodesToDetach.add(node);
-                        Log.info("Detaching node " + m.nodeID);
                     });
                     nodesToDetach.forEach(n -> n.getParent().removeChild(n));
                 }
@@ -309,7 +303,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                         c.setNetworkID(m.componentID);
                         parents.add(m.parentNodeID);
                         componentMap.put(m.componentID, c);
-                        Log.info("Attaching component " + m.componentID);
                     });
                     for (int i = 0; i < componentsToAttach.size(); i++) {
                         Component c = componentsToAttach.get(i);
@@ -337,7 +330,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                         }
                         componentsToReattach.add(c);
                         parents.add(m.parentNodeID);
-                        Log.info("Reattaching component " + m.componentID);
                     });
                     for (int i = 0; i < componentsToReattach.size(); i++) {
                         Component c = componentsToReattach.get(i);
@@ -363,7 +355,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                             return;
                         }
                         c.getParent().removeComponent(c);
-                        Log.info("Detaching component " + m.componentID);
                     });
                 }
 
@@ -387,15 +378,9 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                             Log.warn(getClass().getSimpleName(), "The server wants to invoke an RPC on a component that doesn't exist.");
                             return;
                         }
-                        try {
-                            Method method = RepTable.getTableForType(c.getClass()).getRPCMethod(m.invocation.methodId);
-                            method.invoke(c, m.invocation.arguments.toArray());
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
+                        RepTable.getTableForType(c.getClass()).invokeMethod(c, m.invocation);
                     });
                 }
-                Diagnostics.endTime(Diagnostics.REPLICATE_TOTAL_TIME);
             }
 
             // Send RPC messages

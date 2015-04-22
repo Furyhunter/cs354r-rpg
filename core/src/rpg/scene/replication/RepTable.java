@@ -1,5 +1,7 @@
 package rpg.scene.replication;
 
+import com.esotericsoftware.reflectasm.FieldAccess;
+import com.esotericsoftware.reflectasm.MethodAccess;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import rpg.scene.components.Component;
@@ -11,15 +13,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class RepTable {
+    private static Map<Class<?>, RepTable> tables = new HashMap<>();
+    private static BiMap<Class<?>, Integer> classIDs = HashBiMap.create();
+
     private Class<?> type = null;
 
-    private List<Field> fieldsToSerialize = new ArrayList<>();
-    private BiMap<Method, Integer> rpcMethods = HashBiMap.create();
+    private List<Integer> fieldsToSerializeFieldAccess = new ArrayList<>();
+    private FieldAccess fieldAccess;
 
-    private static Map<Class<?>, RepTable> tables = new HashMap<>();
-
-    private static BiMap<Class<?>, Integer> classIDs = HashBiMap.create();
-    private static int classIDsIncrement = 0;
+    private BiMap<String, Integer> methodNameToAccessorID = HashBiMap.create();
+    private BiMap<Integer, Integer> methodAccessorIDToRepID = HashBiMap.create();
+    private Map<Integer, RPC> methodRepIDToRPCAnnotation = new TreeMap<>();
+    private MethodAccess methodAccess;
 
     private int methodCounter = 0;
 
@@ -74,6 +79,9 @@ public class RepTable {
             c = c.getSuperclass();
         }
 
+        fieldAccess = FieldAccess.get(type);
+        methodAccess = MethodAccess.get(type);
+
         // Add fields marked with annotation to field rep list.
         while (!classes.isEmpty()) {
             Class<?> cc = classes.pop();
@@ -81,13 +89,19 @@ public class RepTable {
             if (fields.stream().anyMatch(f -> Modifier.isPrivate(f.getModifiers()))) {
                 throw new RuntimeException("Replicated fields may not be private.");
             }
-            fieldsToSerialize.addAll(fields);
+
+            fields.forEach(f -> fieldsToSerializeFieldAccess.add(fieldAccess.getIndex(f.getName())));
 
             List<Method> methods = Arrays.stream(cc.getDeclaredMethods()).filter(m -> m.getAnnotation(RPC.class) != null).collect(Collectors.toList());
             if (methods.stream().anyMatch(m -> Modifier.isPrivate(m.getModifiers()))) {
                 throw new RuntimeException("RPC methods may not be private.");
             }
-            methods.forEach(m -> rpcMethods.put(m, methodCounter++));
+            methods.forEach(m -> {
+                int newMethodID = methodCounter++;
+                methodNameToAccessorID.put(m.getName(), methodAccess.getIndex(m.getName()));
+                methodAccessorIDToRepID.put(methodAccess.getIndex(m.getName()), newMethodID);
+                methodRepIDToRPCAnnotation.put(newMethodID, m.getAnnotation(RPC.class));
+            });
         }
     }
 
@@ -103,25 +117,11 @@ public class RepTable {
             throw new IllegalArgumentException("Wrong type, got " + o.getClass().getName() + ", expected " + type.getName());
         }
 
-        List<Boolean> illegalAccessExceptions = new ArrayList<>();
-        boolean excepted;
         FieldReplicationData frd = new FieldReplicationData();
-        frd.fieldChangeset = new BitSet(fieldsToSerialize.size());
-        frd.fieldChangeset.set(0, fieldsToSerialize.size(), true);
-        frd.fieldData = fieldsToSerialize.stream().map(f -> {
-            f.setAccessible(true);
-            try {
-                return f.get(o);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-                illegalAccessExceptions.add(true);
-                return null;
-            }
-        }).collect(Collectors.toList());
+        frd.fieldChangeset = new BitSet(fieldsToSerializeFieldAccess.size());
+        frd.fieldChangeset.set(0, fieldsToSerializeFieldAccess.size(), true);
+        frd.fieldData = fieldsToSerializeFieldAccess.stream().map(f -> fieldAccess.get(o, f)).collect(Collectors.toList());
 
-        if (illegalAccessExceptions.size() > 0) {
-            throw new RuntimeException("at some point, IllegalAccessException was thrown.");
-        }
         return frd;
     }
 
@@ -144,16 +144,11 @@ public class RepTable {
         }
 
         List<Object> fieldData = new LinkedList<>(data.fieldData);
-        for (int i = 0; i < fieldsToSerialize.size(); i++) {
-            Field f = fieldsToSerialize.get(i);
+        for (int i = 0; i < fieldsToSerializeFieldAccess.size(); i++) {
+            int f = fieldsToSerializeFieldAccess.get(i);
             if (data.fieldChangeset.get(i)) {
-                f.setAccessible(true);
-                try {
-                    f.set(destination, fieldData.get(0));
-                    fieldData.remove(0);
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }
+                fieldAccess.set(destination, f, fieldData.get(0));
+                fieldData.remove(0);
             }
         }
 
@@ -167,30 +162,8 @@ public class RepTable {
         return type;
     }
 
-    public Method getRPCMethod(int repID) {
-        return rpcMethods.inverse().get(repID);
-    }
-
-    public Method getRPCMethod(String methodName) {
-        Optional<Method> s = rpcMethods.keySet().stream().filter(m -> m.getName().equals(methodName)).findFirst();
-        if (s.get() != null) {
-            return s.get();
-        } else {
-            throw new RuntimeException("no registered RPC with that name exists");
-        }
-    }
-
-    public int getRPCMethodID(Method m) {
-        return rpcMethods.get(m);
-    }
-
     public int getRPCMethodID(String methodName) {
-        Optional<Method> s = rpcMethods.keySet().stream().filter(m -> m.getName().equals(methodName)).findFirst();
-        if (s.get() != null) {
-            return getRPCMethodID(s.get());
-        } else {
-            throw new RuntimeException("no registered RPC with that name exists");
-        }
+        return methodAccessorIDToRepID.get(methodNameToAccessorID.get(methodName));
     }
 
     public RPCInvocation getRPCInvocation(String methodName, Object... arguments) {
@@ -202,6 +175,24 @@ public class RepTable {
     }
 
     public RPC.Target getRPCTarget(String methodName) {
-        return getRPCMethod(methodName).getAnnotation(RPC.class).target();
+        return methodRepIDToRPCAnnotation.get(methodAccessorIDToRepID.get(methodNameToAccessorID.get(methodName))).target();
+    }
+
+    public RPC.Target getRPCTarget(int repID) {
+        return methodRepIDToRPCAnnotation.get(repID).target();
+    }
+
+    public void invokeMethod(Object target, int repID, Object... args) {
+        int accessorID = methodAccessorIDToRepID.inverse().get(repID);
+        methodAccess.invoke(target, accessorID, args);
+    }
+
+    public void invokeMethod(Object target, String name, Object... args) {
+        int accessorID = methodNameToAccessorID.get(name);
+        methodAccess.invoke(target, accessorID, args);
+    }
+
+    public void invokeMethod(Object target, RPCInvocation invocation) {
+        invokeMethod(target, invocation.methodId, invocation.arguments.toArray());
     }
 }

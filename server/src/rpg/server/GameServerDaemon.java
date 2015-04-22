@@ -4,10 +4,15 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.HeadlessApplication;
 import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
 import org.cloudcoder.daemon.IDaemon;
-import rpg.Diagnostics;
+import rpg.scene.Node;
 import rpg.scene.Scene;
+import rpg.scene.components.RectangleRenderer;
 import rpg.scene.systems.GameLogicSystem;
 import rpg.scene.systems.GdxAssetManagerSystem;
 
@@ -19,6 +24,9 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.IntStream;
 
 public class GameServerDaemon implements IDaemon, ApplicationListener {
 
@@ -27,6 +35,9 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     private GameLogicSystem gameLogicSystem;
     private KryoServerSceneSystem kryoServerSceneSystem;
+
+    private int frames = 0;
+    private Map<String, Long> totalTimes = new TreeMap<>();
 
     public GameServerDaemon() {
 
@@ -129,6 +140,18 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
             e.printStackTrace();
             Gdx.app.exit();
         }
+
+        IntStream.range(-3, 3).forEach(x -> {
+            IntStream.range(-3, 3).forEach(y -> {
+                Node n = new Node();
+                s.getRoot().addChild(n);
+                RectangleRenderer r = new RectangleRenderer();
+                r.setColor(new Color(MathUtils.random(0f, .3f), MathUtils.random(.3f, 1.f), MathUtils.random(0f, .3f), 1));
+                n.addComponent(r);
+                r.setSize(new Vector2(2, 2));
+                n.getTransform().setPosition(new Vector3(x * 2, y * 2, 0));
+            });
+        });
     }
 
     @Override
@@ -138,10 +161,15 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     @Override
     public void render() {
-        Diagnostics.beginTime(Diagnostics.FRAME_TOTAL_TIME);
+        long before, after;
+        before = System.nanoTime();
         s.update(Gdx.graphics.getDeltaTime());
-        Diagnostics.endTime(Diagnostics.FRAME_TOTAL_TIME);
-        Diagnostics.resetTimes();
+        after = System.nanoTime();
+        double timeSeconds = (double) (after - before) / 1_000_000_000;
+        if (timeSeconds > (1.f / kryoServerSceneSystem.getReplicationRate())) {
+            Log.warn(getClass().getSimpleName(), "Network tick time overrun! "
+                    + timeSeconds + "s to evaluate frame on frame " + Gdx.graphics.getFrameId());
+        }
     }
 
     @Override
@@ -156,6 +184,5 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     @Override
     public void dispose() {
-
     }
 }
