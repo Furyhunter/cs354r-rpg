@@ -19,6 +19,8 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class GameServerDaemon implements IDaemon, ApplicationListener {
 
@@ -27,6 +29,9 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     private GameLogicSystem gameLogicSystem;
     private KryoServerSceneSystem kryoServerSceneSystem;
+
+    private int frames = 0;
+    private Map<String, Long> totalTimes = new TreeMap<>();
 
     public GameServerDaemon() {
 
@@ -138,9 +143,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     @Override
     public void render() {
-        Diagnostics.beginTime(Diagnostics.FRAME_TOTAL_TIME);
         s.update(Gdx.graphics.getDeltaTime());
-        Diagnostics.endTime(Diagnostics.FRAME_TOTAL_TIME);
         Diagnostics.resetTimes();
     }
 
@@ -156,6 +159,5 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     @Override
     public void dispose() {
-
     }
 }
