@@ -19,8 +19,6 @@ public class InputSystem extends AbstractSceneSystem implements InputProcessor {
 
     private Set<Component> listeners = new TreeSet<>(Comparator.comparingInt(Component::getNetworkID));
 
-    private boolean processorSet = false;
-
     public static class InputEvent {
         public EventType getType() {
             return type;
@@ -72,12 +70,13 @@ public class InputSystem extends AbstractSceneSystem implements InputProcessor {
         MouseWheelScrolled,
     }
 
+    public InputSystem() {
+        Gdx.input.setInputProcessor(this);
+    }
+
     @Override
     public void beginProcessing() {
-        if (!processorSet) {
-            Gdx.input.setInputProcessor(this);
-            processorSet = true;
-        }
+
     }
 
     @Override
@@ -119,7 +118,7 @@ public class InputSystem extends AbstractSceneSystem implements InputProcessor {
         evt.type = EventType.KeyDown;
         evt.button = keycode;
         inputQueue.add(evt);
-        return true;
+        return false;
     }
 
     @Override
@@ -128,7 +127,7 @@ public class InputSystem extends AbstractSceneSystem implements InputProcessor {
         evt.type = EventType.KeyUp;
         evt.button = keycode;
         inputQueue.add(evt);
-        return true;
+        return false;
     }
 
     @Override
@@ -137,7 +136,7 @@ public class InputSystem extends AbstractSceneSystem implements InputProcessor {
         evt.type = EventType.KeyTyped;
         evt.character = character;
         inputQueue.add(evt);
-        return true;
+        return false;
     }
 
     @Override
@@ -147,7 +146,7 @@ public class InputSystem extends AbstractSceneSystem implements InputProcessor {
         evt.button = button;
         evt.screenPosition = new Vector2(screenX, screenY);
         inputQueue.add(evt);
-        return true;
+        return false;
     }
 
     @Override
@@ -157,7 +156,7 @@ public class InputSystem extends AbstractSceneSystem implements InputProcessor {
         evt.button = button;
         evt.screenPosition = new Vector2(screenX, screenY);
         inputQueue.add(evt);
-        return true;
+        return false;
     }
 
     @Override
@@ -166,7 +165,7 @@ public class InputSystem extends AbstractSceneSystem implements InputProcessor {
         evt.type = EventType.MouseDragged;
         evt.screenPosition = new Vector2(screenX, screenY);
         inputQueue.add(evt);
-        return true;
+        return false;
     }
 
     @Override
@@ -175,7 +174,7 @@ public class InputSystem extends AbstractSceneSystem implements InputProcessor {
         evt.type = EventType.MouseMoved;
         evt.screenPosition = new Vector2(screenX, screenY);
         inputQueue.add(evt);
-        return true;
+        return false;
     }
 
     @Override
@@ -184,6 +183,6 @@ public class InputSystem extends AbstractSceneSystem implements InputProcessor {
         evt.type = EventType.MouseWheelScrolled;
         evt.button = amount;
         inputQueue.add(evt);
-        return true;
+        return false;
     }
 }

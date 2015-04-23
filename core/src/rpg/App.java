@@ -13,10 +13,7 @@ import rpg.client.KryoClientSceneSystem;
 import rpg.scene.Node;
 import rpg.scene.Scene;
 import rpg.scene.components.RectangleRenderer;
-import rpg.scene.systems.GameLogicSystem;
-import rpg.scene.systems.GdxAssetManagerSystem;
-import rpg.scene.systems.InputSystem;
-import rpg.scene.systems.RendererSceneSystem;
+import rpg.scene.systems.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -30,6 +27,7 @@ public class App extends ApplicationAdapter {
 	RendererSceneSystem rendererSceneSystem;
 	KryoClientSceneSystem kryoClientSceneSystem;
 	InputSystem inputSystem;
+	Scene2DUISystem uiSystem;
 
 	private List<String> runArguments = new ArrayList<>();
 
@@ -54,11 +52,13 @@ public class App extends ApplicationAdapter {
 			}
 		}
 		inputSystem = new InputSystem();
+		uiSystem = new Scene2DUISystem();
 		if (!runArguments.contains("--local")) s.addSystem(kryoClientSceneSystem);
 		s.addSystem(GdxAssetManagerSystem.getSingleton());
 		s.addSystem(inputSystem);
 		s.addSystem(new GameLogicSystem());
 		s.addSystem(rendererSceneSystem);
+		s.addSystem(uiSystem);
 
 		if (runArguments.contains("--local")) {
 			// LOCAL TESTING CODE
@@ -91,10 +91,11 @@ public class App extends ApplicationAdapter {
 
 	@Override
 	public void render() {
+		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		s.update(Gdx.graphics.getRawDeltaTime());
-		Gdx.graphics.setTitle(Gdx.graphics.getFramesPerSecond() + "fps");
+		//Gdx.graphics.setTitle(Gdx.graphics.getFramesPerSecond() + "fps");
 	}
 
 	@Override

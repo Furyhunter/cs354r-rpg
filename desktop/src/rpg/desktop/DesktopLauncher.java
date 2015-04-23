@@ -12,6 +12,8 @@ public class DesktopLauncher {
 		config.resizable = true;
 		config.foregroundFPS = 300;
 		config.backgroundFPS = 30;
+		config.width = 800;
+		config.height = 600;
 		App app = new App();
 		Arrays.stream(arg).forEach(app::addRunArgument);
 		new LwjglApplication(app, config);

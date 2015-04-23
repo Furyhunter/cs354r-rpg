@@ -18,7 +18,7 @@ public final class GdxAssetManagerSystem extends AbstractSceneSystem {
     private boolean loading = false;
 
     private GdxAssetManagerSystem() {
-
+        assetManager = new AssetManager(new InternalFileHandleResolver());
     }
 
     public AssetManager getAssetManager() {
@@ -27,9 +27,6 @@ public final class GdxAssetManagerSystem extends AbstractSceneSystem {
 
     @Override
     public void beginProcessing() {
-        if (assetManager == null) {
-            assetManager = new AssetManager(new InternalFileHandleResolver());
-        }
         loading = !assetManager.update(10); // more than enough time in 60fps
     }
 
