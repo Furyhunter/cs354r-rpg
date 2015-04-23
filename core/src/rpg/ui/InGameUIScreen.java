@@ -2,9 +2,7 @@ package rpg.ui;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.esotericsoftware.minlog.Log;
 import rpg.client.KryoClientSceneSystem;
 import rpg.scene.Node;
@@ -19,6 +17,10 @@ public class InGameUIScreen extends UIScreen {
     private Skin skin;
 
     private TextField chatEntry;
+    private VerticalGroup chatMessageList;
+    private ScrollPane chatScrollPane;
+
+    private boolean newMessage = false;
 
     @Override
     public void init() {
@@ -29,12 +31,20 @@ public class InGameUIScreen extends UIScreen {
         }
         table.clear();
         table.setSkin(skin);
-        table.setDebug(true);
         chatEntry = new TextField("", skin);
         Table chatBox = new Table(skin);
         table.add().expand();
         table.row();
-        table.add(chatBox).left().prefWidth(400);
+        table.add(chatBox).left().prefWidth(400).bottom();
+
+        chatMessageList = new VerticalGroup();
+        chatMessageList.left();
+        chatScrollPane = new ScrollPane(chatMessageList, skin);
+        chatScrollPane.setScrollBarPositions(true, false);
+        chatScrollPane.setScrollingDisabled(true, false);
+        chatScrollPane.setFadeScrollBars(false);
+        chatBox.add(chatScrollPane).left().bottom().fillX().maxHeight(100);
+        chatBox.row();
         chatBox.add(chatEntry).prefWidth(400);
 
         chatEntry.addListener(e -> {
@@ -72,8 +82,28 @@ public class InGameUIScreen extends UIScreen {
         });
     }
 
+    @Override
+    public void update(float deltaTime) {
+        if (newMessage) {
+            chatScrollPane.setScrollPercentY(1);
+            newMessage = false;
+        }
+    }
+
     public void addChatMessage(PlayerInfoComponent component, String message) {
         Log.info(getClass().getSimpleName(), component.getPlayerName() + ": " + message);
+        Label messageLabel = new Label(component.getPlayerName() + ": " + message, skin);
+        messageLabel.setWrap(true);
+        messageLabel.setWidth(400);
+
+        if (Math.abs(chatScrollPane.getVisualScrollPercentY()) - 1.0f < 0.00001f || chatScrollPane.getVisualScrollY() == Float.NaN) {
+            chatMessageList.addActor(messageLabel);
+            chatScrollPane.setScrollPercentY(1);
+            chatScrollPane.layout();
+            newMessage = true;
+        } else {
+            chatMessageList.addActor(messageLabel);
+        }
     }
 
     public void focusChatEntry() {

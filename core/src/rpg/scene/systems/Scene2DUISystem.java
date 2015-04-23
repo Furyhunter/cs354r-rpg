@@ -146,8 +146,8 @@ public class Scene2DUISystem extends AbstractSceneSystem {
         }
 
         if (screen != null) {
-            screen.update(Gdx.graphics.getRawDeltaTime());
             stage.act(Gdx.graphics.getRawDeltaTime());
+            screen.update(Gdx.graphics.getRawDeltaTime());
             stage.getViewport().setWorldWidth(600 * ((float) Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight()));
             stage.getViewport().setWorldHeight(600);
             stage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
