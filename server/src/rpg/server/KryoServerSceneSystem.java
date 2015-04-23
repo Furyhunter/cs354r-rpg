@@ -8,6 +8,7 @@ import com.esotericsoftware.minlog.Log;
 import com.google.common.collect.Sets;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
+import rpg.scene.components.PlayerInfoComponent;
 import rpg.scene.components.RectangleRenderer;
 import rpg.scene.components.SimplePlayerComponent;
 import rpg.scene.kryo.*;
@@ -53,6 +54,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 Node playerNode = new Node(getParent().getRoot());
                 playerNode.addComponent(new RectangleRenderer());
                 playerNode.addComponent(new SimplePlayerComponent());
+                playerNode.addComponent(new PlayerInfoComponent("Player " + connection.getID()));
                 Player player = new Player(playerNode, connection);
                 players.add(player);
                 connectionPlayerMap.put(connection, player);
@@ -96,6 +98,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 } catch (Exception e) {
                     Log.error(getClass().getSimpleName(), "Player " + connection.getID()
                             + " is being kicked because of the following RPC exception", e);
+                    e.printStackTrace();
                     connection.close();
                 }
             }

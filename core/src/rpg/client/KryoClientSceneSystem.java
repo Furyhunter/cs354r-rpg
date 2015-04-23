@@ -24,6 +24,8 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
     private Client client;
     private InetAddress hostAddress;
 
+    private List<Node> possessedNodes = new ArrayList<>();
+
     @Override
     public void nodeAttached(Node n) {
         nodeMap.put(n.getNetworkID(), n);
@@ -62,6 +64,18 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
 
     public void setHostAddress(InetAddress hostAddress) {
         this.hostAddress = hostAddress;
+    }
+
+    public void addPossessedNode(Node node) {
+        possessedNodes.add(node);
+    }
+
+    public void removePossessedNode(Node node) {
+        possessedNodes.remove(node);
+    }
+
+    public List<Node> getPossessedNodes() {
+        return Collections.unmodifiableList(possessedNodes);
     }
 
     class ClientListener extends Listener {

@@ -43,7 +43,7 @@ public class Scene {
     public <T extends SceneSystem> T findSystem(Class<T> type) {
         Objects.requireNonNull(type);
         Optional<SceneSystem> o = systems.stream().filter(type::isInstance).findFirst();
-        if (o.get() != null) {
+        if (o.isPresent()) {
             return (T) o.get();
         }
         return null;

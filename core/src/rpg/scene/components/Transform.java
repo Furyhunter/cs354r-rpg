@@ -4,11 +4,11 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
+import rpg.client.KryoClientSceneSystem;
 import rpg.scene.Scene;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.RPC;
 import rpg.scene.replication.Replicated;
-import rpg.scene.systems.NetworkingSceneSystem;
 import rpg.scene.systems.RendererSceneSystem;
 
 import java.util.Objects;
@@ -115,12 +115,15 @@ public class Transform extends Component {
     @RPC(target = RPC.Target.Client)
     public void possessNode() {
         Scene s = getParent().getScene();
-        NetworkingSceneSystem nss = s.findSystem(NetworkingSceneSystem.class);
+        KryoClientSceneSystem nss = s.findSystem(KryoClientSceneSystem.class);
         if (nss == null || nss.getContext() == Context.Client) {
             Log.info(getClass().getSimpleName(), "Possessing node " + getParent().getNetworkID());
             RendererSceneSystem r = s.findSystem(RendererSceneSystem.class);
+            getParent().setPossessed(true);
+            if (nss != null) {
+                nss.addPossessedNode(getParent());
+            }
             if (r != null) {
-                getParent().setPossessed(true);
                 r.setViewTarget(getParent());
             }
         }
