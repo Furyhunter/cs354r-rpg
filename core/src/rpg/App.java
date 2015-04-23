@@ -14,6 +14,7 @@ import rpg.scene.Node;
 import rpg.scene.Scene;
 import rpg.scene.components.RectangleRenderer;
 import rpg.scene.systems.*;
+import rpg.ui.InGameUIScreen;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -59,6 +60,7 @@ public class App extends ApplicationAdapter {
 		s.addSystem(new GameLogicSystem());
 		s.addSystem(rendererSceneSystem);
 		s.addSystem(uiSystem);
+		uiSystem.setScreen(new InGameUIScreen());
 
 		if (runArguments.contains("--local")) {
 			// LOCAL TESTING CODE

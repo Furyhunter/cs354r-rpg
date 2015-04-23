@@ -2,14 +2,10 @@ package rpg.scene.systems;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.esotericsoftware.minlog.Log;
+import rpg.ui.UIScreen;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,8 +15,16 @@ public class Scene2DUISystem extends AbstractSceneSystem {
 
     private Stage stage = new Stage();
 
+    private UIScreen screen;
+    private UIScreen newScreen;
+    private boolean pendingTransition;
+
     public Stage getStage() {
         return stage;
+    }
+
+    public UIScreen getScreen() {
+        return screen;
     }
 
     public static class WrapperInputProcessor implements InputProcessor {
@@ -112,40 +116,52 @@ public class Scene2DUISystem extends AbstractSceneSystem {
     }
 
     public Scene2DUISystem() {
-        GdxAssetManagerSystem.getSingleton().getAssetManager().load("uiskin/uiskin.json", Skin.class);
-        GdxAssetManagerSystem.getSingleton().getAssetManager().finishLoading();
-        Skin s = GdxAssetManagerSystem.getSingleton().getAssetManager().get("uiskin/uiskin.json");
-        Table t = new Table(s);
-        TextButton b = new TextButton("hello world", s);
-        t.setFillParent(true);
-        t.setDebug(true);
-        b.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                Log.info("hello world");
-            }
-        });
-        t.add(b);
-        t.bottom().right();
-
         stage.setViewport(new FitViewport(800, 600));
-        stage.addActor(t);
         InputProcessor current = Gdx.input.getInputProcessor();
-        InputProcessor ip = new WrapperInputProcessor(current, stage);
+        InputProcessor ip = new WrapperInputProcessor(stage, current);
         Gdx.input.setInputProcessor(ip);
     }
 
     @Override
     public void endProcessing() {
-        stage.act(Gdx.graphics.getDeltaTime());
-        stage.getViewport().setWorldWidth(600 * ((float) Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight()));
-        stage.getViewport().setWorldHeight(600);
-        stage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
-        stage.draw();
+        if (pendingTransition) {
+            Log.info(getClass().getSimpleName(), "Changing screens.");
+            if (screen != null) {
+                screen.leave();
+                screen.setScene(null);
+            }
+            screen = newScreen;
+            newScreen = null;
+            if (screen != null && !screen.isInitialized()) {
+                screen.setScene(getParent());
+                screen.init();
+            }
+            if (screen != null) {
+                stage.clear();
+                stage.addActor(screen.getTable());
+                screen.getTable().setFillParent(true);
+                screen.start();
+            }
+            pendingTransition = false;
+        }
+
+        if (screen != null) {
+            screen.update(Gdx.graphics.getRawDeltaTime());
+            stage.act(Gdx.graphics.getRawDeltaTime());
+            stage.getViewport().setWorldWidth(600 * ((float) Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight()));
+            stage.getViewport().setWorldHeight(600);
+            stage.getViewport().update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+            stage.draw();
+        }
     }
 
     @Override
     public boolean doesProcessNodes() {
         return false;
+    }
+
+    public void setScreen(UIScreen screen) {
+        newScreen = screen;
+        pendingTransition = true;
     }
 }
