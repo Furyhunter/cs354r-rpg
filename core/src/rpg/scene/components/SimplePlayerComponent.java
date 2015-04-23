@@ -18,8 +18,8 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     private boolean keyA;
     private boolean keyD;
 
-    private static float MOVE_SPEED = 2;
-    private static float MOVE_SPEED_SQUARED = 4;
+    private static float MOVE_SPEED = 4;
+    private static float MOVE_SPEED_SQUARED = 16;
 
     private float moveTimer = 0;
     private static float MOVE_UPDATE_THRESHOLD = 1.f / 30;

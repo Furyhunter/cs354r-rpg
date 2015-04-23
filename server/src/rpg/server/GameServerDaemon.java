@@ -141,8 +141,8 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
             Gdx.app.exit();
         }
 
-        IntStream.range(-10, 10).forEach(x -> {
-            IntStream.range(-10, 10).forEach(y -> {
+        IntStream.range(-5, 5).forEach(x -> {
+            IntStream.range(-5, 5).forEach(y -> {
                 Node n = new Node();
                 s.getRoot().addChild(n);
                 RectangleRenderer r = new RectangleRenderer();
