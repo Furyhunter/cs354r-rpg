@@ -92,7 +92,11 @@ public class RepTable {
 
             fields.forEach(f -> fieldsToSerializeFieldAccess.add(fieldAccess.getIndex(f.getName())));
 
-            List<Method> methods = Arrays.stream(cc.getDeclaredMethods()).filter(m -> m.getAnnotation(RPC.class) != null).collect(Collectors.toList());
+            List<Method> methods = Arrays.stream(cc.getDeclaredMethods())
+                    .filter(m -> m.getAnnotation(RPC.class) != null)
+                    .sorted((m1, m2) -> m1.getName().compareTo(m2.getName()))
+                    .collect(Collectors.toList());
+
             if (methods.stream().anyMatch(m -> Modifier.isPrivate(m.getModifiers()))) {
                 throw new RuntimeException("RPC methods may not be private.");
             }
