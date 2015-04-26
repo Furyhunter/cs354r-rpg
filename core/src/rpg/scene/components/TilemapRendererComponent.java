@@ -47,7 +47,7 @@ public class TilemapRendererComponent extends Component implements Renderable {
                 for (int ix = 0; ix <= width; ix++) {
                     verts[((iy * (width + 1)) + ix) * 3] = (float) (ix) - ((float) width / 2);
                     verts[((iy * (width + 1)) + ix) * 3 + 1] = (float) (iy) - ((float) height / 2);
-                    verts[((iy * (width + 1)) + ix) * 3 + 2] = (float) ((int) values[(iy * width) + ix] & 0xFF) / 255.f;
+                    verts[((iy * (width + 1)) + ix) * 3 + 2] = (float) ((int) values[(iy * (width + 1)) + ix] & 0xFF) / 255.f;
                 }
             }
             short[] indices = new short[getSize() * 6];
@@ -85,7 +85,7 @@ public class TilemapRendererComponent extends Component implements Renderable {
         if (y < 0 || y > height) {
             throw new IllegalArgumentException("y index out of bounds");
         }
-        values[(y * width) + x] = value;
+        values[(y * (width + 1)) + x] = value;
         reconstructMesh = true;
     }
 
