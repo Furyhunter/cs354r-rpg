@@ -4,15 +4,12 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.HeadlessApplication;
 import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
 import org.cloudcoder.daemon.IDaemon;
 import rpg.scene.Node;
 import rpg.scene.Scene;
-import rpg.scene.components.RectangleRenderer;
+import rpg.scene.components.TilemapRendererComponent;
 import rpg.scene.systems.GameLogicSystem;
 import rpg.scene.systems.GdxAssetManagerSystem;
 
@@ -141,6 +138,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
             Gdx.app.exit();
         }
 
+        /*
         IntStream.range(-5, 5).forEach(x -> {
             IntStream.range(-5, 5).forEach(y -> {
                 Node n = new Node();
@@ -152,6 +150,19 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                 n.getTransform().setPosition(new Vector3(x * 2, y * 2, 0));
             });
         });
+        */
+
+        {
+            Node n = new Node();
+            TilemapRendererComponent tilemapRendererComponent = new TilemapRendererComponent(32, 32);
+            s.getRoot().addChild(n);
+            IntStream.range(0, 33).forEach(ix ->
+                            IntStream.range(0, 33).forEach(iy ->
+                                            tilemapRendererComponent.setPointValue(ix, iy, MathUtils.random(0f, 1f))
+                            )
+            );
+            n.addComponent(tilemapRendererComponent);
+        }
     }
 
     @Override

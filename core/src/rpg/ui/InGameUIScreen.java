@@ -71,6 +71,8 @@ public class InGameUIScreen extends UIScreen {
                             PlayerInfoComponent p = n.findComponent(PlayerInfoComponent.class);
                             if (p != null) {
                                 p.sendRPC("sendChatMessage", chatEntry.getText());
+                            } else {
+                                Log.warn(getClass().getSimpleName(), "Couldn't find PlayerInfoComponent in possessed nodes.");
                             }
                         }
                         chatEntry.setText("");
