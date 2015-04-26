@@ -3,6 +3,8 @@ package rpg.scene.kryo;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.*;
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.serializers.DefaultArraySerializers;
+import com.esotericsoftware.kryo.serializers.DeflateSerializer;
 import rpg.scene.replication.BitSet;
 import rpg.scene.replication.FieldReplicationData;
 import rpg.scene.replication.RPCInvocation;
@@ -48,5 +50,7 @@ public final class KryoClassRegisterUtil {
         };
 
         Arrays.stream(classes).forEach(k::register);
+
+        k.register(byte[].class, new DeflateSerializer(new DefaultArraySerializers.ByteArraySerializer()));
     }
 }

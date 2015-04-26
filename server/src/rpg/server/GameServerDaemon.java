@@ -4,15 +4,12 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.HeadlessApplication;
 import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
 import org.cloudcoder.daemon.IDaemon;
+import rpg.game.OpenSimplexNoise;
 import rpg.scene.Node;
 import rpg.scene.Scene;
-import rpg.scene.components.RectangleRenderer;
+import rpg.scene.components.TilemapRendererComponent;
 import rpg.scene.systems.GameLogicSystem;
 import rpg.scene.systems.GdxAssetManagerSystem;
 
@@ -141,6 +138,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
             Gdx.app.exit();
         }
 
+        /*
         IntStream.range(-5, 5).forEach(x -> {
             IntStream.range(-5, 5).forEach(y -> {
                 Node n = new Node();
@@ -152,6 +150,33 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                 n.getTransform().setPosition(new Vector3(x * 2, y * 2, 0));
             });
         });
+        */
+
+        // Random map generation.
+        OpenSimplexNoise noise = new OpenSimplexNoise(System.currentTimeMillis());
+        for (int iix = -3; iix <= 3; iix++) {
+            for (int iiy = -3; iiy <= 3; iiy++) {
+                Node n = new Node();
+                int width = 32;
+                int height = 32;
+                final int finalIIX = iix;
+                final int finalIIY = iiy;
+                double scaleFactor = 14;
+                TilemapRendererComponent tilemapRendererComponent = new TilemapRendererComponent(width, height);
+                s.getRoot().addChild(n);
+                IntStream.range(0, width + 1).forEach(ix -> {
+                            IntStream.range(0, height + 1).forEach(iy -> {
+                                double noiseX = ((double) (ix + (finalIIX * width)) / (width * 7) * scaleFactor);
+                                double noiseY = ((double) (iy + (finalIIY * height)) / (height * 7) * scaleFactor);
+                                tilemapRendererComponent.setPointValue(ix, iy, (float) ((noise.eval(noiseX, noiseY) + 1) / 2.f));
+                            });
+                        }
+                );
+                n.addComponent(tilemapRendererComponent);
+
+                n.getTransform().translate(iix * width, iiy * height, 0);
+            }
+        }
     }
 
     @Override

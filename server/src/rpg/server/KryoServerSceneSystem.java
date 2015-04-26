@@ -94,7 +94,11 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 }
 
                 try {
-                    RepTable.getTableForType(target.getClass()).invokeMethod(target, rpcMessage.invocation);
+                    RepTable table = RepTable.getTableForType(target.getClass());
+                    if (table.getRPCTarget(rpcMessage.invocation.methodId) != RPC.Target.Server) {
+                        throw new RuntimeException("Player attempted to invoke an RPC not intended for the Server");
+                    }
+                    table.invokeMethod(target, rpcMessage.invocation);
                 } catch (Exception e) {
                     Log.error(getClass().getSimpleName(), "Player " + connection.getID()
                             + " is being kicked because of the following RPC exception", e);

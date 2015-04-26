@@ -63,6 +63,7 @@ public class InGameUIScreen extends UIScreen {
                     }
                     if (inputEvent.getKeyCode() == Input.Keys.ENTER) {
                         inputEvent.getStage().unfocus(e.getTarget());
+                        boolean chatSent = false;
 
                         Scene s = getScene();
                         KryoClientSceneSystem c = s.findSystem(KryoClientSceneSystem.class);
@@ -70,10 +71,17 @@ public class InGameUIScreen extends UIScreen {
                         for (Node n : possessedNodes) {
                             PlayerInfoComponent p = n.findComponent(PlayerInfoComponent.class);
                             if (p != null) {
+                                Log.info(getClass().getSimpleName(), "Sending chat message.");
                                 p.sendRPC("sendChatMessage", chatEntry.getText());
+                                chatSent = true;
+                                break;
                             }
                         }
-                        chatEntry.setText("");
+                        if (chatSent) {
+                            chatEntry.setText("");
+                        } else {
+                            Log.warn(getClass().getSimpleName(), "Chat message not sent.");
+                        }
                         return true;
                     }
                 }
