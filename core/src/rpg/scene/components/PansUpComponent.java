@@ -1,6 +1,5 @@
 package rpg.scene.components;
 
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Scene;
@@ -13,7 +12,7 @@ public class PansUpComponent extends Component implements Steppable {
     protected boolean predictive = true;
 
     @Replicated
-    protected float rotateRate = MathUtils.random(360) - 180;
+    protected float rotateRate = 1;
 
     @Override
     public void step(float deltaTime) {

@@ -10,15 +10,15 @@ import rpg.scene.RenderItem;
 import rpg.scene.components.Renderable;
 import rpg.scene.components.Transform;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class RendererSceneSystem extends AbstractSceneSystem {
 
     private Matrix4 projectionMatrix = new Matrix4();
     private Matrix4 viewMatrix = new Matrix4();
-
-    private Deque<Matrix4> modelMatrixStack = new ArrayDeque<>();
 
     private List<RenderItem> renderItems;
 
@@ -29,66 +29,40 @@ public class RendererSceneSystem extends AbstractSceneSystem {
     @Override
     public void beginProcessing() {
         renderItems = new ArrayList<>();
-        modelMatrixStack.clear();
-        modelMatrixStack.push(new Matrix4());
 
         viewMatrix = new Matrix4();
         if (viewTarget != null) {
-            // check that either we have a parent, or that we are the scene root
-            // note: this could result in infinite loop/dumb behavior if the scene graph is not actually a DAG
-            // we do not verify integrity at all... oh well!
-            if (viewTarget.getParent() != null || (viewTarget.getScene() != null)) {
-                Node visitor = viewTarget;
-                Deque<Node> visitors = new ArrayDeque<>();
-
-                // find our way to the top of the tree, stacking nodes along the way
-                while (visitor != null && visitor.getNetworkID() != Node.ROOT_NODE_NETWORK_ID) {
-                    visitors.push(visitor);
-                    visitor = visitor.getParent();
-                }
-
-                // go through from root to our node, applying transforms
-                while (!visitors.isEmpty()) {
-                    Node n = visitors.pop();
-                    n.getTransform().inverseApplyTransform(viewMatrix);
-                }
-            }
+            Transform t = viewTarget.getTransform();
+            viewMatrix.translate(t.getWorldPosition().cpy().scl(-1));
+            viewMatrix.rotate(t.getWorldRotation().conjugate());
+            viewMatrix.scale(1.f / t.getWorldScale().x, 1.f / t.getWorldScale().y, 1.f / t.getWorldScale().z);
         }
-    }
-
-    @Override
-    public void enterNode(Node n, float deltaTime) {
-        Transform t = n.getTransform();
-        Matrix4 newModel = new Matrix4(modelMatrixStack.peek());
-        t.applyTransform(newModel);
-        modelMatrixStack.push(newModel);
     }
 
     @Override
     public void processNode(Node n, float deltaTime) {
         // Get all renderable components on this node.
         List<Renderable> renderables = n.findComponents(Renderable.class);
-
+        Transform t = n.getTransform();
+        Matrix4 model = new Matrix4();
+        model.translate(t.getWorldPosition());
+        model.rotate(t.getWorldRotation());
+        model.scale(t.getWorldScale().x, t.getWorldScale().y, t.getWorldScale().z);
 
         // Map Renderable to RenderItem with render() method, to get a RenderItem list
         List<RenderItem> items = renderables.stream().map(r -> {
             RenderItem i = r.render();
             // Allow the incoming RenderItem have its own model matrix.
             if (i.getModelMatrix() == null) {
-                i.setModelMatrix(modelMatrixStack.peek());
+                i.setModelMatrix(model);
             } else {
-                i.getModelMatrix().mulLeft(modelMatrixStack.peek());
+                i.getModelMatrix().mulLeft(model);
             }
             return i;
         }).collect(Collectors.toList());
 
         // Append the collecting list of render items.
         renderItems.addAll(items);
-    }
-
-    @Override
-    public void exitNode(Node n, float deltaTime) {
-        modelMatrixStack.pop();
     }
 
     @Override

@@ -12,6 +12,7 @@ import com.esotericsoftware.minlog.Log;
 import rpg.client.KryoClientSceneSystem;
 import rpg.scene.Node;
 import rpg.scene.Scene;
+import rpg.scene.components.PansUpComponent;
 import rpg.scene.components.RectangleRenderer;
 import rpg.scene.systems.*;
 import rpg.ui.InGameUIScreen;
@@ -20,7 +21,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 
 public class App extends ApplicationAdapter {
 	Texture img;
@@ -64,8 +64,8 @@ public class App extends ApplicationAdapter {
 
 		if (runArguments.contains("--local")) {
 			// LOCAL TESTING CODE
-			IntStream.range(0, 100).forEach(i -> {
-				Node n = new Node();
+            /*IntStream.range(0, 100).forEach(i -> {
+                Node n = new Node();
 				RectangleRenderer r = new RectangleRenderer();
 				s.getRoot().addChild(n);
 
@@ -85,7 +85,21 @@ public class App extends ApplicationAdapter {
 				r.setColor(new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), MathUtils.random()));
 				n.addComponent(r);
 				n.getTransform().setPosition(new Vector3(MathUtils.random() * 2 - 1, MathUtils.random() * 2 - 1, 0));
-			});
+			});*/
+            Node n = new Node(s.getRoot());
+            for (int i = 0; i < 100; i++) {
+                Node nn = new Node(n);
+                RectangleRenderer r = new RectangleRenderer();
+                r.setTransparent(true);
+                r.setSize(new Vector2(0.5f, 0.5f));
+                r.setColor(new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), 0.7f));
+                nn.addComponent(r);
+                nn.getTransform().rotate(Vector3.Z, 10);
+                nn.addComponent(new PansUpComponent());
+                nn.getTransform().translate(0, 0.1f, 0);
+                nn.getTransform().scale(0.96f);
+                n = nn;
+            }
 		}
 
 		setProjectionMatrix();

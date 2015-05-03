@@ -5,12 +5,14 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
 import rpg.client.KryoClientSceneSystem;
+import rpg.scene.Node;
 import rpg.scene.Scene;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.RPC;
 import rpg.scene.replication.Replicated;
 import rpg.scene.systems.RendererSceneSystem;
 
+import java.util.LinkedList;
 import java.util.Objects;
 
 public class Transform extends Component {
@@ -20,6 +22,12 @@ public class Transform extends Component {
     protected Vector3 scale = new Vector3(1, 1, 1);
     @Replicated
     protected Quaternion rotation = new Quaternion();
+
+    private Vector3 worldPosition = new Vector3();
+    private Vector3 worldScale = new Vector3();
+    private Quaternion worldRotation = new Quaternion();
+
+    private boolean worldTransformsDirty = true;
 
     public Transform() {
         super();
@@ -47,6 +55,58 @@ public class Transform extends Component {
         in.mulLeft(new Matrix4().scale(1.0f / scale.x, 1.0f / scale.y, 1.0f / scale.z));
     }
 
+    private void reevaluateWorldTransform() {
+        LinkedList<Transform> transforms = new LinkedList<>();
+        Node cur = getParent();
+        while (cur != null) {
+            transforms.addLast(cur.getTransform());
+            cur = cur.getParent();
+        }
+        // We don't want the root node transform so we'll drop it.
+        //transforms.removeFirst();
+
+        worldPosition.setZero();
+        worldScale.set(1, 1, 1);
+        worldRotation = new Quaternion();
+        transforms.forEach(t -> {
+            // Apply parent scale
+            worldScale.scl(t.scale);
+            // Apply rotation (left multiply parent * this)
+            worldRotation.mulLeft(t.rotation);
+
+            // Position is a bit trickier
+            // Scale translation by parent scale
+            worldPosition.add(t.position);
+            worldPosition.scl(t.scale);
+            // parentRotation * thisTranslation
+            worldPosition.mul(t.rotation);
+            // thisTranslation += parentTranslation
+        });
+        worldTransformsDirty = false;
+    }
+
+    private void setDirty() {
+        worldTransformsDirty = true;
+        if (getParent() != null) {
+            getParent().getChildren().stream().map(Node::getTransform).forEach(Transform::setDirty);
+        }
+    }
+
+    public Vector3 getWorldPosition() {
+        if (worldTransformsDirty) reevaluateWorldTransform();
+        return worldPosition;
+    }
+
+    public Vector3 getWorldScale() {
+        if (worldTransformsDirty) reevaluateWorldTransform();
+        return worldScale;
+    }
+
+    public Quaternion getWorldRotation() {
+        if (worldTransformsDirty) reevaluateWorldTransform();
+        return worldRotation;
+    }
+
     /**
      * Gets the position vector. DO NOT MODIFY!
      *
@@ -58,6 +118,7 @@ public class Transform extends Component {
 
     public void setPosition(Vector3 position) {
         this.position = new Vector3(position);
+        setDirty();
     }
 
     /**
@@ -70,6 +131,7 @@ public class Transform extends Component {
 
     public void setScale(Vector3 scale) {
         this.scale = scale;
+        setDirty();
     }
 
     /**
@@ -82,6 +144,7 @@ public class Transform extends Component {
 
     public void setRotation(Quaternion rotation) {
         this.rotation = new Quaternion(rotation);
+        setDirty();
     }
 
     public void translate(Vector3 translation) {
@@ -91,21 +154,25 @@ public class Transform extends Component {
 
     public void translate(float x, float y, float z) {
         position = position.cpy().add(x, y, z);
+        setDirty();
     }
 
     public void rotate(Quaternion quaternion) {
         Objects.requireNonNull(quaternion);
         this.rotation = this.rotation.cpy().mulLeft(quaternion);
+        setDirty();
     }
 
     public void rotate(Vector3 axis, float angleDegrees) {
         Objects.requireNonNull(axis);
         this.rotation = this.rotation.cpy().mulLeft(new Quaternion(axis, angleDegrees));
+        setDirty();
     }
 
     public void scale(Vector3 scale) {
         Objects.requireNonNull(scale);
         this.scale = this.scale.cpy().scl(scale);
+        setDirty();
     }
 
     public void scale(float s) {
