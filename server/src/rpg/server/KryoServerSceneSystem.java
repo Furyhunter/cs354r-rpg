@@ -60,7 +60,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 connectionPlayerMap.put(connection, player);
                 playerNode.getTransform().sendRPC("possessNode");
 
-                oldRelevantSets.put(player, new TreeSet<>(Comparator.comparingInt(Node::getNetworkID)));
+                oldRelevantSets.put(player, new HashSet<>());
                 // when next we send a tick, we'll get a "new" relevant set
 
                 Log.info(getClass().getSimpleName(), "Player "
@@ -295,12 +295,12 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                         p.kryoConnection.sendTCP(nodeDetach);
                     });
 
-                /* Components!
-                 * 1. All components of newly relevant nodes are newly relevant.
-                 * 2. Components of newly irrelevant nodes are implicitly removed, so no message is sent.
-                 * 3. Components attached, detached, reattached whose parents are consistently relevant
-                 *    will have messages sent for them.
-                 */
+                    /* Components!
+                     * 1. All components of newly relevant nodes are newly relevant.
+                     * 2. Components of newly irrelevant nodes are implicitly removed, so no message is sent.
+                     * 3. Components attached, detached, reattached whose parents are consistently relevant
+                     *    will have messages sent for them.
+                     */
 
                     Set<Component> newlyRelevantComponents = new HashSet<>();
                     Set<Component> newlyIrrelevantComponents = new HashSet<>();
@@ -353,7 +353,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     oldRelevantSets.put(p, newRelevantSet);
 
 
-                /* ACTUAL REPLICATION */
+                    /* ACTUAL REPLICATION */
 
                     // Field replication
 
@@ -438,5 +438,14 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     @Override
     public boolean doesProcessNodes() {
         return false;
+    }
+
+    public RelevantSetDecider getRelevantSetDecider() {
+        return relevantSetDecider;
+    }
+
+    public void setRelevantSetDecider(RelevantSetDecider relevantSetDecider) {
+        Objects.requireNonNull(relevantSetDecider);
+        this.relevantSetDecider = relevantSetDecider;
     }
 }

@@ -36,6 +36,12 @@ public class Node2DQuerySystem extends AbstractSceneSystem {
     }
 
     @Override
+    public void nodeReattached(Node n) {
+        dirtyNodes.add(n);
+        treeDirty = true;
+    }
+
+    @Override
     public void nodeDetached(Node n) {
         removedNodes.add(n);
         treeDirty = true;
@@ -43,18 +49,20 @@ public class Node2DQuerySystem extends AbstractSceneSystem {
 
     @Override
     public void componentAttached(Component c) {
-        if (c instanceof Spatial2D) {
-            dirtyNodes.add(c.getParent());
-            treeDirty = true;
-        }
+        dirtyNodes.add(c.getParent());
+        treeDirty = true;
     }
 
     @Override
     public void componentDetached(Component c) {
-        if (c instanceof Spatial2D) {
-            dirtyNodes.add(c.getParent());
-            treeDirty = true;
-        }
+        dirtyNodes.add(c.getParent());
+        treeDirty = true;
+    }
+
+    @Override
+    public void componentReattached(Component c) {
+        dirtyNodes.add(c.getParent());
+        treeDirty = true;
     }
 
     public void addDirtyNode(Node n) {
@@ -88,13 +96,15 @@ public class Node2DQuerySystem extends AbstractSceneSystem {
             pairs.add(Entry.entry(dirtyNode, g));
             nodeToGeom.put(dirtyNode, g);
         }
-        rt.add(pairs);
+        rt = rt.add(pairs);
 
         synchronized (rtreeLock) {
             rtree = rt;
-        }
+            treeDirty = false;
 
-        treeDirty = false;
+            dirtyNodes.clear();
+            removedNodes.clear();
+        }
     }
 
     protected Geometry geometryForNode(Node n) {
@@ -135,7 +145,45 @@ public class Node2DQuerySystem extends AbstractSceneSystem {
         return ret;
     }
 
+    /**
+     * Get all nodes that are the given distance squared away.
+     * <p>
+     * OPERATES ON DISTANCE SQUARED ONLY!
+     *
+     * @param n               the node to query from
+     * @param distanceSquared the maximum distance squared to this node
+     * @return all the nodes in range
+     */
+    public Set<Node> queryNodesDistanceSquared(Node n, float distanceSquared) {
+        if (treeDirty) evaluateTreeChanges();
+        HashSet<Node> ret = new HashSet<>();
+        // TODO broken
+        /*rtree.search(Geometries.point(n.getTransform().getWorldPosition().x, n.getTransform().getWorldPosition().y), distanceSquared, (a, b) -> {
+            if (a instanceof com.github.davidmoten.rtree.geometry.Rectangle) {
+                com.github.davidmoten.rtree.geometry.Rectangle r = ((com.github.davidmoten.rtree.geometry.Rectangle) a);
+                Vector2 c = new Vector2(r.x1() + r.x2() / 2, r.y1() + r.y2() / 2);
+                return (double)(c.sub(new Vector2().len2());
+            } else if (a instanceof Point) {
+                Point p = (Point) a;
+                return (double)(p.distance(b));
+            }
+            return 0.0;
+        }).forEach(p -> ret.add(p.value()));*/
+        return ret;
+    }
+
+    public Set<Node> queryAllNodes() {
+        if (treeDirty) evaluateTreeChanges();
+        HashSet<Node> set = new HashSet<>();
+        rtree.entries().map(Entry::value).forEach(set::add);
+        return set;
+    }
+
     private com.github.davidmoten.rtree.geometry.Rectangle gdxRectToRtreeRect(Rectangle r) {
         return Geometries.rectangle(r.x, r.y, r.x + r.width, r.y + r.height);
+    }
+
+    public int getNumberNodes() {
+        return rtree.size();
     }
 }

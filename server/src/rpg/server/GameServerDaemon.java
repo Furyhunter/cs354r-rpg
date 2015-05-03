@@ -132,16 +132,16 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
         gameLogicSystem = new GameLogicSystem();
         s.addSystem(GdxAssetManagerSystem.getSingleton());
         s.addSystem(gameLogicSystem);
+        querySystem = new Node2DQuerySystem();
+        s.addSystem(querySystem);
         try {
             kryoServerSceneSystem = new KryoServerSceneSystem();
             s.addSystem(kryoServerSceneSystem);
+            kryoServerSceneSystem.setRelevantSetDecider(new DistanceRelevantDecider(querySystem, 5));
         } catch (IOException e) {
             e.printStackTrace();
             Gdx.app.exit();
         }
-
-        querySystem = new Node2DQuerySystem();
-        s.addSystem(querySystem);
 
         // Random map generation.
         OpenSimplexNoise noise = new OpenSimplexNoise(System.currentTimeMillis());

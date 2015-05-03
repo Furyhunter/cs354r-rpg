@@ -161,6 +161,8 @@ public class Node {
             n.setParent(this);
             children.add(n);
             getScene().nodeAttached(n);
+
+            n.getComponents().forEach(c -> getScene().componentAttached(c));
         }
     }
 
