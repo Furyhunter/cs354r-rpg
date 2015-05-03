@@ -44,19 +44,24 @@ public class RendererSceneSystem extends AbstractSceneSystem {
         // Get all renderable components on this node.
         List<Renderable> renderables = n.findComponents(Renderable.class);
         Transform t = n.getTransform();
-        Matrix4 model = new Matrix4();
-        model.translate(t.getWorldPosition());
-        model.rotate(t.getWorldRotation());
-        model.scale(t.getWorldScale().x, t.getWorldScale().y, t.getWorldScale().z);
 
         // Map Renderable to RenderItem with render() method, to get a RenderItem list
         List<RenderItem> items = renderables.stream().map(r -> {
             RenderItem i = r.render();
             // Allow the incoming RenderItem have its own model matrix.
-            if (i.getModelMatrix() == null) {
-                i.setModelMatrix(model);
-            } else {
-                i.getModelMatrix().mulLeft(model);
+            if (!i.isAbsoluteModelPosition()) {
+                Matrix4 model = new Matrix4();
+                model.translate(t.getWorldPosition());
+                model.rotate(t.getWorldRotation());
+                model.scale(t.getWorldScale().x, t.getWorldScale().y, t.getWorldScale().z);
+
+                if (i.getModelMatrix() == null) {
+                    i.setModelMatrix(model);
+                } else {
+                    i.getModelMatrix().mulLeft(model);
+                }
+            } else if (i.getModelMatrix() == null) {
+                i.setModelMatrix(new Matrix4());
             }
             return i;
         }).collect(Collectors.toList());

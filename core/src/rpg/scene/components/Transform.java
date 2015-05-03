@@ -10,6 +10,7 @@ import rpg.scene.Scene;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.RPC;
 import rpg.scene.replication.Replicated;
+import rpg.scene.systems.Node2DQuerySystem;
 import rpg.scene.systems.RendererSceneSystem;
 
 import java.util.LinkedList;
@@ -28,6 +29,8 @@ public class Transform extends Component {
     private Quaternion worldRotation = new Quaternion();
 
     private boolean worldTransformsDirty = true;
+
+    private Node2DQuerySystem querySystemRef = null;
 
     public Transform() {
         super();
@@ -90,6 +93,7 @@ public class Transform extends Component {
         if (getParent() != null) {
             getParent().getChildren().stream().map(Node::getTransform).forEach(Transform::setDirty);
         }
+        dirtyQuerySystem();
     }
 
     public Vector3 getWorldPosition() {
@@ -194,5 +198,17 @@ public class Transform extends Component {
                 r.setViewTarget(getParent());
             }
         }
+    }
+
+    private void dirtyQuerySystem() {
+        if (querySystemRef == null) {
+            Scene s = getParent().getScene();
+            Node2DQuerySystem querySystem = s.findSystem(Node2DQuerySystem.class);
+            if (querySystem != null) {
+                querySystemRef = querySystem;
+            }
+        }
+
+        querySystemRef.addDirtyNode(getParent());
     }
 }

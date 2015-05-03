@@ -14,6 +14,7 @@ import rpg.scene.Node;
 import rpg.scene.Scene;
 import rpg.scene.components.PansUpComponent;
 import rpg.scene.components.RectangleRenderer;
+import rpg.scene.components.Spatial2DBoundingBoxRenderer;
 import rpg.scene.systems.*;
 import rpg.ui.InGameUIScreen;
 
@@ -29,6 +30,7 @@ public class App extends ApplicationAdapter {
 	KryoClientSceneSystem kryoClientSceneSystem;
 	InputSystem inputSystem;
 	Scene2DUISystem uiSystem;
+    Node2DQuerySystem nodeQuerySystem;
 
 	private List<String> runArguments = new ArrayList<>();
 
@@ -54,39 +56,20 @@ public class App extends ApplicationAdapter {
 		}
 		inputSystem = new InputSystem();
 		uiSystem = new Scene2DUISystem();
-		if (!runArguments.contains("--local")) s.addSystem(kryoClientSceneSystem);
+        nodeQuerySystem = new Node2DQuerySystem();
+        if (!runArguments.contains("--local")) s.addSystem(kryoClientSceneSystem);
 		s.addSystem(GdxAssetManagerSystem.getSingleton());
 		s.addSystem(inputSystem);
 		s.addSystem(new GameLogicSystem());
 		s.addSystem(rendererSceneSystem);
 		s.addSystem(uiSystem);
-		uiSystem.setScreen(new InGameUIScreen());
+        s.addSystem(nodeQuerySystem);
+        uiSystem.setScreen(new InGameUIScreen());
 
 		if (runArguments.contains("--local")) {
 			// LOCAL TESTING CODE
-            /*IntStream.range(0, 100).forEach(i -> {
-                Node n = new Node();
-				RectangleRenderer r = new RectangleRenderer();
-				s.getRoot().addChild(n);
-
-				r.setTransparent(true);
-				r.setSize(new Vector2(0.5f, 0.5f));
-				r.setColor(new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), MathUtils.random()));
-				n.addComponent(r);
-				n.getTransform().setPosition(new Vector3(MathUtils.random() * 2 - 1, MathUtils.random() * 2 - 1, 0));
-			});
-			IntStream.range(0, 100).forEach(i -> {
-				Node n = new Node();
-				RectangleRenderer r = new RectangleRenderer();
-				s.getRoot().addChild(n);
-
-				r.setTransparent(false);
-				r.setSize(new Vector2(0.3f, 0.3f));
-				r.setColor(new Color(MathUtils.random(), MathUtils.random(), MathUtils.random(), MathUtils.random()));
-				n.addComponent(r);
-				n.getTransform().setPosition(new Vector3(MathUtils.random() * 2 - 1, MathUtils.random() * 2 - 1, 0));
-			});*/
             Node n = new Node(s.getRoot());
+            n.getTransform().translate(2, 0, 0);
             for (int i = 0; i < 100; i++) {
                 Node nn = new Node(n);
                 RectangleRenderer r = new RectangleRenderer();
@@ -96,6 +79,7 @@ public class App extends ApplicationAdapter {
                 nn.addComponent(r);
                 nn.getTransform().rotate(Vector3.Z, 10);
                 nn.addComponent(new PansUpComponent());
+                nn.addComponent(new Spatial2DBoundingBoxRenderer());
                 nn.getTransform().translate(0, 0.1f, 0);
                 nn.getTransform().scale(0.96f);
                 n = nn;
@@ -105,14 +89,20 @@ public class App extends ApplicationAdapter {
 		setProjectionMatrix();
 	}
 
-	@Override
+    static float time = 0;
+
+    @Override
 	public void render() {
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		s.update(Gdx.graphics.getRawDeltaTime());
-		//Gdx.graphics.setTitle(Gdx.graphics.getFramesPerSecond() + "fps");
-	}
+        time += Gdx.graphics.getRawDeltaTime();
+        if (time > 1) {
+            Gdx.graphics.setTitle(Gdx.graphics.getFramesPerSecond() + "fps");
+            time = 0;
+        }
+    }
 
 	@Override
 	public void resize(int width, int height) {
