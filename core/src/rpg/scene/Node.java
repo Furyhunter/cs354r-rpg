@@ -26,7 +26,6 @@ public class Node {
 
     private boolean defaultComponentsAttached = false;
 
-    private boolean replicated = true;
     private boolean staticReplicant = false;
 
     private boolean possessed = false;
@@ -301,11 +300,7 @@ public class Node {
     }
 
     public boolean isReplicated() {
-        return replicated;
-    }
-
-    public void setReplicated(boolean replicated) {
-        this.replicated = replicated;
+        return networkID >= 0;
     }
 
     public boolean isPossessed() {
