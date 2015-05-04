@@ -255,10 +255,16 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     Set<Node> newlyRelevantNodes = Sets.difference(newRelevantSet, oldRelevantSet);
 
                     // The no longer relevant.
-                    Set<Node> newlyIrrelevantNodes = Sets.difference(oldRelevantSet, newRelevantSet);
+                    // Statically replicant nodes never become irrelevant.
+                    Set<Node> newlyIrrelevantNodes = Sets.filter(Sets.difference(oldRelevantSet, newRelevantSet), n -> !n.isStaticReplicant());
 
                     // The consistently relevant nodes between ticks.
-                    Set<Node> consistentlyRelevantNodes = Sets.intersection(newRelevantSet, oldRelevantSet);
+                    // Statically replicant nodes are always consistently relevant once they've been previously relevant.
+                    Set<Node> consistentlyRelevantNodes = Sets.union(Sets.intersection(newRelevantSet, oldRelevantSet),
+                            Sets.filter(Sets.difference(oldRelevantSet, newRelevantSet), Node::isStaticReplicant));
+
+                    // Add all statically replicant nodes to new relevant set.
+                    newRelevantSet.addAll(Sets.filter(Sets.difference(oldRelevantSet, newRelevantSet), Node::isStaticReplicant));
 
                     // Ensure that any reattached nodes get reattach messages IF AND ONLY IF their new parent is relevant.
                     Set<Node> notActuallyRelevant = Sets.filter(Sets.filter(consistentlyRelevantNodes, nodesToReattach::contains), n -> !newRelevantSet.contains(n));

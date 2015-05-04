@@ -164,6 +164,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                         }
                 );
                 n.addComponent(tilemapRendererComponent);
+                n.setStaticReplicant(true);
 
                 n.getTransform().translate(iix * width, iiy * height, 0);
             }

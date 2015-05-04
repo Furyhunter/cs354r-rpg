@@ -26,6 +26,7 @@ public class Node {
     private boolean defaultComponentsAttached = false;
 
     private boolean replicated = true;
+    private boolean staticReplicant = false;
 
     private boolean possessed = false;
 
@@ -320,5 +321,20 @@ public class Node {
     @Override
     public int hashCode() {
         return networkID;
+    }
+
+    /**
+     * Whether or not this node is "static replicant". A node with this true means that
+     * once it becomes relevant for a player, it will remain relevant for its lifespan
+     * (until it is detached from the scene).
+     *
+     * @return true if this node is forever relevant after it becomes relevant.
+     */
+    public boolean isStaticReplicant() {
+        return staticReplicant;
+    }
+
+    public void setStaticReplicant(boolean staticReplicant) {
+        this.staticReplicant = staticReplicant;
     }
 }
