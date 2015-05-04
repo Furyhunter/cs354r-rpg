@@ -11,18 +11,18 @@ import java.util.Set;
 public class DistanceRelevantDecider implements RelevantSetDecider {
 
     private final Node2DQuerySystem querySystem;
-    private float maxDistanceSquared;
+    private float maxDistance;
 
-    public DistanceRelevantDecider(Node2DQuerySystem querySystem, float maxDistanceSquared) {
+    public DistanceRelevantDecider(Node2DQuerySystem querySystem, float maxDistance) {
         this.querySystem = querySystem;
-        this.maxDistanceSquared = maxDistanceSquared;
+        this.maxDistance = maxDistance;
     }
 
     @Override
     public Set<Node> getRelevantSetForNode(Scene s, Node target) {
         Vector3 worldPos = target.getTransform().getWorldPosition();
-        Set<Node> set = querySystem.queryNodesInArea(new Rectangle(worldPos.x - maxDistanceSquared, worldPos.y - maxDistanceSquared, maxDistanceSquared * 2, maxDistanceSquared * 2));
-        //Set<Node> set = querySystem.queryAllNodes();
+        Rectangle rect = new Rectangle(worldPos.x - maxDistance, worldPos.y - maxDistance, maxDistance * 2, maxDistance * 2);
+        Set<Node> set = querySystem.queryNodesInArea(rect);
         set.add(target);
         return set;
     }

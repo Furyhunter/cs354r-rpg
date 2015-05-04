@@ -108,6 +108,6 @@ public class TilemapRendererComponent extends Component implements Renderable, S
 
     @Override
     public Rectangle getRectangle() {
-        return new Rectangle((float) width / 2, (float) height / 2, width, height);
+        return new Rectangle((float) -width / 2, (float) -height / 2, width, height);
     }
 }

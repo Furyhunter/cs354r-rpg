@@ -137,7 +137,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
         try {
             kryoServerSceneSystem = new KryoServerSceneSystem();
             s.addSystem(kryoServerSceneSystem);
-            kryoServerSceneSystem.setRelevantSetDecider(new DistanceRelevantDecider(querySystem, 5));
+            kryoServerSceneSystem.setRelevantSetDecider(new DistanceRelevantDecider(querySystem, 15));
         } catch (IOException e) {
             e.printStackTrace();
             Gdx.app.exit();

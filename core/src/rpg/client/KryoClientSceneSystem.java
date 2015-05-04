@@ -252,7 +252,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                         }
 
                         parentNode.addChild(node);
-                        Log.info(getClass().getSimpleName(), node.getNetworkID() + " attached");
                     }
                 }
 
