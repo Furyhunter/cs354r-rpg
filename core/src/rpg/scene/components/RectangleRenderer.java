@@ -4,11 +4,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import rpg.scene.RenderItem;
 import rpg.scene.replication.Replicated;
 
-public class RectangleRenderer extends Component implements Renderable {
+public class RectangleRenderer extends Component implements Renderable, Spatial2D {
     @Replicated
     protected Vector2 size = new Vector2(1, 1);
 
@@ -74,5 +75,10 @@ public class RectangleRenderer extends Component implements Renderable {
 
     public void setColor(Color color) {
         this.color = color;
+    }
+
+    @Override
+    public Rectangle getRectangle() {
+        return new Rectangle(-size.x / 2, -size.y / 2, size.x, size.y);
     }
 }

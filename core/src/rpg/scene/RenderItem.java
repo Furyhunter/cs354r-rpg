@@ -14,6 +14,7 @@ public class RenderItem {
     private Matrix4 modelMatrix;
     private int primitiveType;
     private UniformSetFunction uniformSetFunction;
+    private boolean absoluteModelPosition = false;
 
     private boolean transparent = false;
 
@@ -97,5 +98,13 @@ public class RenderItem {
 
     public void setPrimitiveType(int primitiveType) {
         this.primitiveType = primitiveType;
+    }
+
+    public boolean isAbsoluteModelPosition() {
+        return absoluteModelPosition;
+    }
+
+    public void setAbsoluteModelPosition(boolean absoluteModelPosition) {
+        this.absoluteModelPosition = absoluteModelPosition;
     }
 }

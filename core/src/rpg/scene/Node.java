@@ -15,6 +15,7 @@ public class Node {
     private List<Component> components = new ArrayList<>();
 
     private static int networkIDCounter = 0;
+    private static int localNetworkIDCounter = Integer.MIN_VALUE;
 
     public static final int ROOT_NODE_NETWORK_ID = -1;
 
@@ -25,7 +26,7 @@ public class Node {
 
     private boolean defaultComponentsAttached = false;
 
-    private boolean replicated = true;
+    private boolean staticReplicant = false;
 
     private boolean possessed = false;
 
@@ -84,6 +85,14 @@ public class Node {
         this.networkID = networkID;
 
         defaultComponentsAttached = !createDefaults;
+    }
+
+    public static Node createLocalNode() {
+        return createLocalNode(true);
+    }
+
+    public static Node createLocalNode(boolean createDefaults) {
+        return new Node(localNetworkIDCounter++, createDefaults);
     }
 
     private void addDefaultComponents() {
@@ -161,6 +170,8 @@ public class Node {
             n.setParent(this);
             children.add(n);
             getScene().nodeAttached(n);
+
+            n.getComponents().forEach(c -> getScene().componentAttached(c));
         }
     }
 
@@ -289,11 +300,7 @@ public class Node {
     }
 
     public boolean isReplicated() {
-        return replicated;
-    }
-
-    public void setReplicated(boolean replicated) {
-        this.replicated = replicated;
+        return networkID >= 0;
     }
 
     public boolean isPossessed() {
@@ -318,5 +325,20 @@ public class Node {
     @Override
     public int hashCode() {
         return networkID;
+    }
+
+    /**
+     * Whether or not this node is "static replicant". A node with this true means that
+     * once it becomes relevant for a player, it will remain relevant for its lifespan
+     * (until it is detached from the scene).
+     *
+     * @return true if this node is forever relevant after it becomes relevant.
+     */
+    public boolean isStaticReplicant() {
+        return staticReplicant;
+    }
+
+    public void setStaticReplicant(boolean staticReplicant) {
+        this.staticReplicant = staticReplicant;
     }
 }

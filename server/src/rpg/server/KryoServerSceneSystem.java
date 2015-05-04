@@ -60,7 +60,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 connectionPlayerMap.put(connection, player);
                 playerNode.getTransform().sendRPC("possessNode");
 
-                oldRelevantSets.put(player, new TreeSet<>(Comparator.comparingInt(Node::getNetworkID)));
+                oldRelevantSets.put(player, new HashSet<>());
                 // when next we send a tick, we'll get a "new" relevant set
 
                 Log.info(getClass().getSimpleName(), "Player "
@@ -255,10 +255,16 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     Set<Node> newlyRelevantNodes = Sets.difference(newRelevantSet, oldRelevantSet);
 
                     // The no longer relevant.
-                    Set<Node> newlyIrrelevantNodes = Sets.difference(oldRelevantSet, newRelevantSet);
+                    // Statically replicant nodes never become irrelevant.
+                    Set<Node> newlyIrrelevantNodes = Sets.filter(Sets.difference(oldRelevantSet, newRelevantSet), n -> !n.isStaticReplicant());
 
                     // The consistently relevant nodes between ticks.
-                    Set<Node> consistentlyRelevantNodes = Sets.intersection(newRelevantSet, oldRelevantSet);
+                    // Statically replicant nodes are always consistently relevant once they've been previously relevant.
+                    Set<Node> consistentlyRelevantNodes = Sets.union(Sets.intersection(newRelevantSet, oldRelevantSet),
+                            Sets.filter(Sets.difference(oldRelevantSet, newRelevantSet), Node::isStaticReplicant));
+
+                    // Add all statically replicant nodes to new relevant set.
+                    newRelevantSet.addAll(Sets.filter(Sets.difference(oldRelevantSet, newRelevantSet), Node::isStaticReplicant));
 
                     // Ensure that any reattached nodes get reattach messages IF AND ONLY IF their new parent is relevant.
                     Set<Node> notActuallyRelevant = Sets.filter(Sets.filter(consistentlyRelevantNodes, nodesToReattach::contains), n -> !newRelevantSet.contains(n));
@@ -295,19 +301,23 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                         p.kryoConnection.sendTCP(nodeDetach);
                     });
 
-                /* Components!
-                 * 1. All components of newly relevant nodes are newly relevant.
-                 * 2. Components of newly irrelevant nodes are implicitly removed, so no message is sent.
-                 * 3. Components attached, detached, reattached whose parents are consistently relevant
-                 *    will have messages sent for them.
-                 */
+                    /* Components!
+                     * 1. All components of newly relevant nodes are newly relevant.
+                     * 2. Components of newly irrelevant nodes are implicitly removed, so no message is sent.
+                     * 3. Components attached, detached, reattached whose parents are consistently relevant
+                     *    will have messages sent for them.
+                     */
 
                     Set<Component> newlyRelevantComponents = new HashSet<>();
                     Set<Component> newlyIrrelevantComponents = new HashSet<>();
                     Set<Component> reattachedComponents = new HashSet<>();
                     Set<Component> consistentlyRelevantComponents = new HashSet<>();
 
-                    newlyRelevantNodes.stream().filter(n -> n.getParent() != null).forEach(n -> newlyRelevantComponents.addAll(n.getComponents()));
+                    newlyRelevantNodes.stream()
+                            .filter(n -> n.getParent() != null)
+                            .map(Node::getComponents)
+                            .forEach(cl -> cl.stream()
+                                    .filter(c -> c.getNetworkID() >= 0).forEach(newlyRelevantComponents::add));
 
                     consistentlyRelevantNodes.forEach(n -> {
                         n.getComponents().forEach(consistentlyRelevantComponents::add);
@@ -353,7 +363,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     oldRelevantSets.put(p, newRelevantSet);
 
 
-                /* ACTUAL REPLICATION */
+                    /* ACTUAL REPLICATION */
 
                     // Field replication
 
@@ -438,5 +448,14 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     @Override
     public boolean doesProcessNodes() {
         return false;
+    }
+
+    public RelevantSetDecider getRelevantSetDecider() {
+        return relevantSetDecider;
+    }
+
+    public void setRelevantSetDecider(RelevantSetDecider relevantSetDecider) {
+        Objects.requireNonNull(relevantSetDecider);
+        this.relevantSetDecider = relevantSetDecider;
     }
 }

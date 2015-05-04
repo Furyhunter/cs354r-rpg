@@ -14,9 +14,21 @@ public abstract class Component {
     private int networkID = 0;
 
     private static int networkIDCounter = 0;
+    private static int localNetworkIDCounter = Integer.MIN_VALUE;
 
     public Component() {
         networkID = networkIDCounter++;
+    }
+
+    public static <T extends Component> T createLocalComponent(Class<T> type) {
+        try {
+            T ret = type.newInstance();
+            ret.setNetworkID(localNetworkIDCounter++);
+            networkIDCounter--;
+            return ret;
+        } catch (Exception e) {
+            throw new RuntimeException("Exception when instantiating via createLocalComponent: " + e.getMessage(), e);
+        }
     }
 
     /**

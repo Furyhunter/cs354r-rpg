@@ -4,10 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import rpg.scene.RenderItem;
 
-public class SpriteRenderer extends Component implements Renderable {
+public class SpriteRenderer extends Component implements Renderable, Spatial2D {
 
     private Texture texture;
     private static ShaderProgram shader = null;
@@ -63,5 +64,10 @@ public class SpriteRenderer extends Component implements Renderable {
 
     public void setOffset(Vector2 offset) {
         this.offset = new Vector2(offset);
+    }
+
+    @Override
+    public Rectangle getRectangle() {
+        return new Rectangle(offset.x, offset.y, dimensions.x, dimensions.y);
     }
 }

@@ -12,6 +12,7 @@ import rpg.scene.Scene;
 import rpg.scene.components.TilemapRendererComponent;
 import rpg.scene.systems.GameLogicSystem;
 import rpg.scene.systems.GdxAssetManagerSystem;
+import rpg.scene.systems.Node2DQuerySystem;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,6 +33,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     private GameLogicSystem gameLogicSystem;
     private KryoServerSceneSystem kryoServerSceneSystem;
+    private Node2DQuerySystem querySystem;
 
     private int frames = 0;
     private Map<String, Long> totalTimes = new TreeMap<>();
@@ -130,27 +132,16 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
         gameLogicSystem = new GameLogicSystem();
         s.addSystem(GdxAssetManagerSystem.getSingleton());
         s.addSystem(gameLogicSystem);
+        querySystem = new Node2DQuerySystem();
+        s.addSystem(querySystem);
         try {
             kryoServerSceneSystem = new KryoServerSceneSystem();
             s.addSystem(kryoServerSceneSystem);
+            kryoServerSceneSystem.setRelevantSetDecider(new DistanceRelevantDecider(querySystem, 15));
         } catch (IOException e) {
             e.printStackTrace();
             Gdx.app.exit();
         }
-
-        /*
-        IntStream.range(-5, 5).forEach(x -> {
-            IntStream.range(-5, 5).forEach(y -> {
-                Node n = new Node();
-                s.getRoot().addChild(n);
-                RectangleRenderer r = new RectangleRenderer();
-                r.setColor(new Color(MathUtils.random(0f, .3f), MathUtils.random(.3f, 1.f), MathUtils.random(0f, .15f), 1));
-                n.addComponent(r);
-                r.setSize(new Vector2(2, 2));
-                n.getTransform().setPosition(new Vector3(x * 2, y * 2, 0));
-            });
-        });
-        */
 
         // Random map generation.
         OpenSimplexNoise noise = new OpenSimplexNoise(System.currentTimeMillis());
@@ -173,6 +164,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                         }
                 );
                 n.addComponent(tilemapRendererComponent);
+                n.setStaticReplicant(true);
 
                 n.getTransform().translate(iix * width, iiy * height, 0);
             }

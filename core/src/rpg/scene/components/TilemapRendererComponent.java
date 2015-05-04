@@ -6,10 +6,11 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import rpg.scene.RenderItem;
 import rpg.scene.replication.Replicated;
 
-public class TilemapRendererComponent extends Component implements Renderable {
+public class TilemapRendererComponent extends Component implements Renderable, Spatial2D {
     @Replicated
     protected int width;
 
@@ -103,5 +104,10 @@ public class TilemapRendererComponent extends Component implements Renderable {
     @Override
     public void onPostApplyReplicatedFields() {
         reconstructMesh = true;
+    }
+
+    @Override
+    public Rectangle getRectangle() {
+        return new Rectangle((float) -width / 2, (float) -height / 2, width, height);
     }
 }

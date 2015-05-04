@@ -6,6 +6,8 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import org.junit.Before;
 import org.junit.Test;
+import rpg.scene.Node;
+import rpg.scene.Scene;
 
 import static com.badlogic.gdx.math.Matrix4.M00;
 import static com.badlogic.gdx.math.Matrix4.M03;
@@ -116,5 +118,27 @@ public class TransformTest {
         t1.inverseApplyTransform(mat); // coord will now be 0,0,0 (no effect
 
         assertEquals(new Vector3(0, 0, 0), new Vector3(1, 1, 1).mul(mat));
+    }
+
+    @Test
+    public void testGetWorldTransform() {
+        Scene s = new Scene();
+        Node n1 = new Node();
+        Node n2 = new Node();
+        s.getRoot().addChild(n1);
+        n1.addChild(n2);
+
+        n1.getTransform().translate(4, 0, 0);
+
+        assertEquals(4, n2.getTransform().getWorldPosition().x, 0.00001);
+
+        n1.getTransform().translate(-4, 0, 0);
+        n1.getTransform().scale(4);
+        n2.getTransform().translate(2, 0, 0); // 8
+
+        assertEquals(8, n2.getTransform().getWorldPosition().x, 0.00001);
+
+        n1.getTransform().rotate(Vector3.Z, 180);
+        assertEquals(-8, n2.getTransform().getWorldPosition().x, 0.00001);
     }
 }
