@@ -201,7 +201,7 @@ public class Transform extends Component {
     }
 
     private void dirtyQuerySystem() {
-        if (querySystemRef == null) {
+        if (querySystemRef == null && getParent() != null && getParent().getScene() != null) {
             Scene s = getParent().getScene();
             Node2DQuerySystem querySystem = s.findSystem(Node2DQuerySystem.class);
             if (querySystem != null) {
@@ -209,6 +209,6 @@ public class Transform extends Component {
             }
         }
 
-        querySystemRef.addDirtyNode(getParent());
+        if (querySystemRef != null) querySystemRef.addDirtyNode(getParent());
     }
 }
