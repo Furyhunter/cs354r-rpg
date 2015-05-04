@@ -237,7 +237,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     p.kryoConnection.sendTCP(bt);
 
                     // Get the relevant set
-                    Set<Node> newRelevantSet = relevantSetDecider.getRelevantSetForNode(getParent(), p.possessedNode);
+                    Set<Node> newRelevantSet = Sets.filter(relevantSetDecider.getRelevantSetForNode(getParent(), p.possessedNode), n -> n.getNetworkID() >= 0);
                     Set<Node> oldRelevantSet = oldRelevantSets.get(p);
                     if (oldRelevantSet == null) {
                         oldRelevantSet = new HashSet<>(1024);
@@ -313,7 +313,11 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     Set<Component> reattachedComponents = new HashSet<>();
                     Set<Component> consistentlyRelevantComponents = new HashSet<>();
 
-                    newlyRelevantNodes.stream().filter(n -> n.getParent() != null).forEach(n -> newlyRelevantComponents.addAll(n.getComponents()));
+                    newlyRelevantNodes.stream()
+                            .filter(n -> n.getParent() != null)
+                            .map(Node::getComponents)
+                            .forEach(cl -> cl.stream()
+                                    .filter(c -> c.getNetworkID() >= 0).forEach(newlyRelevantComponents::add));
 
                     consistentlyRelevantNodes.forEach(n -> {
                         n.getComponents().forEach(consistentlyRelevantComponents::add);

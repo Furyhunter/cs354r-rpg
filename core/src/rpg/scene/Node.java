@@ -15,6 +15,7 @@ public class Node {
     private List<Component> components = new ArrayList<>();
 
     private static int networkIDCounter = 0;
+    private static int localNetworkIDCounter = Integer.MIN_VALUE;
 
     public static final int ROOT_NODE_NETWORK_ID = -1;
 
@@ -85,6 +86,14 @@ public class Node {
         this.networkID = networkID;
 
         defaultComponentsAttached = !createDefaults;
+    }
+
+    public static Node createLocalNode() {
+        return createLocalNode(true);
+    }
+
+    public static Node createLocalNode(boolean createDefaults) {
+        return new Node(localNetworkIDCounter++, createDefaults);
     }
 
     private void addDefaultComponents() {
