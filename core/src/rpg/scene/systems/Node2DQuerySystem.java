@@ -70,7 +70,7 @@ public class Node2DQuerySystem extends AbstractSceneSystem {
         treeDirty = true;
     }
 
-    protected void evaluateTreeChanges() {
+    protected synchronized void evaluateTreeChanges() {
         RTree<Node, Geometry> rt = rtree;
 
         dirtyNodes.removeAll(removedNodes);
