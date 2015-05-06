@@ -196,9 +196,11 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     }
     @RPC(target = RPC.Target.Server)
     public void generateBullet(Vector3 v) {
-        Node bulletNode = new Node(getParent().findRoot());
+        Node bulletNode = new Node();
+        getParent().getScene().getRoot().addChild(bulletNode);
 
-        SimpleBulletComponent s = new SimpleBulletComponent(v);
+        SimpleBulletComponent s = new SimpleBulletComponent();
+        s.setMoveDirection(v);
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.NAVY);
         bulletNode.addComponent(s);
@@ -209,7 +211,6 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
 
         tBullet.setPosition(tSelf.getWorldPosition());
         tBullet.setRotation(tSelf.getWorldRotation());
-
     }
 
     @RPC(target = RPC.Target.Server)

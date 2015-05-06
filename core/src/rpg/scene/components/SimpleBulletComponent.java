@@ -24,9 +24,7 @@ public class SimpleBulletComponent extends Component implements Steppable{
     private float moveTimer = 0;
     private boolean lerpTargetChanged = false;
 
-    public SimpleBulletComponent(Vector3 v) {
-        bullet.setMoveDirection(v);
-    }
+    public SimpleBulletComponent() {}
 
     @Override
     public void step(float deltaTime) {
@@ -36,6 +34,7 @@ public class SimpleBulletComponent extends Component implements Steppable{
         Transform t = getParent().getTransform();
         Vector3 p = t.getPosition().cpy();
 
+        //System.out.println(bullet.getMoveDirection());
         if (nss.getContext() == Context.Server) {
             if (bullet.isAlive()) {
                 t.setPosition(p.add(bullet.getMoveDirection().cpy().scl(deltaTime)));
@@ -75,6 +74,7 @@ public class SimpleBulletComponent extends Component implements Steppable{
     @Override
     public boolean isAlwaysFieldReplicated() {return true;}
 
+    public Vector3 getMoveDirection() {return bullet.getMoveDirection();}
     public void setMoveDirection(Vector3 v) { bullet.setMoveDirection(v);}
 
 }
