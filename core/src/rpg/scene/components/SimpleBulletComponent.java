@@ -24,6 +24,10 @@ public class SimpleBulletComponent extends Component implements Steppable{
     private float moveTimer = 0;
     private boolean lerpTargetChanged = false;
 
+    public SimpleBulletComponent(Vector3 v) {
+        bullet.setMoveDirection(v);
+    }
+
     @Override
     public void step(float deltaTime) {
         NetworkingSceneSystem nss = getParent().getScene().findSystem(NetworkingSceneSystem.class);

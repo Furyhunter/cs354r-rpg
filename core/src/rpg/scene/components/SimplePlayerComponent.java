@@ -1,17 +1,29 @@
 package rpg.scene.components;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
+import rpg.scene.Node;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.RPC;
 import rpg.scene.systems.InputSystem.InputEvent;
 import rpg.scene.systems.NetworkingSceneSystem;
 
-import static rpg.scene.systems.InputSystem.EventType.KeyDown;
-import static rpg.scene.systems.InputSystem.EventType.KeyUp;
+import static rpg.scene.systems.InputSystem.EventType.*;
 
 public class SimplePlayerComponent extends Component implements Steppable, InputEventListener {
+
+    private boolean mouseLEFT;
+
+    private float shootTimer = 0;
+    private static float SHOOT_UPDATE_THRESHOLD = 1f / 5;
+
+    private Vector2 mousePosition;
+
 
     private boolean keyW;
     private boolean keyS;
@@ -69,12 +81,56 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                     break;
             }
         }
+        if (event.getType() == MouseButtonPressed) {
+            switch (event.getButton()) {
+                case Input.Buttons.LEFT:
+                    mouseLEFT = true;
+                    mousePosition = event.getScreenPosition().cpy();
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (event.getType() == MouseButtonReleased) {
+            switch (event.getButton()) {
+                case Input.Buttons.LEFT:
+                    mouseLEFT = false;
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (event.getType() == MouseDragged) {
+            if (mouseLEFT) {
+                mousePosition = event.getScreenPosition().cpy();
+            }
+        }
     }
 
     @Override
     public void step(float deltaTime) {
         NetworkingSceneSystem nss = getParent().getScene().findSystem(NetworkingSceneSystem.class);
         if (nss == null || (nss.getContext() == Context.Client && getParent().isPossessed())) {
+            if (mouseLEFT) {
+                if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
+                    float x = mousePosition.x - (Gdx.graphics.getWidth() / 2);
+                    float y = (Gdx.graphics.getHeight() / 2) - mousePosition.y;
+                    sendRPC("generateBullet", new Vector3(x,y,0));
+                    shootTimer = 0;
+                }
+                shootTimer += deltaTime;
+            } else {
+                // If the shoot timer is not zero, increment and loop as normal
+                // Prevents mashing producing bullets faster than holding
+                if (shootTimer >= SHOOT_UPDATE_THRESHOLD) {
+                    shootTimer = 0;
+                }
+                if (shootTimer != 0) {
+                    shootTimer += deltaTime;
+                }
+            }
+
+
             Transform t = getParent().getTransform();
             if (clientRealPosition == null) {
                 clientRealPosition = t.getPosition();
@@ -137,6 +193,23 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                 t.setPosition(newPosition);
             }
         }
+    }
+    @RPC(target = RPC.Target.Server)
+    public void generateBullet(Vector3 v) {
+        Node bulletNode = new Node(getParent().findRoot());
+
+        SimpleBulletComponent s = new SimpleBulletComponent(v);
+        RectangleRenderer r = new RectangleRenderer();
+        r.setColor(Color.NAVY);
+        bulletNode.addComponent(s);
+        bulletNode.addComponent(r);
+
+        Transform tBullet = bulletNode.getTransform();
+        Transform tSelf = getParent().getTransform();
+
+        tBullet.setPosition(tSelf.getWorldPosition());
+        tBullet.setRotation(tSelf.getWorldRotation());
+
     }
 
     @RPC(target = RPC.Target.Server)
