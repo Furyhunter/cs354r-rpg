@@ -178,14 +178,10 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
     @Override
     public void render() {
-        long before, after;
-        before = System.nanoTime();
         s.update(Gdx.graphics.getDeltaTime());
-        after = System.nanoTime();
-        double timeSeconds = (double) (after - before) / 1_000_000_000;
-        if (timeSeconds > (1.f / kryoServerSceneSystem.getReplicationRate())) {
+        if (Gdx.graphics.getRawDeltaTime() > (1.f / kryoServerSceneSystem.getReplicationRate())) {
             Log.warn(getClass().getSimpleName(), "Network tick time overrun! "
-                    + timeSeconds + "s to evaluate frame on frame " + Gdx.graphics.getFrameId());
+                    + Gdx.graphics.getRawDeltaTime() + "s to evaluate frame on frame " + Gdx.graphics.getFrameId());
         }
     }
 
