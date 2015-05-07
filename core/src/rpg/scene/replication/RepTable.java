@@ -4,7 +4,11 @@ import com.esotericsoftware.reflectasm.FieldAccess;
 import com.esotericsoftware.reflectasm.MethodAccess;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import rpg.scene.Node;
+import rpg.scene.Scene;
 import rpg.scene.components.Component;
+import rpg.scene.kryo.ComponentReferenceContainer;
+import rpg.scene.kryo.NodeReferenceContainer;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -124,9 +128,39 @@ public class RepTable {
         FieldReplicationData frd = new FieldReplicationData();
         frd.fieldChangeset = new BitSet(fieldsToSerializeFieldAccess.size());
         frd.fieldChangeset.set(0, fieldsToSerializeFieldAccess.size(), true);
-        frd.fieldData = fieldsToSerializeFieldAccess.stream().map(f -> fieldAccess.get(o, f)).collect(Collectors.toList());
+        frd.fieldData = fieldsToSerializeFieldAccess.stream().map(f -> fieldAccess.get(o, f)).map(RepTable::mapToReplicateContainer).collect(Collectors.toList());
 
         return frd;
+    }
+
+    public static Scene scene;
+
+    private static Object mapToReplicateContainer(Object o) {
+        if (scene == null) return o;
+
+        if (o instanceof Node) {
+            NodeReferenceContainer nodeReferenceContainer = new NodeReferenceContainer();
+            nodeReferenceContainer.nodeID = ((Node) o).getNetworkID();
+            return nodeReferenceContainer;
+        }
+        if (o instanceof Component) {
+            ComponentReferenceContainer componentReferenceContainer = new ComponentReferenceContainer();
+            componentReferenceContainer.componentID = ((Component) o).getNetworkID();
+            return componentReferenceContainer;
+        }
+        return o;
+    }
+
+    private static Object mapToActualObject(Object o) {
+        if (scene == null) return o;
+
+        if (o instanceof NodeReferenceContainer) {
+            return scene.findNode(((NodeReferenceContainer) o).nodeID);
+        }
+        if (o instanceof ComponentReferenceContainer) {
+            return scene.findComponent(((ComponentReferenceContainer) o).componentID);
+        }
+        return o;
     }
 
     /**
@@ -151,7 +185,7 @@ public class RepTable {
         for (int i = 0; i < fieldsToSerializeFieldAccess.size(); i++) {
             int f = fieldsToSerializeFieldAccess.get(i);
             if (data.fieldChangeset.get(i)) {
-                fieldAccess.set(destination, f, fieldData.get(0));
+                fieldAccess.set(destination, f, mapToActualObject(fieldData.get(0)));
                 fieldData.remove(0);
             }
         }

@@ -8,6 +8,9 @@ import java.util.*;
 public class Scene {
     private Node root;
 
+    private Set<Node> nodes = new HashSet<>(1024);
+    private Set<Component> components = new HashSet<>(1024);
+
     private List<SceneSystem> systems = new ArrayList<>();
 
     public Scene() {
@@ -74,10 +77,12 @@ public class Scene {
     }
 
     public void nodeAttached(Node n) {
+        nodes.add(n);
         systems.forEach(s -> s.nodeAttached(n));
     }
 
     public void nodeDetached(Node n) {
+        nodes.remove(n);
         systems.forEach(s -> s.nodeDetached(n));
     }
 
@@ -87,6 +92,7 @@ public class Scene {
     }
 
     public void componentAttached(Component c) {
+        components.add(c);
         systems.forEach(s -> s.componentAttached(c));
 
     }
@@ -97,7 +103,26 @@ public class Scene {
     }
 
     public void componentDetached(Component c) {
+        components.remove(c);
         systems.forEach(s -> s.componentDetached(c));
 
+    }
+
+    public Node findNode(int nodeID) {
+        Optional<Node> nn = nodes.stream().filter(n -> n.getNetworkID() == nodeID).findFirst();
+        if (nn.isPresent()) {
+            return nn.get();
+        } else {
+            return null;
+        }
+    }
+
+    public Component findComponent(int componentID) {
+        Optional<Component> cc = components.stream().filter(c -> c.getNetworkID() == componentID).findFirst();
+        if (cc.isPresent()) {
+            return cc.get();
+        } else {
+            return null;
+        }
     }
 }

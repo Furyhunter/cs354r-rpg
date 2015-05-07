@@ -15,6 +15,7 @@ import rpg.scene.Scene;
 import rpg.scene.components.PansUpComponent;
 import rpg.scene.components.RectangleRenderer;
 import rpg.scene.components.Spatial2DBoundingBoxRenderer;
+import rpg.scene.replication.RepTable;
 import rpg.scene.systems.*;
 import rpg.ui.InGameUIScreen;
 
@@ -44,7 +45,8 @@ public class App extends ApplicationAdapter {
 		}
 
 		s = new Scene();
-		rendererSceneSystem = new RendererSceneSystem();
+        RepTable.scene = s;
+        rendererSceneSystem = new RendererSceneSystem();
 		if (host != null) {
 			try {
 				kryoClientSceneSystem = new KryoClientSceneSystem();
