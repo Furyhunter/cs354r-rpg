@@ -138,8 +138,8 @@ public class App extends ApplicationAdapter {
 
 		if (host == null) {
 			try {
-				host = InetAddress.getByName("idolagames.com");
-			} catch (IOException e) {
+                host = InetAddress.getByName("rpgtest.idolagames.com");
+            } catch (IOException e) {
 				Log.error(getClass().getSimpleName(), "Unable to resolve host idolagames.com, cannot connect to server.");
 			}
 		}
