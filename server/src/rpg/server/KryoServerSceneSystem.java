@@ -17,6 +17,8 @@ import rpg.scene.systems.NetworkingSceneSystem;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
@@ -34,6 +36,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     private RelevantSetDecider relevantSetDecider = new AlwaysRelevantDecider();
 
     private final List<Player> players = Collections.synchronizedList(new ArrayList<>());
+    private final Lock playerLock = new ReentrantLock();
     private Map<Connection, Player> connectionPlayerMap = new TreeMap<>(Comparator.comparingInt(Connection::getID));
 
     private Map<Player, Set<Node>> oldRelevantSets = new TreeMap<>(Comparator.comparingInt(p -> p.kryoConnection.getID()));
@@ -50,7 +53,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     class ServerListener extends Listener {
         @Override
         public void connected(Connection connection) {
-            synchronized (players) {
+            playerLock.lock();
+            try {
                 Node playerNode = new Node(getParent().getRoot());
                 playerNode.addComponent(new RectangleRenderer());
                 playerNode.addComponent(new SimplePlayerComponent());
@@ -67,6 +71,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                         + player.kryoConnection.getID()
                         + " at " + player.kryoConnection.getRemoteAddressTCP().toString()
                         + " connected.");
+            } finally {
+                playerLock.unlock();
             }
         }
 
@@ -110,7 +116,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
         @Override
         public void disconnected(Connection connection) {
-            synchronized (players) {
+            playerLock.lock();
+            try {
                 Player p = connectionPlayerMap.remove(connection);
                 players.remove(p);
                 oldRelevantSets.remove(p);
@@ -119,6 +126,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
                 Log.info(getClass().getSimpleName(), "Player "
                         + p.kryoConnection.getID() + " disconnected.");
+            } finally {
+                playerLock.unlock();
             }
         }
     }
@@ -229,7 +238,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
              * 5. Replicate components.
              * 6. EndTick
              */
-            synchronized (players) {
+            playerLock.lock();
+            try {
                 players.parallelStream().forEach(p -> {
                     // Send begin tick.
                     BeginTick bt = new BeginTick();
@@ -416,6 +426,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     endTick.tickID = currentTick;
                     p.kryoConnection.sendTCP(endTick);
                 });
+            } finally {
+                playerLock.unlock();
             }
 
             timeBuffer = 0;
