@@ -17,6 +17,8 @@ public class SimpleBullet extends Bullet {
 
     @Override
     public boolean isAlive() {return age < LIFETIME;}
+    @Override
+    public float getLIFETIME() {return LIFETIME;}
 
     @Override
     public float getDamage() {return 10;}

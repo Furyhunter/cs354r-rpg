@@ -38,18 +38,24 @@ public class SimpleEnemyComponent extends Component implements Steppable {
         Vector3 p = t.getPosition().cpy();
         Vector3 wp = t.getWorldPosition().cpy();
         if (nss.getContext() == Context.Server) {
-            Node n = getTargetNode();
-            target = (n==null)? null: n.getTransform().getWorldPosition().cpy().sub(wp);
-            enemy.update(deltaTime,n,target);
-            destination = enemy.getDestination();
+            Node nTarget = getTargetNode();
+            target = (nTarget==null)? null: nTarget.getTransform().getWorldPosition().cpy().sub(wp);
+            enemy.update(deltaTime,nTarget,target);
+            if (enemy.isAlive()) {
+                destination = enemy.getDestination();
 
-            if (destination != null) {
-                // should take into account move speed...
-                t.setPosition(p.lerp(destination, deltaTime));
-            }
+                if (destination != null) {
+                    // should take into account move speed...
+                    t.setPosition(p.lerp(destination, deltaTime));
+                }
 
-            if (enemy.isFiring() && target != null) {
-                generateBullet(target);
+                if (enemy.isFiring() && target != null) {
+                    generateBullet(target);
+                }
+            } else {
+                // Leaving destruction to the GC
+                Node nSelf = getParent();
+                nSelf.getParent().removeChild(nSelf);
             }
         } else if (nss.getContext() == Context.Client) {
             if (oldPosition != null) {
@@ -74,6 +80,7 @@ public class SimpleEnemyComponent extends Component implements Steppable {
 
         SimpleBulletComponent s = new SimpleBulletComponent();
         s.setMoveDirection(v);
+        s.setEvil(true);
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.PINK);
         bulletNode.addComponent(s);
@@ -107,6 +114,8 @@ public class SimpleEnemyComponent extends Component implements Steppable {
         else
             return null;
     }
+
+    public void hurt(float damage) {enemy.hurt(damage);}
 
     @Override
     public void onPreApplyReplicateFields() {

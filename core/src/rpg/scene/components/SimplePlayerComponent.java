@@ -43,6 +43,9 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
 
     private boolean lerpTargetChanged = false;
 
+    private static float MAX_HEALTH = 150;
+    private float health = MAX_HEALTH;
+
     @Override
     public void processInputEvent(InputEvent event) {
         if (event.getType() == KeyDown) {
@@ -224,6 +227,8 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         newPosition = vec.cpy();
         moveTimer = 0;
     }
+
+    public void hurt(float damage) {health -= damage;}
 
     @Override
     public void onPreApplyReplicateFields() {
