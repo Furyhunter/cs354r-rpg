@@ -7,15 +7,21 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import rpg.scene.RenderItem;
+import rpg.scene.containers.TextureContainer;
+import rpg.scene.replication.Replicated;
 
 public class SpriteRenderer extends Component implements Renderable, Spatial2D {
 
-    private Texture texture;
+    @Replicated
+    protected TextureContainer texture;
+
     private static ShaderProgram shader = null;
     private static Mesh mesh = null;
 
-    private Vector2 dimensions = new Vector2(1, 1);
-    private Vector2 offset = new Vector2();
+    @Replicated
+    protected Vector2 dimensions = new Vector2(1, 1);
+    @Replicated
+    protected Vector2 offset = new Vector2();
 
     @Override
     public RenderItem render() {
@@ -39,15 +45,18 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
         }
 
         Matrix4 model = new Matrix4().mulLeft(new Matrix4().setToTranslation(offset.x, offset.y, 0)).mulLeft(new Matrix4().setToScaling(dimensions.x, dimensions.y, 1));
-        return new RenderItem(shader, new Texture[]{texture}, mesh, model, GL20.GL_TRIANGLE_FAN);
+        return new RenderItem(shader, new Texture[]{texture.getAsset()}, mesh, model, GL20.GL_TRIANGLE_FAN);
     }
 
-    public Texture getTexture() {
+    public TextureContainer getTexture() {
         return texture;
     }
 
-    public void setTexture(Texture texture) {
-        this.texture = texture;
+    public void setTexture(String path) {
+        if (texture == null) {
+            texture = new TextureContainer();
+        }
+        texture.setPath(path);
     }
 
     public Vector2 getDimensions() {

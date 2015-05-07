@@ -11,6 +11,7 @@ import rpg.scene.Node;
 import rpg.scene.Scene;
 import rpg.scene.components.SimpleEnemySpawnComponent;
 import rpg.scene.components.TilemapRendererComponent;
+import rpg.scene.replication.RepTable;
 import rpg.scene.systems.GameLogicSystem;
 import rpg.scene.systems.GdxAssetManagerSystem;
 import rpg.scene.systems.Node2DQuerySystem;
@@ -130,6 +131,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
     @Override
     public void create() {
         s = new Scene();
+        RepTable.scene = s;
         gameLogicSystem = new GameLogicSystem();
         s.addSystem(GdxAssetManagerSystem.getSingleton());
         s.addSystem(gameLogicSystem);

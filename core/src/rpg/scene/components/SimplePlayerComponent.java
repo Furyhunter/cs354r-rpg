@@ -10,6 +10,7 @@ import com.esotericsoftware.minlog.Log;
 import rpg.scene.Node;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.RPC;
+import rpg.scene.replication.Replicated;
 import rpg.scene.systems.InputSystem.InputEvent;
 import rpg.scene.systems.NetworkingSceneSystem;
 
@@ -42,6 +43,9 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     private Vector3 clientRealPosition = null;
 
     private boolean lerpTargetChanged = false;
+
+    @Replicated
+    protected PlayerInfoComponent playerInfoComponent;
 
     private static float MAX_HEALTH = 150;
     private float health = MAX_HEALTH;
@@ -180,6 +184,11 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                 }
             } else if (newPosition != null) {
                 t.setPosition(newPosition);
+            }
+
+            // If we haven't found our PlayerInfoComponent, find it now.
+            if (playerInfoComponent == null) {
+                playerInfoComponent = getParent().findComponent(PlayerInfoComponent.class);
             }
 
             if (health <= 0) {

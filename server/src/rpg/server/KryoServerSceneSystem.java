@@ -9,8 +9,8 @@ import com.google.common.collect.Sets;
 import rpg.scene.Node;
 import rpg.scene.components.Component;
 import rpg.scene.components.PlayerInfoComponent;
-import rpg.scene.components.RectangleRenderer;
 import rpg.scene.components.SimplePlayerComponent;
+import rpg.scene.components.SpriteRenderer;
 import rpg.scene.kryo.*;
 import rpg.scene.replication.*;
 import rpg.scene.systems.NetworkingSceneSystem;
@@ -56,7 +56,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             playerLock.lock();
             try {
                 Node playerNode = new Node(getParent().getRoot());
-                playerNode.addComponent(new RectangleRenderer());
+                SpriteRenderer s = new SpriteRenderer();
+                s.setTexture("sprites/warrior.png");
+                playerNode.addComponent(s);
                 playerNode.addComponent(new SimplePlayerComponent());
                 playerNode.addComponent(new PlayerInfoComponent("Player " + connection.getID()));
                 Player player = new Player(playerNode, connection);

@@ -6,6 +6,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.serializers.DefaultArraySerializers;
 import com.esotericsoftware.kryo.serializers.DeflateSerializer;
 import rpg.game.*;
+import rpg.scene.containers.*;
 import rpg.scene.replication.BitSet;
 import rpg.scene.replication.FieldReplicationData;
 import rpg.scene.replication.RPCInvocation;
@@ -40,6 +41,13 @@ public final class KryoClassRegisterUtil {
                 BitSet.class,
                 RPCInvocation.class,
 
+                AssetContainer.class,
+                BitmapFontContainer.class,
+                MusicContainer.class,
+                SoundContainer.class,
+                TextureAtlasContainer.class,
+                TextureContainer.class,
+
                 FieldReplicationData.class,
 
                 // Messages
@@ -55,7 +63,10 @@ public final class KryoClassRegisterUtil {
                 ComponentReattach.class,
 
                 FieldReplicateMessage.class,
-                RPCMessage.class
+                RPCMessage.class,
+
+                NodeReferenceContainer.class,
+                ComponentReferenceContainer.class,
         };
 
         Arrays.stream(classes).forEach(k::register);
