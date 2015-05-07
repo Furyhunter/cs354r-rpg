@@ -5,12 +5,15 @@ import com.badlogic.gdx.ai.fsm.StateMachine;
 import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Node;
 
+import java.util.Random;
+
 /**
  * Created by Corin Hill on 5/6/15.
  */
 public class SimpleEnemy extends Enemy {
     private StateMachine<SimpleEnemy> fsm;
 
+    // Unused for now?
     private static float MOVE_SPEED = 4;
 
     private static float MAX_HEALTH = 100;
@@ -31,6 +34,8 @@ public class SimpleEnemy extends Enemy {
     private Node targetNode = null;
     private Vector3 targetDelta = null;
     private boolean firing = false;
+
+    private static Random rng = new Random(System.currentTimeMillis());
 
     public SimpleEnemy() {
         health = MAX_HEALTH;
@@ -71,4 +76,5 @@ public class SimpleEnemy extends Enemy {
     public void fire() {firing = true;}
     public void ceasefire() {firing = false;}
 
+    public Random getRandom() {return rng;}
 }

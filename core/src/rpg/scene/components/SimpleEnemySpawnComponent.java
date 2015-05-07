@@ -1,7 +1,6 @@
 package rpg.scene.components;
 
 import com.badlogic.gdx.graphics.Color;
-import rpg.game.SimpleEnemy;
 import rpg.scene.Node;
 
 /**
@@ -9,7 +8,7 @@ import rpg.scene.Node;
  */
 public class SimpleEnemySpawnComponent extends SpawnComponent {
     public SimpleEnemySpawnComponent() {
-        this.frequency = 5;
+        frequency = 15;
     }
     @Override
     protected void setFrequency(float frequency) {

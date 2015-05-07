@@ -17,10 +17,10 @@ import java.util.Optional;
  * Created by Corin Hill on 5/6/15.
  */
 public class SimpleEnemyComponent extends Component implements Steppable {
-    private SimpleEnemy enemy;
+    private SimpleEnemy enemy = new SimpleEnemy();
 
-    private Vector3 destination;
-    private Vector3 target;
+    private Vector3 destination = null;
+    private Vector3 target = null;
 
     private float moveTimer = 0;
 

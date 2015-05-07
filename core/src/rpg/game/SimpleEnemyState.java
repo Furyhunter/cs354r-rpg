@@ -5,8 +5,6 @@ import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Node;
 
-import java.util.Random;
-
 /**
  * Created by Corin Hill on 5/6/15.
  */
@@ -22,11 +20,10 @@ public enum SimpleEnemyState implements State<SimpleEnemy> {
             Node target = enemy.getTargetNode();
             // Modify destination, if enemy is bored
             if (!enemy.isFocused()) {
-                Random rng = new Random();
                 // Hard coding scale of deflection
                 // Or lack thereof, as it is 1
-                float xOff = (rng.nextFloat() - 1);
-                float yOff = (rng.nextFloat() - 1);
+                float xOff = (enemy.getRandom().nextFloat() - 1);
+                float yOff = (enemy.getRandom().nextFloat() - 1);
 
                 if (enemy.getDestination() != null) {
                     // Alter path slightly
@@ -34,7 +31,7 @@ public enum SimpleEnemyState implements State<SimpleEnemy> {
                 } else {
                     // Set a new random destination
                     // And hard code more scalars
-                    enemy.getDestination().set(xOff*15,yOff*15,0);
+                    enemy.setDestination(new Vector3(xOff * 15, yOff * 15, 0));
                 }
                 enemy.refocus();
             }
