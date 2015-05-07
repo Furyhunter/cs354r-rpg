@@ -19,8 +19,15 @@ import java.util.Optional;
 public class SimpleEnemyComponent extends Component implements Steppable {
     private SimpleEnemy enemy;
 
-    Vector3 destination;
-    Vector3 target;
+    private Vector3 destination;
+    private Vector3 target;
+
+    private float moveTimer = 0;
+
+    private Vector3 oldPosition = null;
+    private Vector3 newPosition = null;
+
+    private boolean lerpTargetChanged = false;
 
     @Override
     public void step(float deltaTime) {
@@ -44,6 +51,19 @@ public class SimpleEnemyComponent extends Component implements Steppable {
             if (enemy.isFiring() && target != null) {
                 generateBullet(target);
             }
+        } else if (nss.getContext() == Context.Client) {
+            if (oldPosition != null) {
+                moveTimer += deltaTime;
+                if (lerpTargetChanged) {
+                    moveTimer = 0;
+                    lerpTargetChanged = false;
+                }
+
+                t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / nss.getTickDeltaTime()));
+            } else if (newPosition != null) {
+                t.setPosition(newPosition);
+            }
+
         }
 
     }
@@ -75,16 +95,30 @@ public class SimpleEnemyComponent extends Component implements Steppable {
 
         Optional<Node> closest =
                 n2qs.queryNodesInArea(r).parallelStream().filter(n ->
-                        n.findComponent(SimplePlayerComponent.class) != null
-                ).min((n1,n2) ->
-                        Comparator.<Float>naturalOrder().compare(
-                                p.dst(n1.getTransform().getWorldPosition()),
-                                p.dst(n2.getTransform().getWorldPosition())
-                        )
+                                n.findComponent(SimplePlayerComponent.class) != null
+                ).min((n1, n2) ->
+                                Comparator.<Float>naturalOrder().compare(
+                                        p.dst(n1.getTransform().getWorldPosition()),
+                                        p.dst(n2.getTransform().getWorldPosition())
+                                )
                 );
         if (closest.isPresent())
             return closest.get();
         else
             return null;
+    }
+
+    @Override
+    public void onPreApplyReplicateFields() {
+        Transform t = getParent().getTransform();
+        oldPosition = newPosition == null ? null : newPosition.cpy();
+        // The transform has already been updated by now.
+        newPosition = t.getPosition().cpy();
+        lerpTargetChanged = true;
+    }
+
+    @Override
+    public boolean isAlwaysFieldReplicated() {
+        return true;
     }
 }

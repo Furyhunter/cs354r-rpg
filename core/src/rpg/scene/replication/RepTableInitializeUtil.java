@@ -2,6 +2,7 @@ package rpg.scene.replication;
 
 import org.reflections.Reflections;
 import rpg.game.Bullet;
+import rpg.game.Enemy;
 import rpg.scene.components.Component;
 
 public final class RepTableInitializeUtil {
@@ -13,5 +14,6 @@ public final class RepTableInitializeUtil {
         Reflections r = new Reflections("rpg");
         r.getSubTypesOf(Component.class).stream().forEach(RepTable::getTableForType);
         r.getSubTypesOf(Bullet.class).stream().forEach(RepTable::getTableForType);
+        r.getSubTypesOf(Enemy.class).stream().forEach(RepTable::getTableForType);
     }
 }
