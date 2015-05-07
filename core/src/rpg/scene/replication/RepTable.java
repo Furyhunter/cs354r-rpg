@@ -208,7 +208,7 @@ public class RepTable {
         int id = getRPCMethodID(methodName);
         RPCInvocation r = new RPCInvocation();
         r.methodId = id;
-        r.arguments = Arrays.asList(arguments);
+        r.arguments = Arrays.stream(arguments).map(RepTable::mapToReplicateContainer).collect(Collectors.toList());
         return r;
     }
 
@@ -231,6 +231,6 @@ public class RepTable {
     }
 
     public void invokeMethod(Object target, RPCInvocation invocation) {
-        invokeMethod(target, invocation.methodId, invocation.arguments.toArray());
+        invokeMethod(target, invocation.methodId, invocation.arguments.stream().map(RepTable::mapToActualObject).toArray());
     }
 }
