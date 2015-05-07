@@ -25,7 +25,7 @@ public class SimpleEnemyComponent extends Component implements Steppable {
     private float moveTimer = 0;
 
     private float shootTimer = 0;
-    private static float SHOOT_UPDATE_THRESHOLD = 1f / 5;
+    private static float SHOOT_UPDATE_THRESHOLD = 1f / 3;
 
     private Vector3 oldPosition = null;
     private Vector3 newPosition = null;
@@ -56,6 +56,7 @@ public class SimpleEnemyComponent extends Component implements Steppable {
                     if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
                         generateBullet(target);
                     }
+                    shootTimer += deltaTime;
                 }
                 if (shootTimer >= SHOOT_UPDATE_THRESHOLD) {
                     shootTimer = 0;
@@ -63,7 +64,7 @@ public class SimpleEnemyComponent extends Component implements Steppable {
                 if (shootTimer != 0) {
                     shootTimer += deltaTime;
                 }
-                
+
             } else {
                 // Leaving destruction to the GC
                 Node nSelf = getParent();

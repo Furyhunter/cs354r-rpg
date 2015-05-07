@@ -75,6 +75,7 @@ public class SimpleBulletComponent extends Component implements Steppable{
     }
 
     protected void checkCollisions() {
+        System.out.println("sbc D:");
         Node2DQuerySystem n2qs = getParent().getScene().findSystem(Node2DQuerySystem.class);
         Objects.requireNonNull(n2qs);
         // Why is idea grumpy about the type but claims it isn't explicitly necessary

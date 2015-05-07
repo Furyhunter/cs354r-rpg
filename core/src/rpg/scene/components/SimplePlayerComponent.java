@@ -132,12 +132,6 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                     shootTimer += deltaTime;
                 }
             }
-            if (health <= 0) {
-                RectangleRenderer r = getParent().<RectangleRenderer>findComponent(RectangleRenderer.class);
-                if (r != null) {
-                    r.setColor(Color.GRAY);
-                }
-            }
 
 
             Transform t = getParent().getTransform();
@@ -187,6 +181,14 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
             } else if (newPosition != null) {
                 t.setPosition(newPosition);
             }
+
+            if (health <= 0) {
+                RectangleRenderer r = getParent().<RectangleRenderer>findComponent(RectangleRenderer.class);
+                if (r != null) {
+                    r.setColor(Color.GRAY);
+                }
+            }
+
         } else if (nss.getContext() == Context.Client) {
             Transform t = getParent().getTransform();
 
