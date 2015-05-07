@@ -132,6 +132,12 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                     shootTimer += deltaTime;
                 }
             }
+            if (health <= 0) {
+                RectangleRenderer r = getParent().<RectangleRenderer>findComponent(RectangleRenderer.class);
+                if (r != null) {
+                    r.setColor(Color.GRAY);
+                }
+            }
 
 
             Transform t = getParent().getTransform();
@@ -202,7 +208,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         Node bulletNode = new Node();
         getParent().getScene().getRoot().addChild(bulletNode);
 
-        SimpleBulletComponent s = new SimpleBulletComponent();
+        SimplePlayerBulletComponent s = new SimplePlayerBulletComponent();
         s.setMoveDirection(v);
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.NAVY);

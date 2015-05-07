@@ -20,10 +20,7 @@ import java.util.Set;
 public class SimpleBulletComponent extends Component implements Steppable{
 
     @Replicated
-    Bullet bullet = new SimpleBullet();
-
-    @Replicated
-    protected boolean evil = false;
+    protected Bullet bullet;
 
     private Vector3 oldPosition = null;
     private Vector3 newPosition = null;
@@ -31,7 +28,9 @@ public class SimpleBulletComponent extends Component implements Steppable{
     private float moveTimer = 0;
     private boolean lerpTargetChanged = false;
 
-    public SimpleBulletComponent() {}
+    public SimpleBulletComponent() {
+        bullet = new SimpleBullet();
+    }
 
     @Override
     public void step(float deltaTime) {
@@ -45,7 +44,7 @@ public class SimpleBulletComponent extends Component implements Steppable{
         if (nss.getContext() == Context.Server) {
             if (bullet.isAlive()) {
                 t.setPosition(p.add(bullet.getMoveDirection().cpy().scl(deltaTime)));
-                checkCollision();
+                checkCollisions();
                 bullet.age(deltaTime);
             } else {
                 // Leaving destruction to the GC
@@ -75,7 +74,7 @@ public class SimpleBulletComponent extends Component implements Steppable{
         }
     }
 
-    private Node checkCollision() {
+    protected void checkCollisions() {
         Node2DQuerySystem n2qs = getParent().getScene().findSystem(Node2DQuerySystem.class);
         Objects.requireNonNull(n2qs);
         // Why is idea grumpy about the type but claims it isn't explicitly necessary
@@ -83,20 +82,7 @@ public class SimpleBulletComponent extends Component implements Steppable{
         Objects.requireNonNull(s);
 
         Set<Node> nodes = n2qs.queryNodesInArea(s.getRectangle());
-        if (isEvil()) {
-            nodes.stream().map(n ->
-                n.<SimplePlayerComponent>findComponent(SimplePlayerComponent.class)
-            ).filter(p -> p != null).forEach(p -> p.hurt(bullet.getDamage()));
-        } else {
-            nodes.stream().map(n ->
-                n.<SimpleEnemyComponent>findComponent(SimpleEnemyComponent.class)
-            ).filter(e -> e != null).forEach(e -> e.hurt(bullet.getDamage()));
-        }
-        if (nodes.size() > 0) {
-            //bullet.age(bullet.getLIFETIME());
-        }
-
-        return null;
+        // Do something, if you want
     }
 
     @Override
@@ -105,9 +91,6 @@ public class SimpleBulletComponent extends Component implements Steppable{
     }
     @Override
     public boolean isAlwaysFieldReplicated() {return true;}
-
-    public boolean isEvil() {return evil;}
-    public void setEvil(boolean quality) {evil = quality;}
 
     public Vector3 getMoveDirection() {return bullet.getMoveDirection();}
     public void setMoveDirection(Vector3 v) { bullet.setMoveDirection(v);}

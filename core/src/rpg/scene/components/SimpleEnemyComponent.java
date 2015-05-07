@@ -24,6 +24,9 @@ public class SimpleEnemyComponent extends Component implements Steppable {
 
     private float moveTimer = 0;
 
+    private float shootTimer = 0;
+    private static float SHOOT_UPDATE_THRESHOLD = 1f / 5;
+
     private Vector3 oldPosition = null;
     private Vector3 newPosition = null;
 
@@ -50,8 +53,17 @@ public class SimpleEnemyComponent extends Component implements Steppable {
                 }
 
                 if (enemy.isFiring() && target != null) {
-                    generateBullet(target);
+                    if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
+                        generateBullet(target);
+                    }
                 }
+                if (shootTimer >= SHOOT_UPDATE_THRESHOLD) {
+                    shootTimer = 0;
+                }
+                if (shootTimer != 0) {
+                    shootTimer += deltaTime;
+                }
+                
             } else {
                 // Leaving destruction to the GC
                 Node nSelf = getParent();
@@ -78,9 +90,8 @@ public class SimpleEnemyComponent extends Component implements Steppable {
         Node bulletNode = new Node();
         getParent().getScene().getRoot().addChild(bulletNode);
 
-        SimpleBulletComponent s = new SimpleBulletComponent();
+        SimpleEnemyBulletComponent s = new SimpleEnemyBulletComponent();
         s.setMoveDirection(v);
-        s.setEvil(true);
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.PINK);
         bulletNode.addComponent(s);
