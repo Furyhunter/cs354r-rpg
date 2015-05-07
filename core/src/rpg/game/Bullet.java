@@ -7,11 +7,8 @@ import rpg.scene.replication.Replicated;
  * Created by Corin Hill on 5/6/15.
  */
 public abstract class Bullet {
-    private static float LIFETIME;
     @Replicated
     protected float age = 0;
-
-    private static float MOVE_SPEED;
 
     @Replicated
     protected Vector3 moveDirection = new Vector3();
