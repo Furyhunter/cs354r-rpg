@@ -165,12 +165,16 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                         }
                 );
                 n.addComponent(tilemapRendererComponent);
-                if (iix == 0 && iiy == 0) {
-                    n.addComponent(new SimpleEnemySpawnComponent());
-                }
                 n.setStaticReplicant(true);
 
                 n.getTransform().translate(iix * width, iiy * height, 0);
+
+                if (iix == 0 && iiy == 0) {
+                    Node localSpawnNode = Node.createLocalNode();
+                    s.getRoot().addChild(localSpawnNode);
+                    localSpawnNode.addComponent(new SimpleEnemySpawnComponent());
+                    localSpawnNode.getTransform().translate(iix * width, iiy * height, 0);
+                }
             }
         }
     }
