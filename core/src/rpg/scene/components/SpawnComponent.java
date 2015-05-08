@@ -29,6 +29,7 @@ public abstract class SpawnComponent extends Component implements Steppable {
             while ( i.hasNext() ) {
                 Node node = i.next();
                 if (node.getParent() == null) {
+                    Log.info(getClass().getSimpleName(), String.format("%d:%d one of my enemies died, removing from spawns", getParent().getNetworkID(), getNetworkID()));
                     i.remove();
                 }
             }
