@@ -172,7 +172,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
                 n.getTransform().translate(iix * width, iiy * height, 0);
 
-                if (iix == 0 && iiy == 0) {
+                if (iix > -2 && iix < 2 && iiy > -2 && iiy < 2) {
                     Node localSpawnNode = Node.createLocalNode();
                     s.getRoot().addChild(localSpawnNode);
                     localSpawnNode.addComponent(Component.createLocalComponent(SimpleEnemySpawnComponent.class));

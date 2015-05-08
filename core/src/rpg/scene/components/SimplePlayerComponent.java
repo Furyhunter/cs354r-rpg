@@ -223,6 +223,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         s.setMoveDirection(v);
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.NAVY);
+        r.setSize(new Vector2(0.1f, 0.1f));
         bulletNode.addComponent(s);
         bulletNode.addComponent(r);
 

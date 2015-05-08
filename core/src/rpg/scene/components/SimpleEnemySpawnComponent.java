@@ -1,6 +1,9 @@
 package rpg.scene.components;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Node;
 
 /**
@@ -8,8 +11,8 @@ import rpg.scene.Node;
  */
 public class SimpleEnemySpawnComponent extends SpawnComponent {
     public SimpleEnemySpawnComponent() {
-        frequency = 5;
-        maxSpawns = 5;
+        frequency = 10;
+        maxSpawns = 3;
     }
 
     @Override
@@ -29,13 +32,14 @@ public class SimpleEnemySpawnComponent extends SpawnComponent {
         SimpleEnemyComponent s = new SimpleEnemyComponent();
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.MAROON);
+        r.setSize(new Vector2(0.5f, 0.5f));
         enemyNode.addComponent(s);
         enemyNode.addComponent(r);
 
         Transform tEnemy = enemyNode.getTransform();
         Transform tSelf = getParent().getTransform();
 
-        tEnemy.setPosition(tSelf.getWorldPosition());
+        tEnemy.setPosition(tSelf.getWorldPosition().cpy().add(new Vector3(MathUtils.random(-3f, 3f), MathUtils.random(-3f, 3f), 0)));
         tEnemy.setRotation(tSelf.getWorldRotation());
 
         return enemyNode;
