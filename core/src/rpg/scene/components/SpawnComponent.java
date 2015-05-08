@@ -4,7 +4,10 @@ import rpg.scene.Node;
 import rpg.scene.replication.Context;
 import rpg.scene.systems.NetworkingSceneSystem;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Created by Corin Hill on 5/6/15.

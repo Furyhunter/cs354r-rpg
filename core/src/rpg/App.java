@@ -113,8 +113,8 @@ public class App extends ApplicationAdapter {
 
 	private void setProjectionMatrix() {
 		float aspect = (float) Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight();
-		rendererSceneSystem.getProjectionMatrix().setToOrtho2D(0, 0, 8 * (aspect), 8).translate(4 * aspect, 4, 0);
-	}
+        rendererSceneSystem.getProjectionMatrix().setToOrtho2D(0, 0, 10 * (aspect), 10).translate(5 * aspect, 5, 0);
+    }
 
 	public List<String> getRunArguments() {
 		return runArguments;

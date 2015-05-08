@@ -2,6 +2,7 @@ package rpg.scene.components;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import rpg.game.SimpleEnemy;
 import rpg.scene.Node;
@@ -95,6 +96,7 @@ public class SimpleEnemyComponent extends Component implements Steppable {
         s.setMoveDirection(v);
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.PINK);
+        r.setSize(new Vector2(0.1f, 0.1f));
         bulletNode.addComponent(s);
         bulletNode.addComponent(r);
 
