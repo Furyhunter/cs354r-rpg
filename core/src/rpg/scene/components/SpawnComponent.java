@@ -1,10 +1,14 @@
 package rpg.scene.components;
 
+import com.esotericsoftware.minlog.Log;
 import rpg.scene.Node;
 import rpg.scene.replication.Context;
 import rpg.scene.systems.NetworkingSceneSystem;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Created by Corin Hill on 5/6/15.
@@ -31,6 +35,7 @@ public abstract class SpawnComponent extends Component implements Steppable {
             if (getMaxSpawns() == 0 || spawns.size() < getMaxSpawns()) {
                 spawnTimer += deltaTime;
                 if (spawnTimer > getFrequency()) {
+                    Log.info(getClass().getSimpleName(), String.format("%d:%d is spawning enemy", getParent().getNetworkID(), getNetworkID()));
                     spawns.add(spawn());
                     spawnTimer = 0;
                 }

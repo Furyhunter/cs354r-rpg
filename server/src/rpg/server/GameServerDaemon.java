@@ -9,6 +9,7 @@ import org.cloudcoder.daemon.IDaemon;
 import rpg.game.OpenSimplexNoise;
 import rpg.scene.Node;
 import rpg.scene.Scene;
+import rpg.scene.components.Component;
 import rpg.scene.components.SimpleEnemySpawnComponent;
 import rpg.scene.components.TilemapRendererComponent;
 import rpg.scene.replication.RepTable;
@@ -174,7 +175,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                 if (iix == 0 && iiy == 0) {
                     Node localSpawnNode = Node.createLocalNode();
                     s.getRoot().addChild(localSpawnNode);
-                    localSpawnNode.addComponent(new SimpleEnemySpawnComponent());
+                    localSpawnNode.addComponent(Component.createLocalComponent(SimpleEnemySpawnComponent.class));
                     localSpawnNode.getTransform().translate(iix * width, iiy * height, 0);
                 }
             }
