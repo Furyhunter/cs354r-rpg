@@ -21,7 +21,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     private boolean mouseLEFT;
 
     private float shootTimer = 0;
-    private static float SHOOT_UPDATE_THRESHOLD = 1f / 5;
+    private static float SHOOT_UPDATE_THRESHOLD = 1f / 8;
 
     private Vector2 mousePosition;
 
