@@ -7,10 +7,7 @@ import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 import com.google.common.collect.Sets;
 import rpg.scene.Node;
-import rpg.scene.components.Component;
-import rpg.scene.components.PlayerInfoComponent;
-import rpg.scene.components.SimplePlayerComponent;
-import rpg.scene.components.SpriteRenderer;
+import rpg.scene.components.*;
 import rpg.scene.kryo.*;
 import rpg.scene.replication.*;
 import rpg.scene.systems.NetworkingSceneSystem;
@@ -59,6 +56,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             playerNode.addComponent(s);
             playerNode.addComponent(new SimplePlayerComponent());
             playerNode.addComponent(new PlayerInfoComponent("Player " + connection.getID()));
+            UnitComponent u = new UnitComponent();
+            u.setFaction(UnitComponent.PLAYER);
+            playerNode.addComponent(u);
             Player player = new Player(playerNode, connection);
             players.add(player);
             connectionPlayerMap.put(connection, player);
@@ -117,7 +117,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             players.remove(p);
             oldRelevantSets.remove(p);
 
-            p.possessedNode.getParent().removeChild(p.possessedNode);
+            if (p.possessedNode != null && p.possessedNode.getParent() != null) {
+                p.possessedNode.getParent().removeChild(p.possessedNode);
+            }
 
             Log.info(getClass().getSimpleName(), "Player "
                     + p.kryoConnection.getID() + " disconnected.");

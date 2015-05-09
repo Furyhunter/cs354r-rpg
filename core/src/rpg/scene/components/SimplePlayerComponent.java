@@ -16,7 +16,7 @@ import rpg.scene.systems.NetworkingSceneSystem;
 
 import static rpg.scene.systems.InputSystem.EventType.*;
 
-public class SimplePlayerComponent extends Component implements Steppable, InputEventListener {
+public class SimplePlayerComponent extends Component implements Steppable, InputEventListener, Killable {
 
     private boolean mouseLEFT;
 
@@ -44,11 +44,10 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
 
     private boolean lerpTargetChanged = false;
 
+    private UnitComponent unitComponent;
+
     @Replicated
     protected PlayerInfoComponent playerInfoComponent;
-
-    private static float MAX_HEALTH = 150;
-    private float health = MAX_HEALTH;
 
     @Override
     public void processInputEvent(InputEvent event) {
@@ -117,6 +116,11 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     @Override
     public void step(float deltaTime) {
         NetworkingSceneSystem nss = getParent().getScene().findSystem(NetworkingSceneSystem.class);
+
+        if (unitComponent == null) {
+            unitComponent = getParent().findComponent(UnitComponent.class);
+        }
+
         if (nss == null || (nss.getContext() == Context.Client && getParent().isPossessed())) {
             if (mouseLEFT) {
                 if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
@@ -191,13 +195,6 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                 playerInfoComponent = getParent().findComponent(PlayerInfoComponent.class);
             }
 
-            if (health <= 0) {
-                RectangleRenderer r = getParent().<RectangleRenderer>findComponent(RectangleRenderer.class);
-                if (r != null) {
-                    r.setColor(Color.GRAY);
-                }
-            }
-
         } else if (nss.getContext() == Context.Client) {
             Transform t = getParent().getTransform();
 
@@ -219,12 +216,13 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         Node bulletNode = new Node();
         getParent().getScene().getRoot().addChild(bulletNode);
 
-        SimplePlayerBulletComponent s = new SimplePlayerBulletComponent();
-        s.setMoveDirection(v);
+        SimpleBulletComponent bulletComponent = new SimpleBulletComponent();
+        bulletComponent.setMoveDirection(v);
+        bulletComponent.setCreator(getParent());
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.NAVY);
         r.setSize(new Vector2(0.1f, 0.1f));
-        bulletNode.addComponent(s);
+        bulletNode.addComponent(bulletComponent);
         bulletNode.addComponent(r);
 
         Transform tBullet = bulletNode.getTransform();
@@ -246,8 +244,6 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         moveTimer = 0;
     }
 
-    public void hurt(float damage) {health -= damage;}
-
     @Override
     public void onPreApplyReplicateFields() {
         Transform t = getParent().getTransform();
@@ -260,5 +256,10 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     @Override
     public boolean isAlwaysFieldReplicated() {
         return true;
+    }
+
+    @Override
+    public void kill() {
+        getParent().removeFromParent();
     }
 }

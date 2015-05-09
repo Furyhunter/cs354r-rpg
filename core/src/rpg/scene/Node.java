@@ -240,6 +240,10 @@ public class Node {
         }
     }
 
+    public void removeFromParent() {
+        getParent().removeChild(this);
+    }
+
     /**
      * Gets the scene this node belongs to. This will traverse up the tree if it has to,
      * but the result will be memoized, so future calls will be faster. The memo will be

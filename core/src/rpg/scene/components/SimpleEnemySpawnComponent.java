@@ -31,10 +31,13 @@ public class SimpleEnemySpawnComponent extends SpawnComponent {
 
         SimpleEnemyComponent s = new SimpleEnemyComponent();
         RectangleRenderer r = new RectangleRenderer();
+        UnitComponent u = new UnitComponent();
         r.setColor(Color.MAROON);
         r.setSize(new Vector2(0.5f, 0.5f));
+        u.setFaction(UnitComponent.ENEMY);
         enemyNode.addComponent(s);
         enemyNode.addComponent(r);
+        enemyNode.addComponent(u);
 
         Transform tEnemy = enemyNode.getTransform();
         Transform tSelf = getParent().getTransform();
