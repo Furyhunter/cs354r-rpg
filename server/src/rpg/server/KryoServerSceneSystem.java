@@ -232,6 +232,12 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
              */
             List<Player> playersCopy = new ArrayList<>(players);
             playersCopy.parallelStream().forEach(p -> {
+                if (!players.contains(p)) {
+                    // don't continue if the player is not in the player list
+                    // (we do this to avoid concurrent modification errors)
+                    return;
+                }
+
                 // Send begin tick.
                 BeginTick bt = new BeginTick();
                 bt.tickID = currentTick;
