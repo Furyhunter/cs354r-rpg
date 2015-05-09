@@ -56,6 +56,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
             playerNode.addComponent(s);
             playerNode.addComponent(new SimplePlayerComponent());
             playerNode.addComponent(new PlayerInfoComponent("Player " + connection.getID()));
+            playerNode.addComponent(new PlayerSpriteAnimatorComponent());
             UnitComponent u = new UnitComponent();
             u.setFaction(UnitComponent.PLAYER);
             playerNode.addComponent(u);

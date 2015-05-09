@@ -26,10 +26,10 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     private Vector2 mousePosition;
 
 
-    private boolean keyW;
-    private boolean keyS;
-    private boolean keyA;
-    private boolean keyD;
+    public boolean keyW;
+    public boolean keyS;
+    public boolean keyA;
+    public boolean keyD;
 
     private static float MOVE_SPEED = 4;
     private static float MOVE_SPEED_SQUARED = 16;
