@@ -25,11 +25,12 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
 
     private Vector2 mousePosition;
 
+    public Vector2 animMoveDirection = new Vector2();
 
-    public boolean keyW;
-    public boolean keyS;
-    public boolean keyA;
-    public boolean keyD;
+    private boolean keyW;
+    private boolean keyS;
+    private boolean keyA;
+    private boolean keyD;
 
     private static float MOVE_SPEED = 4;
     private static float MOVE_SPEED_SQUARED = 16;
@@ -170,6 +171,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                 moveTimer = 0;
             }
             t.setPosition(clientRealPosition);
+            this.animMoveDirection.set(moveDirection.x, moveDirection.y);
 
         } else if (nss.getContext() == Context.Server) {
             // Server side
@@ -203,6 +205,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                 if (lerpTargetChanged) {
                     moveTimer = 0;
                     lerpTargetChanged = false;
+                    animMoveDirection.set(newPosition.x - oldPosition.x, newPosition.y - oldPosition.y).nor();
                 }
 
                 t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / nss.getTickDeltaTime()));
