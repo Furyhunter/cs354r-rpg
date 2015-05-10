@@ -13,16 +13,6 @@ public class SimpleEnemySpawnComponent extends SpawnComponent {
         frequency = 10;
         maxSpawns = 3;
     }
-
-    @Override
-    protected void setFrequency(float frequency) {this.frequency = frequency;}
-    @Override
-    protected float getFrequency() {return frequency;}
-    @Override
-    protected void setMaxSpawns(int spawns) {this.maxSpawns = spawns;}
-    @Override
-    protected int getMaxSpawns(){return maxSpawns;}
-
     @Override
     protected Node spawn() {
         Node enemyNode = new Node();
@@ -44,6 +34,8 @@ public class SimpleEnemySpawnComponent extends SpawnComponent {
         tEnemy.setPosition(tSelf.getWorldPosition().cpy().add(new Vector3(MathUtils.random(-3f, 3f), MathUtils.random(-3f, 3f), 0)));
         tEnemy.translate(0, 0, 0.5f);
         tEnemy.setRotation(tSelf.getWorldRotation());
+
+        s.setHomePosition(tEnemy.getWorldPosition());
 
         return enemyNode;
     }

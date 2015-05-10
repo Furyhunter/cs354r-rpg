@@ -31,19 +31,16 @@ public abstract class SpawnComponent extends Component implements Steppable {
                     i.remove();
                 }
             }
-            if (getMaxSpawns() == 0 || spawns.size() < getMaxSpawns()) {
+            if (maxSpawns == 0 || spawns.size() < maxSpawns) {
                 spawnTimer += deltaTime;
-                if (spawnTimer > getFrequency()) {
+                if (spawnTimer > frequency) {
                     spawns.add(spawn());
                     spawnTimer = 0;
                 }
             }
         }
     }
-    protected abstract void setFrequency(float frequency);
-    protected abstract float getFrequency();
-    protected abstract void setMaxSpawns(int spawns);
-    protected abstract int getMaxSpawns();
+
     protected abstract Node spawn();
 
 }

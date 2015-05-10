@@ -46,14 +46,12 @@ public class SimpleBulletComponent extends Component implements Steppable{
         Transform t = getParent().getTransform();
         Vector3 p = t.getPosition().cpy();
 
-        //System.out.println(bullet.getMoveDirection());
         if (nss.getContext() == Context.Server) {
             if (bullet.isAlive()) {
                 t.setPosition(p.add(bullet.getMoveDirection().cpy().scl(deltaTime)));
                 checkCollisions();
                 bullet.age(deltaTime);
             } else {
-                // Leaving destruction to the GC
                 Node n = getParent();
                 n.getParent().removeChild(n);
             }

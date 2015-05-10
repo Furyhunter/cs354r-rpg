@@ -1,10 +1,12 @@
 package rpg.scene.components;
 
+import com.badlogic.gdx.ai.fsm.DefaultStateMachine;
+import com.badlogic.gdx.ai.fsm.StateMachine;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import rpg.game.SimpleEnemy;
+import rpg.game.SimpleEnemyState;
 import rpg.scene.Node;
 import rpg.scene.replication.Context;
 import rpg.scene.systems.NetworkingSceneSystem;
@@ -18,20 +20,38 @@ import java.util.Optional;
  * Created by Corin Hill on 5/6/15.
  */
 public class SimpleEnemyComponent extends Component implements Steppable, Killable {
-    private SimpleEnemy enemy = new SimpleEnemy();
-
-    private Vector3 destination = null;
-    private Vector3 target = null;
-
-    private float moveTimer = 0;
+    private StateMachine<SimpleEnemyComponent> fsm;
 
     private float shootTimer = 0;
     private static float SHOOT_UPDATE_THRESHOLD = 1f / 3;
+
+    private float moveTimer = 0;
+    private static float MOVE_SPEED = 4;
+    // Inner radius of rectangle of vision
+    private static float VISION_RADIUS = 10;
+    // Desired distance from target
+    private static float ATTACK_RADIUS = 5;
+    // Allowed distance from home spawn point
+    private static float WANDER_RADIUS = 16;
+
+    // Attention span in seconds, used for wandering
+    private static float ATTENTION = 3;
+    private float focus = 0;
+
+    private Vector3 home = new Vector3();
+
+    private Node targetNode = null;
+    private Vector3 destination = null;
+    private boolean firing = false;
 
     private Vector3 oldPosition = null;
     private Vector3 newPosition = null;
 
     private boolean lerpTargetChanged = false;
+
+    public SimpleEnemyComponent() {
+        fsm = new DefaultStateMachine(this, SimpleEnemyState.WANDER);
+    }
 
     @Override
     public void step(float deltaTime) {
@@ -40,37 +60,29 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
 
         Transform t = getParent().getTransform();
         Vector3 p = t.getPosition().cpy();
-        Vector3 wp = t.getWorldPosition().cpy();
         if (nss.getContext() == Context.Server) {
-            Node nTarget = getTargetNode();
-            target = (nTarget==null)? null: nTarget.getTransform().getWorldPosition().cpy().sub(wp);
-            enemy.update(deltaTime,nTarget,target);
-            if (enemy.isAlive()) {
-                destination = enemy.getDestination();
+            targetNode = findTargetNode();
+            focus += deltaTime;
+            fsm.update();
 
-                if (destination != null) {
-                    // should take into account move speed...
-                    t.setPosition(p.lerp(destination, deltaTime));
+            if (destination != null) {
+                t.setPosition(p.add(destination.cpy().nor().scl(MOVE_SPEED).scl(deltaTime)));
+            }
+            if (firing) {
+                if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
+                    generateBullet(getTargetDelta());
+                    shootTimer = 0;
                 }
-
-                if (enemy.isFiring() && target != null) {
-                    if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
-                        generateBullet(target);
-                    }
-                    shootTimer += deltaTime;
-                }
+                shootTimer += deltaTime;
+            } else {
                 if (shootTimer >= SHOOT_UPDATE_THRESHOLD) {
                     shootTimer = 0;
                 }
                 if (shootTimer != 0) {
                     shootTimer += deltaTime;
                 }
-
-            } else {
-                // Leaving destruction to the GC
-                Node nSelf = getParent();
-                nSelf.getParent().removeChild(nSelf);
             }
+
         } else if (nss.getContext() == Context.Client) {
             if (oldPosition != null) {
                 moveTimer += deltaTime;
@@ -78,14 +90,12 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
                     moveTimer = 0;
                     lerpTargetChanged = false;
                 }
-
                 t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / nss.getTickDeltaTime()));
             } else if (newPosition != null) {
                 t.setPosition(newPosition);
             }
 
         }
-
     }
 
     private void generateBullet(Vector3 v) {
@@ -109,12 +119,13 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
         tBullet.translate(0, 0, 0.5f);
     }
 
-    private Node getTargetNode() {
+    private Node findTargetNode() {
         Node2DQuerySystem n2qs = getParent().getScene().findSystem(Node2DQuerySystem.class);
         Objects.requireNonNull(n2qs);
 
         Vector3 p = getParent().getTransform().getWorldPosition();
-        Rectangle r = new Rectangle(p.x,p.y,enemy.getVisionRadius(),enemy.getVisionRadius());
+        Rectangle r = new Rectangle(p.x - VISION_RADIUS,p.y - VISION_RADIUS,
+                                    VISION_RADIUS * 2f,VISION_RADIUS * 2f);
 
         Optional<Node> closest =
                 n2qs.queryNodesInArea(r).parallelStream().filter(n ->
@@ -130,6 +141,28 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
         else
             return null;
     }
+
+    public StateMachine<SimpleEnemyComponent> getFSM() {return fsm;}
+    public boolean isFocused() {return focus < ATTENTION;}
+    public void refocus() {focus = 0;}
+    public Vector3 getHomePosition() {return home;}
+    public boolean isHomeFar() {
+        if (home == null) return false;
+        return home.dst(getParent().getTransform().getWorldPosition()) > WANDER_RADIUS;
+    }
+    public void setHomePosition(Vector3 home) {this.home.set(home);}
+    public Node getTargetNode() {return targetNode;}
+    public boolean isTargetFar() {
+        if (targetNode == null) return false;
+        return targetNode.getTransform().getWorldPosition().dst(getParent().getTransform().getWorldPosition()) > ATTACK_RADIUS;
+    }
+    public Vector3 getTargetDelta() {
+        if (targetNode == null) return null;
+        return targetNode.getTransform().getWorldPosition().cpy().sub(getParent().getTransform().getWorldPosition());
+    }
+    public Vector3 getDestination() {return destination;}
+    public void setDestination(Vector3 v) {this.destination = v;}
+    public void setFiring(boolean fire) {this.firing = fire;}
 
     @Override
     public void onPreApplyReplicateFields() {
