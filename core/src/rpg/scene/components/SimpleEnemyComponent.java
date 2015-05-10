@@ -59,14 +59,15 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
         Objects.requireNonNull(nss);
 
         Transform t = getParent().getTransform();
-        Vector3 p = t.getPosition().cpy();
         if (nss.getContext() == Context.Server) {
             targetNode = findTargetNode();
             focus += deltaTime;
             fsm.update();
 
             if (destination != null) {
-                t.setPosition(p.add(destination.cpy().nor().scl(MOVE_SPEED).scl(deltaTime)));
+                Vector3 v = t.getPosition().cpy().add(destination.cpy().nor().scl(MOVE_SPEED).scl(deltaTime));
+                v.z = t.getPosition().z;
+                t.setPosition(v);
             }
             if (firing) {
                 if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
