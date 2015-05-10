@@ -1,6 +1,5 @@
 package rpg.scene.components;
 
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -30,13 +29,13 @@ public class SimpleEnemySpawnComponent extends SpawnComponent {
         getParent().getScene().getRoot().addChild(enemyNode);
 
         SimpleEnemyComponent s = new SimpleEnemyComponent();
-        RectangleRenderer r = new RectangleRenderer();
+        SpriteRenderer spriteRenderer = new SpriteRenderer();
         UnitComponent u = new UnitComponent();
-        r.setColor(Color.MAROON);
-        r.setSize(new Vector2(0.5f, 0.5f));
+        spriteRenderer.setTexture("sprites/enemy-simple.png");
+        spriteRenderer.setDimensions(new Vector2(0.5f, 0.5f));
         u.setFaction(UnitComponent.ENEMY);
         enemyNode.addComponent(s);
-        enemyNode.addComponent(r);
+        enemyNode.addComponent(spriteRenderer);
         enemyNode.addComponent(u);
 
         Transform tEnemy = enemyNode.getTransform();
