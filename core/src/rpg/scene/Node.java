@@ -244,6 +244,21 @@ public class Node {
         }
     }
 
+    /**
+     * Get the depth in the tree of this node. A depth of 0 indicates root.
+     *
+     * @return
+     */
+    public int getDepth() {
+        Node n = this;
+        int depthCounter = -1;
+        while (n != null) {
+            depthCounter++;
+            n = n.getParent();
+        }
+        return depthCounter;
+    }
+
     public void removeFromParent() {
         getParent().removeChild(this);
     }

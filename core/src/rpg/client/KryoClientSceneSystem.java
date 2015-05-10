@@ -234,7 +234,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                 if (nodeAttachList.size() > 0) {
                     List<Node> nodesToAttach = new ArrayList<>();
                     List<Integer> parents = new ArrayList<>();
-                    nodeAttachList.forEach(m -> {
+                    nodeAttachList.stream().sorted(Comparator.comparingInt(NodeAttach::getDepth)).forEach(m -> {
                         Node node = new Node(m.nodeID, false);
                         nodeMap.put(m.nodeID, node);
 
@@ -262,7 +262,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                 if (nodeReattachList.size() > 0) {
                     List<Node> nodesToReattach = new ArrayList<>();
                     List<Integer> parents = new ArrayList<>();
-                    nodeReattachList.forEach(m -> {
+                    nodeReattachList.stream().sorted(Comparator.comparingInt(NodeReattach::getDepth)).forEach(m -> {
                         Node node = nodeMap.get(m.nodeID);
                         if (node == null) {
                             throw new RuntimeException("server asked a node to reattach, but it couldn't be found");

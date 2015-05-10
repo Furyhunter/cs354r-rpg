@@ -325,6 +325,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     NodeReattach nodeReattach = new NodeReattach();
                     nodeReattach.nodeID = n.getNetworkID();
                     nodeReattach.parentID = n.getParent().getNetworkID();
+                    nodeReattach.depth = n.getDepth();
                     p.kryoConnection.sendTCP(nodeReattach);
                 });
 
@@ -336,6 +337,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     NodeAttach nodeAttach = new NodeAttach();
                     nodeAttach.nodeID = n.getNetworkID();
                     nodeAttach.parentID = n.getParent().getNetworkID();
+                    nodeAttach.depth = n.getDepth();
                     p.kryoConnection.sendTCP(nodeAttach);
                 });
 
