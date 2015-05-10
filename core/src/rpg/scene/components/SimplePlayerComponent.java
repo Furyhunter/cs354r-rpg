@@ -228,6 +228,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         spriteRenderer.setTexture("sprites/bullet-player.png");
         spriteRenderer.setDimensions(new Vector2(0.5f, 0.5f));
         spriteRenderer.setRotation(45f);
+        spriteRenderer.setBillboard(false);
         bulletNode.addComponent(bulletComponent);
         bulletNode.addComponent(spriteRenderer);
 
@@ -235,6 +236,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         Transform tSelf = getParent().getTransform();
 
         tBullet.setPosition(tSelf.getWorldPosition());
+        tBullet.translate(0, 0, 0.5f);
         float angle = 0;
         if (v.x >= 0) {
             // TR

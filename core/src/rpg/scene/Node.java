@@ -96,7 +96,11 @@ public class Node {
     }
 
     private void addDefaultComponents() {
-        myTransform = new Transform();
+        if (networkID < 0) {
+            myTransform = Component.createLocalComponent(Transform.class);
+        } else {
+            myTransform = new Transform();
+        }
 
         addComponent(myTransform);
         defaultComponentsAttached = true;
@@ -238,6 +242,21 @@ public class Node {
                 addDefaultComponents();
             }
         }
+    }
+
+    /**
+     * Get the depth in the tree of this node. A depth of 0 indicates root.
+     *
+     * @return
+     */
+    public int getDepth() {
+        Node n = this;
+        int depthCounter = -1;
+        while (n != null) {
+            depthCounter++;
+            n = n.getParent();
+        }
+        return depthCounter;
     }
 
     public void removeFromParent() {

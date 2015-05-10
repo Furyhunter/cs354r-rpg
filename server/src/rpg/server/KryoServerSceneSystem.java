@@ -8,6 +8,7 @@ import com.esotericsoftware.minlog.Log;
 import com.google.common.collect.Sets;
 import rpg.scene.Constants;
 import rpg.scene.Node;
+import rpg.scene.NodeFactory;
 import rpg.scene.components.*;
 import rpg.scene.kryo.*;
 import rpg.scene.replication.*;
@@ -160,10 +161,12 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         UnitComponent u = new UnitComponent();
         u.setFaction(UnitComponent.PLAYER);
         playerNode.addComponent(u);
-        //players.add(player);
-        //connectionPlayerMap.put(connection, player);
+        playerNode.getTransform().translate(0, 0, 0.5f);
         playerNode.getTransform().sendRPC("possessNode");
         p.possessedNode = playerNode;
+
+        Node shadowNode = NodeFactory.makeShadowNode(playerNode, false);
+        shadowNode.getTransform().translate(0, 0, -1f + 0.005f);
 
         //oldRelevantSets.put(p, new HashSet<>());
         // when next we send a tick, we'll get a "new" relevant set
@@ -322,6 +325,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     NodeReattach nodeReattach = new NodeReattach();
                     nodeReattach.nodeID = n.getNetworkID();
                     nodeReattach.parentID = n.getParent().getNetworkID();
+                    nodeReattach.depth = n.getDepth();
                     p.kryoConnection.sendTCP(nodeReattach);
                 });
 
@@ -333,6 +337,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     NodeAttach nodeAttach = new NodeAttach();
                     nodeAttach.nodeID = n.getNetworkID();
                     nodeAttach.parentID = n.getParent().getNetworkID();
+                    nodeAttach.depth = n.getDepth();
                     p.kryoConnection.sendTCP(nodeAttach);
                 });
 

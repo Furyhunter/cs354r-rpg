@@ -24,6 +24,9 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
     @Replicated
     protected float rotation;
 
+    @Replicated
+    protected boolean billboard = true;
+
     public Vector2 texCoordTranslation = new Vector2();
     public Vector2 texCoordScale = new Vector2(1, 1);
 
@@ -50,7 +53,7 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
 
         Matrix4 model = new Matrix4();
         model.scale(dimensions.x, dimensions.y, 1);
-        model.translate(offset.x, offset.y, 0);
+        if (!billboard) model.translate(offset.x, offset.y, 0);
         model.rotate(Vector3.Z, rotation);
 
         RenderItem renderItem = new RenderItem(shader, new Texture[]{texture.getAsset()}, mesh, model, GL20.GL_TRIANGLE_FAN);
@@ -94,6 +97,14 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
         this.rotation = rotation;
     }
 
+    public boolean isBillboard() {
+        return billboard;
+    }
+
+    public void setBillboard(boolean billboard) {
+        this.billboard = billboard;
+    }
+
     @Override
     public Rectangle getRectangle() {
         return new Rectangle(offset.x, offset.y, dimensions.x, dimensions.y);
@@ -102,5 +113,8 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
     private void setUniforms(ShaderProgram p) {
         Matrix3 m = new Matrix3().translate(texCoordTranslation).scale(texCoordScale);
         p.setUniformMatrix("u_texCoord0Transform", m);
+        p.setUniformf("u_billboard", billboard ? 1.0f : 0.0f);
+        p.setUniformMatrix("u_spriteRotScale", new Matrix4().rotate(Vector3.Z, rotation).scale(dimensions.x, dimensions.y, 1));
+        p.setUniformf("u_spriteOffset", offset);
     }
 }
