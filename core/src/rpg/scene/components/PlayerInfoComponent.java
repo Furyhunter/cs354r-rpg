@@ -40,13 +40,27 @@ public class PlayerInfoComponent extends Component implements InputEventListener
 
     @RPC(target = RPC.Target.Multicast)
     protected void chatMessage(String message) {
+        addMessageToChatbox(String.format("%s: %s", getPlayerName(), message), InGameUIScreen.MessageType.Say);
+    }
+
+    @RPC(target = RPC.Target.Multicast)
+    protected void systemMessage(String message) {
+        addMessageToChatbox(message, InGameUIScreen.MessageType.System);
+    }
+
+    @RPC(target = RPC.Target.Multicast)
+    protected void gameMessage(String message) {
+        addMessageToChatbox(message, InGameUIScreen.MessageType.Game);
+    }
+
+    protected void addMessageToChatbox(String message, InGameUIScreen.MessageType type) {
         Scene s = getParent().getScene();
         Scene2DUISystem ui = s.findSystem(Scene2DUISystem.class);
         if (ui != null) {
             UIScreen ss = ui.getScreen();
             if (ss instanceof InGameUIScreen) {
                 InGameUIScreen inGameUIScreen = ((InGameUIScreen) ss);
-                inGameUIScreen.addChatMessage(this, message);
+                inGameUIScreen.addChatMessage(message, type);
             }
         }
     }

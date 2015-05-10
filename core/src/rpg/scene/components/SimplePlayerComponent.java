@@ -274,6 +274,11 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
 
     @Override
     public void kill() {
-        getParent().removeFromParent();
+        playerInfoComponent.sendRPC("gameMessage", "You have died.");
+        SpriteRenderer s = getParent().findComponent(SpriteRenderer.class);
+        PlayerSpriteAnimatorComponent p = getParent().findComponent(PlayerSpriteAnimatorComponent.class);
+        if (s != null) getParent().removeComponent(s);
+        if (p != null) getParent().removeComponent(p);
+        getParent().removeComponent(this);
     }
 }

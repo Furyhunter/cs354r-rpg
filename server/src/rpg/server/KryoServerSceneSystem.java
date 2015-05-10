@@ -52,10 +52,11 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         public void connected(Connection connection) {
             Node playerNode = new Node(getParent().getRoot());
             SpriteRenderer s = new SpriteRenderer();
+            PlayerInfoComponent infoComponent = new PlayerInfoComponent("Player " + connection.getID());
             s.setTexture("sprites/warrior.png");
             playerNode.addComponent(s);
             playerNode.addComponent(new SimplePlayerComponent());
-            playerNode.addComponent(new PlayerInfoComponent("Player " + connection.getID()));
+            playerNode.addComponent(infoComponent);
             playerNode.addComponent(new PlayerSpriteAnimatorComponent());
             UnitComponent u = new UnitComponent();
             u.setFaction(UnitComponent.PLAYER);
@@ -67,6 +68,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
             oldRelevantSets.put(player, new HashSet<>());
             // when next we send a tick, we'll get a "new" relevant set
+
+            infoComponent.sendRPC("systemMessage", String.format("Welcome %s! WASD to move, click to shoot.", infoComponent.getPlayerName()));
+            infoComponent.sendRPC("systemMessage", "If you die, you lose all your progress.");
 
             Log.info(getClass().getSimpleName(), "Player "
                     + player.kryoConnection.getID()
@@ -86,8 +90,8 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                     // Disconnect for security failure.
                     Log.warn(getClass().getSimpleName(),
                             "Player " + connection.getID()
-                                    + " is being kicked for trying to execute an RPC on a component that doesn't exist.");
-                    connection.close();
+                                    + " tried to send an RPC on a component that doesn't exist");
+                    //connection.close();
                     return;
                 }
                 if (target.getParent().getNetworkID() != p.possessedNode.getNetworkID()) {
@@ -340,13 +344,13 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                         .forEach(consistentlyRelevantComponents::add);
 
                 componentsToAttach.stream()
-                        .filter(c -> c.getParent().getNetworkID() >= 0 && finalConsisRelRef.contains(c.getParent()))
+                        .filter(c -> c.getParent() != null && c.getParent().getNetworkID() >= 0 && finalConsisRelRef.contains(c.getParent()))
                         .forEach(newlyRelevantComponents::add);
                 componentsToDetach.stream()
-                        .filter(c -> c.getParent().getNetworkID() >= 0 && finalConsisRelRef.contains(c.getParent()))
+                        .filter(c -> c.getParent() == null || c.getParent().getNetworkID() >= 0 && finalConsisRelRef.contains(c.getParent()))
                         .forEach(newlyIrrelevantComponents::add);
                 componentsToReattach.stream()
-                        .filter(c -> c.getParent().getNetworkID() >= 0 && finalConsisRelRef.contains(c.getParent()))
+                        .filter(c -> c.getParent() != null && c.getParent().getNetworkID() >= 0 && finalConsisRelRef.contains(c.getParent()))
                         .forEach(reattachedComponents::add);
 
                 newlyRelevantComponents.forEach(c -> {

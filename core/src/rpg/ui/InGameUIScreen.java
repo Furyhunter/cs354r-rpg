@@ -1,6 +1,7 @@
 package rpg.ui;
 
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.esotericsoftware.minlog.Log;
@@ -22,6 +23,18 @@ public class InGameUIScreen extends UIScreen {
 
     private boolean newMessage = false;
 
+    public enum MessageType {
+        Say(Color.WHITE),
+        System(Color.MAGENTA),
+        Game(Color.YELLOW);
+
+        Color c;
+
+        MessageType(Color c) {
+            this.c = c;
+        }
+    }
+
     @Override
     public void init() {
         if (skin == null) {
@@ -39,11 +52,12 @@ public class InGameUIScreen extends UIScreen {
 
         chatMessageList = new VerticalGroup();
         chatMessageList.left();
+        chatMessageList.padLeft(16);
         chatScrollPane = new ScrollPane(chatMessageList, skin);
         chatScrollPane.setScrollBarPositions(true, false);
         chatScrollPane.setScrollingDisabled(true, false);
-        chatScrollPane.setFadeScrollBars(false);
-        chatBox.add(chatScrollPane).left().bottom().fillX().maxHeight(100);
+        chatScrollPane.setFadeScrollBars(true);
+        chatBox.add(chatScrollPane).left().bottom().fillX().maxHeight(100).minHeight(100);
         chatBox.row();
         chatBox.add(chatEntry).prefWidth(400);
 
@@ -87,6 +101,8 @@ public class InGameUIScreen extends UIScreen {
             }
             return true;
         });
+
+
     }
 
     @Override
@@ -94,23 +110,27 @@ public class InGameUIScreen extends UIScreen {
         if (newMessage) {
             chatScrollPane.setScrollPercentY(1);
             newMessage = false;
+            chatScrollPane.layout();
         }
     }
 
-    public void addChatMessage(PlayerInfoComponent component, String message) {
-        Log.info(getClass().getSimpleName(), component.getPlayerName() + ": " + message);
-        Label messageLabel = new Label(component.getPlayerName() + ": " + message, skin);
+    public void addChatMessage(String message, MessageType type) {
+        Log.info(getClass().getSimpleName(), message);
+        Label messageLabel = new Label(message, skin);
         messageLabel.setWrap(true);
         messageLabel.setWidth(400);
+        messageLabel.setColor(type.c);
+        Table t = new Table(skin);
+        t.setWidth(400);
 
+        t.add(messageLabel).width(400);
+        chatMessageList.addActor(t);
         if (Math.abs(chatScrollPane.getVisualScrollPercentY()) - 1.0f < 0.00001f || chatScrollPane.getVisualScrollY() == Float.NaN) {
-            chatMessageList.addActor(messageLabel);
             chatScrollPane.setScrollPercentY(1);
-            chatScrollPane.layout();
             newMessage = true;
-        } else {
-            chatMessageList.addActor(messageLabel);
         }
+        chatMessageList.layout();
+        chatScrollPane.layout();
     }
 
     public void focusChatEntry() {
