@@ -10,13 +10,10 @@ import java.util.Random;
 /**
  * Created by Corin Hill on 5/6/15.
  */
-public class SimpleEnemy extends Enemy {
+public class SimpleEnemy {
     private StateMachine<SimpleEnemy> fsm;
 
-    // Unused for now?
     private static float MOVE_SPEED = 4;
-
-    private static float MAX_HEALTH = 100;
 
     // Inner radius of rectangle of vision
     private static float VISION_RADIUS = 5;
@@ -35,10 +32,7 @@ public class SimpleEnemy extends Enemy {
     private Vector3 targetDelta = null;
     private boolean firing = false;
 
-    private static Random rng = new Random(System.currentTimeMillis());
-
     public SimpleEnemy() {
-        health = MAX_HEALTH;
         fsm = new DefaultStateMachine<SimpleEnemy>(this,SimpleEnemyState.WANDER);
     }
 
@@ -73,8 +67,5 @@ public class SimpleEnemy extends Enemy {
     }
 
     public boolean isFiring() {return firing;}
-    public void fire() {firing = true;}
-    public void ceasefire() {firing = false;}
-
-    public Random getRandom() {return rng;}
+    public void setFiring(boolean fire) {this.firing = fire;}
 }

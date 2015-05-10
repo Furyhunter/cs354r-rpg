@@ -2,6 +2,7 @@ package rpg.game;
 
 import com.badlogic.gdx.ai.fsm.State;
 import com.badlogic.gdx.ai.msg.Telegram;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Node;
 
@@ -19,24 +20,20 @@ public enum SimpleEnemyState implements State<SimpleEnemy> {
         public void update(SimpleEnemy enemy) {
             Node target = enemy.getTargetNode();
             // Modify destination, if enemy is bored
-            if (!enemy.isFocused()) {
-                // Hard coding scale of deflection
-                // Or lack thereof, as it is 1
-                float xOff = (enemy.getRandom().nextFloat() - 1);
-                float yOff = (enemy.getRandom().nextFloat() - 1);
+            if (!enemy.isFocused() || enemy.getDestination() == null) {
+                float xOff = MathUtils.random(-.5f,.5f);
+                float yOff = MathUtils.random(-.5f,.5f);
 
                 if (enemy.getDestination() != null) {
                     // Alter path slightly
-                    enemy.getDestination().add(xOff,yOff,0);
+                    enemy.getDestination().scl(xOff, yOff, 0);
                 } else {
-                    // Set a new random destination
-                    // And hard code more scalars
-                    enemy.setDestination(new Vector3(xOff * 15, yOff * 15, 0));
+                    float speed = enemy.getMoveSpeed();
+                    enemy.setDestination(new Vector3(xOff, yOff, 0).scl(speed));
                 }
                 enemy.refocus();
             }
 
-            super.update(enemy);
             if (target != null) {
                 if (enemy.isTargetFar()) {
                     enemy.getFSM().changeState(CHASE);
@@ -55,11 +52,13 @@ public enum SimpleEnemyState implements State<SimpleEnemy> {
         public void update(SimpleEnemy enemy) {
             Node target = enemy.getTargetNode();
 
-            enemy.setDestination(enemy.getTargetDelta());
+            Vector3 v = enemy.getTargetDelta();
+            if (v != null) {
+                enemy.setDestination(v.nor().scl(enemy.getMoveSpeed()));
+            }
 
-            super.update(enemy);
             if (target != null) {
-                if (!enemy.isTargetFar()) {
+                if (enemy.isTargetClose()) {
                     enemy.getFSM().changeState(ATTACK);
                 }
             } else {
@@ -72,9 +71,8 @@ public enum SimpleEnemyState implements State<SimpleEnemy> {
         public void  update(SimpleEnemy enemy) {
             Node target = enemy.getTargetNode();
 
-            enemy.fire();
+            enemy.setFiring(true);
 
-            super.update(enemy);
             if (target != null) {
                 if (enemy.isTargetFar()) {
                     enemy.getFSM().changeState(CHASE);
@@ -86,20 +84,14 @@ public enum SimpleEnemyState implements State<SimpleEnemy> {
         @Override
         public void exit(SimpleEnemy enemy) {
             super.exit(enemy);
-            enemy.ceasefire();
+            enemy.setFiring(false);
         }
 
-    },
-    DEAD() {
     };
     @Override
     public void enter(SimpleEnemy enemy) {}
     @Override
-    public void update(SimpleEnemy enemy) {
-        if (!enemy.isAlive()) {
-            enemy.getFSM().changeState(DEAD);
-        }
-    }
+    public void update(SimpleEnemy enemy) {}
     @Override
     public void exit(SimpleEnemy enemy) {
         enemy.setDestination(null);

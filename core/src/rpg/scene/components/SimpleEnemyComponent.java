@@ -20,13 +20,10 @@ import java.util.Optional;
 public class SimpleEnemyComponent extends Component implements Steppable, Killable {
     private SimpleEnemy enemy = new SimpleEnemy();
 
-    private Vector3 destination = null;
-    private Vector3 target = null;
-
-    private float moveTimer = 0;
-
     private float shootTimer = 0;
     private static float SHOOT_UPDATE_THRESHOLD = 1f / 3;
+
+    private float moveTimer = 0;
 
     private Vector3 oldPosition = null;
     private Vector3 newPosition = null;
@@ -42,35 +39,28 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
         Vector3 p = t.getPosition().cpy();
         Vector3 wp = t.getWorldPosition().cpy();
         if (nss.getContext() == Context.Server) {
-            Node nTarget = getTargetNode();
-            target = (nTarget==null)? null: nTarget.getTransform().getWorldPosition().cpy().sub(wp);
-            enemy.update(deltaTime,nTarget,target);
-            if (enemy.isAlive()) {
-                destination = enemy.getDestination();
+            Node targetNode = getTargetNode();
+            Vector3 targetDelta = (targetNode==null)? null: targetNode.getTransform().getWorldPosition().cpy().sub(wp);
+            enemy.update(deltaTime,targetNode,targetDelta);
 
-                if (destination != null) {
-                    // should take into account move speed...
-                    t.setPosition(p.lerp(destination, deltaTime));
+            if (enemy.getDestination() != null) {
+                t.setPosition(p.lerp(enemy.getDestination(), deltaTime));
+            }
+            if (enemy.isFiring() && targetDelta != null) {
+                if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
+                    generateBullet(targetDelta);
+                    shootTimer = 0;
                 }
-
-                if (enemy.isFiring() && target != null) {
-                    if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
-                        generateBullet(target);
-                    }
-                    shootTimer += deltaTime;
-                }
+                shootTimer += deltaTime;
+            } else {
                 if (shootTimer >= SHOOT_UPDATE_THRESHOLD) {
                     shootTimer = 0;
                 }
                 if (shootTimer != 0) {
                     shootTimer += deltaTime;
                 }
-
-            } else {
-                // Leaving destruction to the GC
-                Node nSelf = getParent();
-                nSelf.getParent().removeChild(nSelf);
             }
+
         } else if (nss.getContext() == Context.Client) {
             if (oldPosition != null) {
                 moveTimer += deltaTime;
@@ -78,14 +68,12 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
                     moveTimer = 0;
                     lerpTargetChanged = false;
                 }
-
                 t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / nss.getTickDeltaTime()));
             } else if (newPosition != null) {
                 t.setPosition(newPosition);
             }
 
         }
-
     }
 
     private void generateBullet(Vector3 v) {
