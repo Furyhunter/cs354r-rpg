@@ -115,6 +115,6 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
         p.setUniformMatrix("u_texCoord0Transform", m);
         p.setUniformf("u_billboard", billboard ? 1.0f : 0.0f);
         p.setUniformMatrix("u_spriteRotScale", new Matrix4().rotate(Vector3.Z, rotation).scale(dimensions.x, dimensions.y, 1));
-        p.setUniformf("u_spriteOffset", offset);
+        if (p.getUniformLocation("u_spriteOffset") != -1) p.setUniformf("u_spriteOffset", offset);
     }
 }

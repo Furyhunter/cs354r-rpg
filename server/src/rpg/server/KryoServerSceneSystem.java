@@ -1,6 +1,7 @@
 package rpg.server;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
@@ -160,13 +161,14 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         playerNode.addComponent(new PlayerSpriteAnimatorComponent());
         UnitComponent u = new UnitComponent();
         u.setFaction(UnitComponent.PLAYER);
+        s.setOffset(new Vector2(0, 0.5f));
         playerNode.addComponent(u);
-        playerNode.getTransform().translate(0, 0, 0.5f);
+        //playerNode.getTransform().translate(0, 0, 0.5f);
         playerNode.getTransform().sendRPC("possessNode");
         p.possessedNode = playerNode;
 
         Node shadowNode = NodeFactory.makeShadowNode(playerNode, false);
-        shadowNode.getTransform().translate(0, 0, -1f + 0.005f);
+        shadowNode.getTransform().translate(0, 0, 0.005f);
 
         //oldRelevantSets.put(p, new HashSet<>());
         // when next we send a tick, we'll get a "new" relevant set

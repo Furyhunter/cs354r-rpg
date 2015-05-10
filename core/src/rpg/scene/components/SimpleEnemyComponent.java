@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import rpg.game.SimpleEnemyState;
 import rpg.scene.Node;
+import rpg.scene.NodeFactory;
 import rpg.scene.replication.Context;
 import rpg.scene.systems.NetworkingSceneSystem;
 import rpg.scene.systems.Node2DQuerySystem;
@@ -48,6 +49,8 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
     private Vector3 newPosition = null;
 
     private boolean lerpTargetChanged = false;
+
+    private boolean shadowCreated = false;
 
     public SimpleEnemyComponent() {
         fsm = new DefaultStateMachine(this, SimpleEnemyState.WANDER);
@@ -94,6 +97,12 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
                 t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / nss.getTickDeltaTime()));
             } else if (newPosition != null) {
                 t.setPosition(newPosition);
+            }
+
+            if (!shadowCreated) {
+                Node n = NodeFactory.makeShadowNode(getParent(), true);
+                n.getTransform().translate(0, 0, 0.005f);
+                shadowCreated = true;
             }
 
         }

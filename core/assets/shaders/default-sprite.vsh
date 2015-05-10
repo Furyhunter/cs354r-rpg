@@ -15,7 +15,7 @@ uniform vec2 u_spriteOffset;
 
 void main() {
     if (u_billboard == 1.0) {
-        gl_Position = u_pMatrix * (u_vmMatrix * vec4(u_spriteOffset.x, 0.0, u_spriteOffset.y, 1.0) + (u_spriteRotScale * vec4(a_position, 0)));
+        gl_Position = u_pMatrix * (u_vmMatrix * vec4(0.0, 0.0, 0.0, 1.0) + (u_spriteRotScale * vec4(a_position + vec3(u_spriteOffset, 0), 0)));
     } else {
         gl_Position = u_pMatrix * u_vmMatrix * vec4(a_position, 1);
     }
