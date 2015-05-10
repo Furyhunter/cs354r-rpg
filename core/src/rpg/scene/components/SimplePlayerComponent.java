@@ -3,7 +3,7 @@ package rpg.scene.components;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
@@ -216,20 +216,31 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         Node bulletNode = new Node();
         getParent().getScene().getRoot().addChild(bulletNode);
 
+        v.nor();
+
         SimpleBulletComponent bulletComponent = new SimpleBulletComponent();
         bulletComponent.setMoveDirection(v);
         bulletComponent.setCreator(getParent());
-        RectangleRenderer r = new RectangleRenderer();
-        r.setColor(Color.NAVY);
-        r.setSize(new Vector2(0.1f, 0.1f));
+        SpriteRenderer spriteRenderer = new SpriteRenderer();
+        spriteRenderer.setTexture("sprites/bullet-player.png");
+        spriteRenderer.setDimensions(new Vector2(0.5f, 0.5f));
+        spriteRenderer.setRotation(45f);
         bulletNode.addComponent(bulletComponent);
-        bulletNode.addComponent(r);
+        bulletNode.addComponent(spriteRenderer);
 
         Transform tBullet = bulletNode.getTransform();
         Transform tSelf = getParent().getTransform();
 
         tBullet.setPosition(tSelf.getWorldPosition());
-        tBullet.setRotation(tSelf.getWorldRotation());
+        float angle = 0;
+        if (v.x >= 0) {
+            // TR
+            angle = (float) Math.acos(v.dot(Vector3.Y));
+        } else if (v.x < 0) {
+            // BL
+            angle = (float) -Math.acos(v.dot(Vector3.Y));
+        }
+        spriteRenderer.setRotation(-angle * MathUtils.radiansToDegrees - 45f);
     }
 
     @RPC(target = RPC.Target.Server)
