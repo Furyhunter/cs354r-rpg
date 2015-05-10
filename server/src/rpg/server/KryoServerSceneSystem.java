@@ -408,17 +408,17 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
                 });
 
 
-                // Multicast RPCs (only if component is in relevant set)
+                // Multicast RPCs (only if component is in relevant set, or the component was recently irrelevant)
                 multicastRPCs.stream().filter(r -> {
                     Component c = componentMap.get(r.targetNetworkID);
-                    return c != null && newRelevantSet.contains(c.getParent());
+                    return c != null && (newRelevantSet.contains(c.getParent()) || newlyIrrelevantComponents.contains(c));
                 }).forEach(p.kryoConnection::sendTCP);
 
                 // Client RPCS
                 // These should only be sent to the possessing client.
                 clientRPCs.stream().filter(r -> {
                     Component c = componentMap.get(r.targetNetworkID);
-                    return c != null && c.getParent() == p.possessedNode && newRelevantSet.contains(c.getParent());
+                    return c != null && c.getParent() == p.possessedNode && (newRelevantSet.contains(c.getParent()) || newlyRelevantComponents.contains(c));
                 }).forEach(p.kryoConnection::sendTCP);
 
 

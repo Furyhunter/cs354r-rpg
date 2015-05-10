@@ -225,9 +225,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     tickLock.notify();
                 }
 
-                /* Nodes */
-
-                // Attachment
+                // Attachment of Nodes
                 if (nodeAttachList.size() > 0) {
                     List<Node> nodesToAttach = new ArrayList<>();
                     List<Integer> parents = new ArrayList<>();
@@ -255,7 +253,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     }
                 }
 
-                // Reattachment
+                // Reattachment of Nodes
                 if (nodeReattachList.size() > 0) {
                     List<Node> nodesToReattach = new ArrayList<>();
                     List<Integer> parents = new ArrayList<>();
@@ -285,23 +283,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     }
                 }
 
-                // Detachment
-                if (nodeDetachList.size() > 0) {
-                    List<Node> nodesToDetach = new ArrayList<>();
-                    nodeDetachList.forEach(m -> {
-                        Node node = nodeMap.get(m.nodeID);
-                        if (node == null) {
-                            Log.warn(getClass().getSimpleName(), "The server told us to detach a node but we didn't even know it ever existed.");
-                        }
-                        nodesToDetach.add(node);
-                    });
-                    nodesToDetach.forEach(n -> n.getParent().removeChild(n));
-                }
-
-
-                /* Component Synchronization */
-
-                // Attachment
+                // Attachment of Components
                 if (componentAttachList.size() > 0) {
                     List<Component> componentsToAttach = new ArrayList<>();
                     List<Integer> parents = new ArrayList<>();
@@ -333,7 +315,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     }
                 }
 
-                // Reattachment
+                // Reattachment of Components
                 if (componentReattachList.size() > 0) {
                     List<Component> componentsToReattach = new ArrayList<>();
                     List<Integer> parents = new ArrayList<>();
@@ -360,18 +342,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     }
                 }
 
-                // Detachment
-                if (componentDetachList.size() > 0) {
-                    componentDetachList.forEach(m -> {
-                        Component c = componentMap.get(m.componentID);
-                        if (c == null) {
-                            Log.warn(getClass().getSimpleName(), "The server told us to detach a component we didn't know ever existed.");
-                            return;
-                        }
-                        c.getParent().removeComponent(c);
-                    });
-                }
-
                 /* Field Replication */
                 if (fieldReplicateMessageList.size() > 0) {
                     fieldReplicateMessageList.forEach(m -> {
@@ -393,6 +363,34 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                             return;
                         }
                         RepTable.getTableForType(c.getClass()).invokeMethod(c, m.invocation);
+                    });
+                }
+
+                // Detachment is done last in order to provide for RPC calls just before removal
+                // i.e. "kill" in killable interface
+
+                // Detachment of Nodes
+                if (nodeDetachList.size() > 0) {
+                    List<Node> nodesToDetach = new ArrayList<>();
+                    nodeDetachList.forEach(m -> {
+                        Node node = nodeMap.get(m.nodeID);
+                        if (node == null) {
+                            Log.warn(getClass().getSimpleName(), "The server told us to detach a node but we didn't even know it ever existed.");
+                        }
+                        nodesToDetach.add(node);
+                    });
+                    nodesToDetach.forEach(n -> n.getParent().removeChild(n));
+                }
+
+                // Detachment of Components
+                if (componentDetachList.size() > 0) {
+                    componentDetachList.forEach(m -> {
+                        Component c = componentMap.get(m.componentID);
+                        if (c == null) {
+                            Log.warn(getClass().getSimpleName(), "The server told us to detach a component we didn't know ever existed.");
+                            return;
+                        }
+                        c.getParent().removeComponent(c);
                     });
                 }
             }
