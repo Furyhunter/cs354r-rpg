@@ -98,6 +98,7 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.PINK);
         r.setSize(new Vector2(0.1f, 0.1f));
+        r.setTransparent(true);
         bulletNode.addComponent(bulletComponent);
         bulletNode.addComponent(r);
 
