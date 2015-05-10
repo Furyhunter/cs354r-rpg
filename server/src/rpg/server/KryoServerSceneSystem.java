@@ -6,6 +6,7 @@ import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 import com.google.common.collect.Sets;
+import rpg.scene.Constants;
 import rpg.scene.Node;
 import rpg.scene.components.*;
 import rpg.scene.kryo.*;
@@ -50,67 +51,74 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
     class ServerListener extends Listener {
         @Override
         public void connected(Connection connection) {
-            Node playerNode = new Node(getParent().getRoot());
-            SpriteRenderer s = new SpriteRenderer();
-            PlayerInfoComponent infoComponent = new PlayerInfoComponent("Player " + connection.getID());
-            s.setTexture("sprites/warrior.png");
-            playerNode.addComponent(s);
-            playerNode.addComponent(new SimplePlayerComponent());
-            playerNode.addComponent(infoComponent);
-            playerNode.addComponent(new PlayerSpriteAnimatorComponent());
-            UnitComponent u = new UnitComponent();
-            u.setFaction(UnitComponent.PLAYER);
-            playerNode.addComponent(u);
-            Player player = new Player(playerNode, connection);
-            players.add(player);
-            connectionPlayerMap.put(connection, player);
-            playerNode.getTransform().sendRPC("possessNode");
-
-            oldRelevantSets.put(player, new HashSet<>());
-            // when next we send a tick, we'll get a "new" relevant set
-
-            infoComponent.sendRPC("systemMessage", String.format("Welcome %s! WASD to move, click to shoot.", infoComponent.getPlayerName()));
-            infoComponent.sendRPC("systemMessage", "If you die, you lose all your progress.");
+            Player p = new Player(null, connection);
+            players.add(p);
+            connectionPlayerMap.put(connection, p);
 
             Log.info(getClass().getSimpleName(), "Player "
-                    + player.kryoConnection.getID()
-                    + " at " + player.kryoConnection.getRemoteAddressTCP().toString()
+                    + p.kryoConnection.getID()
+                    + " at " + p.kryoConnection.getRemoteAddressTCP().toString()
                     + " connected.");
         }
 
         @Override
         public void received(Connection connection, Object o) {
-            if (o instanceof RPCMessage) {
-                // We can handle it immediately since server update is synchronous with app thread.
-                RPCMessage rpcMessage = (RPCMessage) o;
-                Player p = connectionPlayerMap.get(connection);
+            Player p = connectionPlayerMap.get(connection);
+            if (p == null) {
+                throw new RuntimeException("Connection is not in mapping??");
+            }
 
-                Component target = componentMap.get(rpcMessage.targetNetworkID);
-                if (target == null) {
-                    // Disconnect for security failure.
-                    Log.warn(getClass().getSimpleName(),
-                            "Player " + connection.getID()
-                                    + " tried to send an RPC on a component that doesn't exist");
-                    //connection.close();
-                    return;
-                }
-                if (target.getParent().getNetworkID() != p.possessedNode.getNetworkID()) {
-                    Log.warn(getClass().getSimpleName(),
-                            "Player " + connection.getID() + " is being kicked for trying to execute an RPC" +
-                                    " on a component not belonging to one of its nodes.");
-                    connection.close();
-                }
+            if (p.state == Player.IN_PLAY) {
+                if (o instanceof RPCMessage) {
+                    // We can handle it immediately since server update is synchronous with app thread.
+                    RPCMessage rpcMessage = (RPCMessage) o;
 
-                try {
-                    RepTable table = RepTable.getTableForType(target.getClass());
-                    if (table.getRPCTarget(rpcMessage.invocation.methodId) != RPC.Target.Server) {
-                        throw new RuntimeException("Player attempted to invoke an RPC not intended for the Server");
+                    Component target = componentMap.get(rpcMessage.targetNetworkID);
+                    if (target == null) {
+                        // Disconnect for security failure.
+                        Log.warn(getClass().getSimpleName(),
+                                "Player " + connection.getID()
+                                        + " tried to send an RPC on a component that doesn't exist");
+                        //connection.close();
+                        return;
                     }
-                    table.invokeMethod(target, rpcMessage.invocation);
-                } catch (Exception e) {
-                    Log.error(getClass().getSimpleName(), "Player " + connection.getID()
-                            + " is being kicked because of the following RPC exception", e);
-                    e.printStackTrace();
+                    if (target.getParent().getNetworkID() != p.possessedNode.getNetworkID()) {
+                        Log.warn(getClass().getSimpleName(),
+                                "Player " + connection.getID() + " is being kicked for trying to execute an RPC" +
+                                        " on a component not belonging to one of its nodes.");
+                        connection.close();
+                    }
+
+                    try {
+                        RepTable table = RepTable.getTableForType(target.getClass());
+                        if (table.getRPCTarget(rpcMessage.invocation.methodId) != RPC.Target.Server) {
+                            throw new RuntimeException("Player attempted to invoke an RPC not intended for the Server");
+                        }
+                        table.invokeMethod(target, rpcMessage.invocation);
+                    } catch (Exception e) {
+                        Log.error(getClass().getSimpleName(), "Player " + connection.getID()
+                                + " is being kicked because of the following RPC exception", e);
+                        e.printStackTrace();
+                        connection.close();
+                    }
+                }
+            } else if (p.state == Player.AUTHENTICATING) {
+                if (o instanceof ClientAuthenticate) {
+                    if (((ClientAuthenticate) o).gameVersion != Constants.GAME_VERSION) {
+                        Log.warn(getClass().getSimpleName(),
+                                "Player " + connection.getID() + " is using invalid game version.");
+                        connection.sendTCP(new KickMessage("Invalid game version. Please update."));
+                        connection.close();
+                    } else {
+                        p.state = Player.IN_PLAY;
+                        joinPlayer(p);
+                        Log.info(getClass().getSimpleName(), "Player " + connection.getID() + " authenticated");
+                    }
+                } else {
+                    Log.warn(getClass().getSimpleName(),
+                            "Player "
+                                    + connection.getID()
+                                    + " tried to do something other than authenticate during authentication");
                     connection.close();
                 }
             }
@@ -140,9 +148,29 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         RepTableInitializeUtil.initializeRepTables();
     }
 
-    @Override
-    public void processNode(Node n, float deltaTime) {
+    private Node joinPlayer(Player p) {
+        Node playerNode = new Node(getParent().getRoot());
+        SpriteRenderer s = new SpriteRenderer();
+        PlayerInfoComponent infoComponent = new PlayerInfoComponent("Player " + p.kryoConnection.getID());
+        s.setTexture("sprites/warrior.png");
+        playerNode.addComponent(s);
+        playerNode.addComponent(new SimplePlayerComponent());
+        playerNode.addComponent(infoComponent);
+        playerNode.addComponent(new PlayerSpriteAnimatorComponent());
+        UnitComponent u = new UnitComponent();
+        u.setFaction(UnitComponent.PLAYER);
+        playerNode.addComponent(u);
+        //players.add(player);
+        //connectionPlayerMap.put(connection, player);
+        playerNode.getTransform().sendRPC("possessNode");
+        p.possessedNode = playerNode;
 
+        //oldRelevantSets.put(p, new HashSet<>());
+        // when next we send a tick, we'll get a "new" relevant set
+
+        infoComponent.sendRPC("systemMessage", String.format("Welcome %s! WASD to move, click to shoot.", infoComponent.getPlayerName()));
+        infoComponent.sendRPC("systemMessage", "If you die, you lose all your progress.");
+        return playerNode;
     }
 
     @Override
@@ -239,7 +267,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
              */
             List<Player> playersCopy = new ArrayList<>(players);
             playersCopy.parallelStream().forEach(p -> {
-                if (!players.contains(p)) {
+                if (!players.contains(p) || p.state != Player.IN_PLAY) {
                     // don't continue if the player is not in the player list
                     // (we do this to avoid concurrent modification errors)
                     return;

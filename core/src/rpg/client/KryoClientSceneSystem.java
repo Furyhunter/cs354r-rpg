@@ -46,8 +46,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
         componentMap.remove(c.getNetworkID());
     }
 
-    private boolean connecting = false;
-
     private final List<Object> objectsFromServer = new ArrayList<>();
 
     private List<RPCMessage> rpcsToSend = new ArrayList<>();
@@ -59,6 +57,15 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
     private float lastTickTime = 0;
     private float tickDeltaTime = 0;
     private float time = 0;
+
+    private int connectionState = NOT_CONNECTED;
+
+    public static final int AUTHENTICATING = 0;
+    public static final int AUTHENTICATION_SENT = 1;
+    public static final int IN_PLAY = 2;
+    public static final int DISCONNECTED = 3;
+    public static final int CONNECTING = 4;
+    public static final int NOT_CONNECTED = 5; // not kicked/dc'ed, but just hasn't attempted connection yet
 
     private final Object tickLock = new Object();
 
@@ -88,11 +95,13 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
         @Override
         public void connected(Connection connection) {
             Log.info(getClass().getSimpleName(), "Connected");
+            connectionState = AUTHENTICATING;
         }
 
         @Override
         public void disconnected(Connection connection) {
             Log.info(getClass().getSimpleName(), "Disconnected");
+            connectionState = DISCONNECTED;
         }
 
         @Override
@@ -136,6 +145,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     newTickAvailable = true;
                 }
                 processingTick = false;
+                connectionState = IN_PLAY;
                 return;
             }
 
@@ -175,14 +185,9 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
     }
 
     @Override
-    public void processNode(Node n, float deltaTime) {
-
-    }
-
-    @Override
     public void beginProcessing() {
         time += Gdx.graphics.getRawDeltaTime();
-        if (!connecting) {
+        if (connectionState == NOT_CONNECTED) {
             client.start();
             new Thread(() -> {
                 try {
@@ -191,10 +196,10 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     Log.error(KryoClientSceneSystem.class.getSimpleName(), e);
                 }
             }).start();
-            connecting = true;
+            connectionState = CONNECTING;
         }
 
-        if (client.isConnected()) {
+        if (client.isConnected() && connectionState == IN_PLAY) {
             if (newTickAvailable) {
                 // Set tick delta times.
                 lastTickTime = tickDeltaTime;
@@ -400,6 +405,12 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                 rpcsToSend.forEach(client::sendTCP);
                 rpcsToSend.clear();
             }
+        } else if (connectionState == AUTHENTICATING) {
+            // the game version is set implicitly in the initializer block
+            ClientAuthenticate c = new ClientAuthenticate();
+            client.sendTCP(c);
+            Log.info(getClass().getSimpleName(), "Sending authentication");
+            connectionState = AUTHENTICATION_SENT;
         }
     }
 

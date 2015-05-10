@@ -29,7 +29,10 @@ public class PlayerInfoComponent extends Component implements InputEventListener
     @RPC(target = RPC.Target.Server)
     protected void sendChatMessage(String message) {
         Objects.requireNonNull(message);
-        if (message.length() > 400) {
+        if (message.length() > 100) {
+            return;
+        }
+        if (message.length() == 0) {
             return;
         }
 
