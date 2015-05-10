@@ -8,6 +8,7 @@ import com.esotericsoftware.minlog.Log;
 import com.google.common.collect.Sets;
 import rpg.scene.Constants;
 import rpg.scene.Node;
+import rpg.scene.NodeFactory;
 import rpg.scene.components.*;
 import rpg.scene.kryo.*;
 import rpg.scene.replication.*;
@@ -163,6 +164,9 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         playerNode.getTransform().translate(0, 0, 0.5f);
         playerNode.getTransform().sendRPC("possessNode");
         p.possessedNode = playerNode;
+
+        Node shadowNode = NodeFactory.makeShadowNode(playerNode, false);
+        shadowNode.getTransform().translate(0, 0, -1f + 0.005f);
 
         //oldRelevantSets.put(p, new HashSet<>());
         // when next we send a tick, we'll get a "new" relevant set

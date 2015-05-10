@@ -8,6 +8,7 @@ uniform sampler2D u_texture1;
 uniform mat3 u_texCoord0Transform;
 uniform float u_billboard;
 uniform mat4 u_spriteRotScale;
+uniform vec2 u_spriteOffset;
 
 void main() {
     vec4 sample = texture2D(u_texture1, v_texCoord0);

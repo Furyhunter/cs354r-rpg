@@ -96,7 +96,11 @@ public class Node {
     }
 
     private void addDefaultComponents() {
-        myTransform = new Transform();
+        if (networkID < 0) {
+            myTransform = Component.createLocalComponent(Transform.class);
+        } else {
+            myTransform = new Transform();
+        }
 
         addComponent(myTransform);
         defaultComponentsAttached = true;

@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.Vector3;
 import rpg.game.Bullet;
 import rpg.game.SimpleBullet;
 import rpg.scene.Node;
+import rpg.scene.NodeFactory;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.Replicated;
 import rpg.scene.systems.NetworkingSceneSystem;
@@ -30,6 +31,8 @@ public class SimpleBulletComponent extends Component implements Steppable{
     protected Node creator;
 
     private UnitComponent creatorUnitComponent;
+
+    private boolean shadowCreated;
 
     public SimpleBulletComponent() {
         bullet = new SimpleBullet();
@@ -73,6 +76,14 @@ public class SimpleBulletComponent extends Component implements Steppable{
                     t.setPosition(p.add(bullet.getMoveDirection().cpy().scl(deltaTime)));
                 }
                 bullet.age(deltaTime);
+
+                // add shadow if needed
+                if (!shadowCreated) {
+                    Node n = NodeFactory.makeShadowNode(getParent(), true);
+                    n.getTransform().translate(0, 0, -1.5f + 0.005f);
+                    n.getTransform().setScale(new Vector3(0.3f, 0.3f, 0.3f));
+                    shadowCreated = true;
+                }
             }
         }
     }
