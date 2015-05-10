@@ -37,8 +37,6 @@ public final class KryoClassRegisterUtil {
                 Bullet.class,
                 SimpleBullet.class,
 
-                SimpleEnemy.class,
-
                 BitSet.class,
                 RPCInvocation.class,
 

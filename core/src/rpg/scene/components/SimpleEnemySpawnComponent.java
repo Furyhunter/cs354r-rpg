@@ -34,6 +34,8 @@ public class SimpleEnemySpawnComponent extends SpawnComponent {
         tEnemy.setPosition(tSelf.getWorldPosition().cpy().add(new Vector3(MathUtils.random(-3f, 3f), MathUtils.random(-3f, 3f), 0)));
         tEnemy.setRotation(tSelf.getWorldRotation());
 
+        s.setHomePosition(tEnemy.getWorldPosition());
+
         return enemyNode;
     }
 }

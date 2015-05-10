@@ -5,32 +5,32 @@ import com.badlogic.gdx.ai.msg.Telegram;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Node;
+import rpg.scene.components.SimpleEnemyComponent;
 
 /**
  * Created by Corin Hill on 5/6/15.
  */
-public enum SimpleEnemyState implements State<SimpleEnemy> {
+public enum SimpleEnemyState implements State<SimpleEnemyComponent> {
     /**
      * When no player is in the vision range,
      * wander in a direction until bored
      * Pick a new destination and repeat
+     * Stay near home spawn point too
      */
     WANDER() {
         @Override
-        public void update(SimpleEnemy enemy) {
+        public void update(SimpleEnemyComponent enemy) {
             Node target = enemy.getTargetNode();
             // Modify destination, if enemy is bored
             if (!enemy.isFocused() || enemy.getDestination() == null) {
                 float xOff = MathUtils.random(-.5f,.5f);
                 float yOff = MathUtils.random(-.5f,.5f);
-
-                if (enemy.getDestination() != null) {
-                    // Alter path slightly
-                    enemy.getDestination().scl(xOff, yOff, 0);
-                } else {
-                    float speed = enemy.getMoveSpeed();
-                    enemy.setDestination(new Vector3(xOff, yOff, 0).scl(speed));
+                if (enemy.isHomeFar()) {
+                    xOff = enemy.getHomePosition().x - enemy.getParent().getTransform().getWorldPosition().x;
+                    yOff = enemy.getHomePosition().y - enemy.getParent().getTransform().getWorldPosition().y;
                 }
+
+                enemy.setDestination(new Vector3(xOff, yOff, 0));
                 enemy.refocus();
             }
 
@@ -49,16 +49,17 @@ public enum SimpleEnemyState implements State<SimpleEnemy> {
      */
     CHASE() {
         @Override
-        public void update(SimpleEnemy enemy) {
+        public void update(SimpleEnemyComponent enemy) {
             Node target = enemy.getTargetNode();
+
 
             Vector3 v = enemy.getTargetDelta();
             if (v != null) {
-                enemy.setDestination(v.nor().scl(enemy.getMoveSpeed()));
+                enemy.setDestination(v);
             }
 
             if (target != null) {
-                if (enemy.isTargetClose()) {
+                if (!enemy.isTargetFar()) {
                     enemy.getFSM().changeState(ATTACK);
                 }
             } else {
@@ -68,7 +69,7 @@ public enum SimpleEnemyState implements State<SimpleEnemy> {
     },
     ATTACK() {
         @Override
-        public void  update(SimpleEnemy enemy) {
+        public void  update(SimpleEnemyComponent enemy) {
             Node target = enemy.getTargetNode();
 
             enemy.setFiring(true);
@@ -82,22 +83,23 @@ public enum SimpleEnemyState implements State<SimpleEnemy> {
             }
         }
         @Override
-        public void exit(SimpleEnemy enemy) {
+        public void exit(SimpleEnemyComponent enemy) {
             super.exit(enemy);
             enemy.setFiring(false);
         }
 
     };
     @Override
-    public void enter(SimpleEnemy enemy) {}
+    public void enter(SimpleEnemyComponent enemy) {}
     @Override
-    public void update(SimpleEnemy enemy) {}
+    public void update(SimpleEnemyComponent enemy) {}
     @Override
-    public void exit(SimpleEnemy enemy) {
+    public void exit(SimpleEnemyComponent enemy) {
         enemy.setDestination(null);
+        enemy.refocus();
     }
     @Override
-    public boolean onMessage(SimpleEnemy enemy, Telegram telegram) {
+    public boolean onMessage(SimpleEnemyComponent enemy, Telegram telegram) {
         return false;
     }
 }
