@@ -1,8 +1,12 @@
 uniform mat4 u_pvmMatrix;
 
+uniform mat3 u_texCoord0Matrix;
+uniform sampler2D u_texture1;
+
 uniform float u_time;
 
 varying float v_index;
+varying vec2 v_texCoord0;
 
 void main() {
     // Color ranges
@@ -26,5 +30,8 @@ void main() {
         float a = (v_index - 0.8) * (1.0 / 0.2);
         color = mix(vec3(0.6, 0.6, 0.6), vec3(0.9, 0.9, 0.9), a);
     }
-    gl_FragColor = vec4(color, 1);
+    vec4 texSample = texture2D(u_texture1, v_texCoord0);
+    gl_FragColor.x = color.x * texSample.x;
+    gl_FragColor.y = color.y * texSample.y;
+    gl_FragColor.z = color.z * texSample.z;
 }

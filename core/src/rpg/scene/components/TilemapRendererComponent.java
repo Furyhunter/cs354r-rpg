@@ -3,12 +3,15 @@ package rpg.scene.components;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Rectangle;
 import rpg.scene.RenderItem;
 import rpg.scene.replication.Replicated;
+import rpg.scene.systems.GdxAssetManagerSystem;
 
 public class TilemapRendererComponent extends Component implements Renderable, Spatial2D {
     @Replicated
@@ -24,6 +27,7 @@ public class TilemapRendererComponent extends Component implements Renderable, S
 
     private boolean reconstructMesh = true;
 
+    private static Texture texture;
     private static ShaderProgram shader;
 
     public TilemapRendererComponent() {
@@ -43,12 +47,14 @@ public class TilemapRendererComponent extends Component implements Renderable, S
             if (mesh != null) {
                 mesh.dispose();
             }
-            float[] verts = new float[(width + 1) * (height + 1) * 3];
+            float[] verts = new float[(width + 1) * (height + 1) * 5];
             for (int iy = 0; iy <= height; iy++) {
                 for (int ix = 0; ix <= width; ix++) {
-                    verts[((iy * (width + 1)) + ix) * 3] = (float) (ix) - ((float) width / 2);
-                    verts[((iy * (width + 1)) + ix) * 3 + 1] = (float) (iy) - ((float) height / 2);
-                    verts[((iy * (width + 1)) + ix) * 3 + 2] = (float) ((int) values[(iy * (width + 1)) + ix] & 0xFF) / 255.f;
+                    verts[((iy * (width + 1)) + ix) * 5] = (float) (ix) - ((float) width / 2);
+                    verts[((iy * (width + 1)) + ix) * 5 + 1] = (float) (iy) - ((float) height / 2);
+                    verts[((iy * (width + 1)) + ix) * 5 + 2] = (float) ((int) values[(iy * (width + 1)) + ix] & 0xFF) / 255.f;
+                    verts[((iy * (width + 1)) + ix) * 5 + 3] = (float) ix;
+                    verts[((iy * (width + 1)) + ix) * 5 + 4] = (float) iy;
                 }
             }
             short[] indices = new short[getSize() * 6];
@@ -63,7 +69,7 @@ public class TilemapRendererComponent extends Component implements Renderable, S
                 }
             }
 
-            mesh = new Mesh(true, (width + 1) * (height + 1), getSize() * 6, VertexAttribute.Position());
+            mesh = new Mesh(true, (width + 1) * (height + 1), getSize() * 6, VertexAttribute.Position(), VertexAttribute.TexCoords(0));
             mesh.setVertices(verts);
             mesh.setIndices(indices);
 
@@ -71,11 +77,20 @@ public class TilemapRendererComponent extends Component implements Renderable, S
         }
         if (shader == null) {
             shader = new ShaderProgram(Gdx.files.internal("shaders/tilemaprenderer.vsh"), Gdx.files.internal("shaders/tilemaprenderer.fsh"));
+            System.out.println(shader.getLog());
+        }
+        if (texture == null) {
+            GdxAssetManagerSystem.getSingleton().getAssetManager().load("sprites/terrain-noise.png", Texture.class);
+            GdxAssetManagerSystem.getSingleton().getAssetManager().finishLoadingAsset("sprites/terrain-noise.png");
+            texture = GdxAssetManagerSystem.getSingleton().getAssetManager().get("sprites/terrain-noise.png", Texture.class);
+            texture.setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         }
         RenderItem item = new RenderItem();
         item.setMesh(mesh);
         item.setShader(shader);
         item.setPrimitiveType(GL20.GL_TRIANGLES);
+        item.setTextureToBind(0, texture);
+        item.setUniformSetFunction(this::setShaderUniforms);
         return item;
     }
 
@@ -109,5 +124,11 @@ public class TilemapRendererComponent extends Component implements Renderable, S
     @Override
     public Rectangle getRectangle() {
         return new Rectangle((float) -width / 2, (float) -height / 2, width, height);
+    }
+
+    private void setShaderUniforms(ShaderProgram p) {
+        if (p.getUniformLocation("u_texCoord0Matrix") != -1) {
+            p.setUniformMatrix("u_texCoord0Matrix", new Matrix3().scale(0.1f, 0.1f));
+        }
     }
 }
