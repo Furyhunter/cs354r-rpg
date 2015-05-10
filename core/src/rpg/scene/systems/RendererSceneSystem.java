@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Node;
 import rpg.scene.RenderItem;
 import rpg.scene.components.Renderable;
@@ -33,6 +34,9 @@ public class RendererSceneSystem extends AbstractSceneSystem {
         viewMatrix = new Matrix4();
         if (viewTarget != null) {
             Transform t = viewTarget.getTransform();
+            viewMatrix.translate(0, 0, -10);
+            viewMatrix.rotate(Vector3.X, -30);
+
             viewMatrix.translate(t.getWorldPosition().cpy().scl(-1));
             viewMatrix.rotate(t.getWorldRotation().conjugate());
             viewMatrix.scale(1.f / t.getWorldScale().x, 1.f / t.getWorldScale().y, 1.f / t.getWorldScale().z);
@@ -131,6 +135,9 @@ public class RendererSceneSystem extends AbstractSceneSystem {
 
             ShaderProgram s = r.getShader();
             s.begin();
+            if (s.getUniformLocation("u_pMatrix") != -1) s.setUniformMatrix("u_pMatrix", projectionMatrix);
+            if (s.getUniformLocation("u_vmMatrix") != -1)
+                s.setUniformMatrix("u_vmMatrix", viewMatrix.cpy().mul(r.getModelMatrix()));
             if (s.getUniformLocation("u_pvmMatrix") != -1) s.setUniformMatrix("u_pvmMatrix", pvm);
             if (s.getUniformLocation("u_time") != -1) s.setUniformf("u_time", elapsedTime);
             if (s.getUniformLocation("u_texture1") != -1) s.setUniformi("u_texture1", 0);

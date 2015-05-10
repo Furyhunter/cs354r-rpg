@@ -42,6 +42,7 @@ public class SimpleEnemySpawnComponent extends SpawnComponent {
         Transform tSelf = getParent().getTransform();
 
         tEnemy.setPosition(tSelf.getWorldPosition().cpy().add(new Vector3(MathUtils.random(-3f, 3f), MathUtils.random(-3f, 3f), 0)));
+        tEnemy.translate(0, 0, 0.5f);
         tEnemy.setRotation(tSelf.getWorldRotation());
 
         return enemyNode;

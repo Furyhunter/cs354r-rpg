@@ -160,8 +160,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
         UnitComponent u = new UnitComponent();
         u.setFaction(UnitComponent.PLAYER);
         playerNode.addComponent(u);
-        //players.add(player);
-        //connectionPlayerMap.put(connection, player);
+        playerNode.getTransform().translate(0, 0, 0.5f);
         playerNode.getTransform().sendRPC("possessNode");
         p.possessedNode = playerNode;
 
