@@ -3,7 +3,7 @@ package rpg.scene.components;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
@@ -16,7 +16,7 @@ import rpg.scene.systems.NetworkingSceneSystem;
 
 import static rpg.scene.systems.InputSystem.EventType.*;
 
-public class SimplePlayerComponent extends Component implements Steppable, InputEventListener {
+public class SimplePlayerComponent extends Component implements Steppable, InputEventListener, Killable {
 
     private boolean mouseLEFT;
 
@@ -25,6 +25,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
 
     private Vector2 mousePosition;
 
+    public Vector2 animMoveDirection = new Vector2();
 
     private boolean keyW;
     private boolean keyS;
@@ -44,11 +45,10 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
 
     private boolean lerpTargetChanged = false;
 
+    private UnitComponent unitComponent;
+
     @Replicated
     protected PlayerInfoComponent playerInfoComponent;
-
-    private static float MAX_HEALTH = 150;
-    private float health = MAX_HEALTH;
 
     @Override
     public void processInputEvent(InputEvent event) {
@@ -117,6 +117,11 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     @Override
     public void step(float deltaTime) {
         NetworkingSceneSystem nss = getParent().getScene().findSystem(NetworkingSceneSystem.class);
+
+        if (unitComponent == null) {
+            unitComponent = getParent().findComponent(UnitComponent.class);
+        }
+
         if (nss == null || (nss.getContext() == Context.Client && getParent().isPossessed())) {
             if (mouseLEFT) {
                 if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
@@ -166,6 +171,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                 moveTimer = 0;
             }
             t.setPosition(clientRealPosition);
+            this.animMoveDirection.set(moveDirection.x, moveDirection.y);
 
         } else if (nss.getContext() == Context.Server) {
             // Server side
@@ -191,13 +197,6 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                 playerInfoComponent = getParent().findComponent(PlayerInfoComponent.class);
             }
 
-            if (health <= 0) {
-                RectangleRenderer r = getParent().<RectangleRenderer>findComponent(RectangleRenderer.class);
-                if (r != null) {
-                    r.setColor(Color.GRAY);
-                }
-            }
-
         } else if (nss.getContext() == Context.Client) {
             Transform t = getParent().getTransform();
 
@@ -206,6 +205,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                 if (lerpTargetChanged) {
                     moveTimer = 0;
                     lerpTargetChanged = false;
+                    animMoveDirection.set(newPosition.x - oldPosition.x, newPosition.y - oldPosition.y).nor();
                 }
 
                 t.setPosition(oldPosition.cpy().lerp(newPosition, moveTimer / nss.getTickDeltaTime()));
@@ -219,19 +219,33 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         Node bulletNode = new Node();
         getParent().getScene().getRoot().addChild(bulletNode);
 
-        SimplePlayerBulletComponent s = new SimplePlayerBulletComponent();
-        s.setMoveDirection(v);
-        RectangleRenderer r = new RectangleRenderer();
-        r.setColor(Color.NAVY);
-        r.setSize(new Vector2(0.1f, 0.1f));
-        bulletNode.addComponent(s);
-        bulletNode.addComponent(r);
+        v.nor();
+
+        SimpleBulletComponent bulletComponent = new SimpleBulletComponent();
+        bulletComponent.setMoveDirection(v);
+        bulletComponent.setCreator(getParent());
+        SpriteRenderer spriteRenderer = new SpriteRenderer();
+        spriteRenderer.setTexture("sprites/bullet-player.png");
+        spriteRenderer.setDimensions(new Vector2(0.5f, 0.5f));
+        spriteRenderer.setRotation(45f);
+        spriteRenderer.setBillboard(false);
+        bulletNode.addComponent(bulletComponent);
+        bulletNode.addComponent(spriteRenderer);
 
         Transform tBullet = bulletNode.getTransform();
         Transform tSelf = getParent().getTransform();
 
         tBullet.setPosition(tSelf.getWorldPosition());
-        tBullet.setRotation(tSelf.getWorldRotation());
+        tBullet.translate(0, 0, 0.5f);
+        float angle = 0;
+        if (v.x >= 0) {
+            // TR
+            angle = (float) Math.acos(v.dot(Vector3.Y));
+        } else if (v.x < 0) {
+            // BL
+            angle = (float) -Math.acos(v.dot(Vector3.Y));
+        }
+        spriteRenderer.setRotation(-angle * MathUtils.radiansToDegrees - 45f);
     }
 
     @RPC(target = RPC.Target.Server)
@@ -246,8 +260,6 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         moveTimer = 0;
     }
 
-    public void hurt(float damage) {health -= damage;}
-
     @Override
     public void onPreApplyReplicateFields() {
         Transform t = getParent().getTransform();
@@ -260,5 +272,15 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     @Override
     public boolean isAlwaysFieldReplicated() {
         return true;
+    }
+
+    @Override
+    public void kill() {
+        playerInfoComponent.sendRPC("gameMessage", "You have died.");
+        SpriteRenderer s = getParent().findComponent(SpriteRenderer.class);
+        PlayerSpriteAnimatorComponent p = getParent().findComponent(PlayerSpriteAnimatorComponent.class);
+        if (s != null) getParent().removeComponent(s);
+        if (p != null) getParent().removeComponent(p);
+        getParent().removeComponent(this);
     }
 }

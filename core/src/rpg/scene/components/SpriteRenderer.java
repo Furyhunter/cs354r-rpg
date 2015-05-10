@@ -3,9 +3,7 @@ package rpg.scene.components;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.*;
 import rpg.scene.RenderItem;
 import rpg.scene.containers.TextureContainer;
 import rpg.scene.replication.Replicated;
@@ -22,6 +20,15 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
     protected Vector2 dimensions = new Vector2(1, 1);
     @Replicated
     protected Vector2 offset = new Vector2();
+
+    @Replicated
+    protected float rotation;
+
+    @Replicated
+    protected boolean billboard = true;
+
+    public Vector2 texCoordTranslation = new Vector2();
+    public Vector2 texCoordScale = new Vector2(1, 1);
 
     @Override
     public RenderItem render() {
@@ -44,8 +51,15 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
             });
         }
 
-        Matrix4 model = new Matrix4().mulLeft(new Matrix4().setToTranslation(offset.x, offset.y, 0)).mulLeft(new Matrix4().setToScaling(dimensions.x, dimensions.y, 1));
-        return new RenderItem(shader, new Texture[]{texture.getAsset()}, mesh, model, GL20.GL_TRIANGLE_FAN);
+        Matrix4 model = new Matrix4();
+        model.scale(dimensions.x, dimensions.y, 1);
+        if (!billboard) model.translate(offset.x, offset.y, 0);
+        model.rotate(Vector3.Z, rotation);
+
+        RenderItem renderItem = new RenderItem(shader, new Texture[]{texture.getAsset()}, mesh, model, GL20.GL_TRIANGLE_FAN);
+        renderItem.setUniformSetFunction(this::setUniforms);
+        renderItem.setTransparent(true);
+        return renderItem;
     }
 
     public TextureContainer getTexture() {
@@ -75,8 +89,32 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
         this.offset = new Vector2(offset);
     }
 
+    public float getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(float rotation) {
+        this.rotation = rotation;
+    }
+
+    public boolean isBillboard() {
+        return billboard;
+    }
+
+    public void setBillboard(boolean billboard) {
+        this.billboard = billboard;
+    }
+
     @Override
     public Rectangle getRectangle() {
         return new Rectangle(offset.x, offset.y, dimensions.x, dimensions.y);
+    }
+
+    private void setUniforms(ShaderProgram p) {
+        Matrix3 m = new Matrix3().translate(texCoordTranslation).scale(texCoordScale);
+        p.setUniformMatrix("u_texCoord0Transform", m);
+        p.setUniformf("u_billboard", billboard ? 1.0f : 0.0f);
+        p.setUniformMatrix("u_spriteRotScale", new Matrix4().rotate(Vector3.Z, rotation).scale(dimensions.x, dimensions.y, 1));
+        p.setUniformf("u_spriteOffset", offset);
     }
 }

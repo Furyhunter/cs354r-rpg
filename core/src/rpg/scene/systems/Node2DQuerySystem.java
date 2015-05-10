@@ -88,6 +88,7 @@ public class Node2DQuerySystem extends AbstractSceneSystem {
         // Reinsert dirty nodes
         pairs.clear();
         for (Node dirtyNode : dirtyNodes) {
+            if (dirtyNode == null) continue;
             Geometry g = nodeToGeom.get(dirtyNode);
             if (g != null) {
                 rt = rt.delete(dirtyNode, g);

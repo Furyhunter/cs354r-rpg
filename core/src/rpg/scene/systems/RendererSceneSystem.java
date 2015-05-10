@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Node;
 import rpg.scene.RenderItem;
 import rpg.scene.components.Renderable;
@@ -33,6 +34,9 @@ public class RendererSceneSystem extends AbstractSceneSystem {
         viewMatrix = new Matrix4();
         if (viewTarget != null) {
             Transform t = viewTarget.getTransform();
+            viewMatrix.translate(0, 0, -10);
+            viewMatrix.rotate(Vector3.X, -30);
+
             viewMatrix.translate(t.getWorldPosition().cpy().scl(-1));
             viewMatrix.rotate(t.getWorldRotation().conjugate());
             viewMatrix.scale(1.f / t.getWorldScale().x, 1.f / t.getWorldScale().y, 1.f / t.getWorldScale().z);
@@ -48,6 +52,8 @@ public class RendererSceneSystem extends AbstractSceneSystem {
         // Map Renderable to RenderItem with render() method, to get a RenderItem list
         List<RenderItem> items = renderables.stream().map(r -> {
             RenderItem i = r.render();
+            if (i == null) return null;
+
             // Allow the incoming RenderItem have its own model matrix.
             if (!i.isAbsoluteModelPosition()) {
                 Matrix4 model = new Matrix4();
@@ -64,7 +70,7 @@ public class RendererSceneSystem extends AbstractSceneSystem {
                 i.setModelMatrix(new Matrix4());
             }
             return i;
-        }).collect(Collectors.toList());
+        }).filter(r -> r != null).collect(Collectors.toList());
 
         // Append the collecting list of render items.
         renderItems.addAll(items);
@@ -90,27 +96,48 @@ public class RendererSceneSystem extends AbstractSceneSystem {
         // Draw the draw list
         Texture currentlyBoundTexture = null;
         boolean transparencySet = false;
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
+        Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE1);
+        Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE2);
+        Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE3);
+        Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE4);
+        Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE5);
+        Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE6);
+        Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE7);
+        Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
         for (RenderItem r : renderItems) {
             if (r.getTextureToBind(0) != currentlyBoundTexture) {
                 if (r.getTextureToBind(0) != null) r.getTextureToBind(0).bind(0);
                 if (r.getTextureToBind(1) != null) r.getTextureToBind(1).bind(1);
                 if (r.getTextureToBind(2) != null) r.getTextureToBind(2).bind(2);
                 if (r.getTextureToBind(3) != null) r.getTextureToBind(3).bind(3);
-                if (r.getTextureToBind(3) != null) r.getTextureToBind(4).bind(4);
-                if (r.getTextureToBind(3) != null) r.getTextureToBind(5).bind(5);
-                if (r.getTextureToBind(3) != null) r.getTextureToBind(6).bind(6);
-                if (r.getTextureToBind(3) != null) r.getTextureToBind(7).bind(7);
+                if (r.getTextureToBind(4) != null) r.getTextureToBind(4).bind(4);
+                if (r.getTextureToBind(5) != null) r.getTextureToBind(5).bind(5);
+                if (r.getTextureToBind(6) != null) r.getTextureToBind(6).bind(6);
+                if (r.getTextureToBind(7) != null) r.getTextureToBind(7).bind(7);
                 currentlyBoundTexture = r.getTextureToBind(0);
             }
             if (r.isTransparent() && !transparencySet) {
                 Gdx.gl20.glEnable(GL20.GL_BLEND);
                 Gdx.gl20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
                 transparencySet = true;
+            } else if (!r.isTransparent() && transparencySet) {
+                Gdx.gl20.glDisable(GL20.GL_BLEND);
             }
             Matrix4 pvm = new Matrix4(projview).mul(r.getModelMatrix());
 
             ShaderProgram s = r.getShader();
             s.begin();
+            if (s.getUniformLocation("u_pMatrix") != -1) s.setUniformMatrix("u_pMatrix", projectionMatrix);
+            if (s.getUniformLocation("u_vmMatrix") != -1)
+                s.setUniformMatrix("u_vmMatrix", viewMatrix.cpy().mul(r.getModelMatrix()));
             if (s.getUniformLocation("u_pvmMatrix") != -1) s.setUniformMatrix("u_pvmMatrix", pvm);
             if (s.getUniformLocation("u_time") != -1) s.setUniformf("u_time", elapsedTime);
             if (s.getUniformLocation("u_texture1") != -1) s.setUniformi("u_texture1", 0);

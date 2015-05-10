@@ -1,17 +1,16 @@
 package rpg.scene.components;
 
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import rpg.game.Bullet;
 import rpg.game.SimpleBullet;
 import rpg.scene.Node;
+import rpg.scene.NodeFactory;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.Replicated;
 import rpg.scene.systems.NetworkingSceneSystem;
 import rpg.scene.systems.Node2DQuerySystem;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -27,6 +26,13 @@ public class SimpleBulletComponent extends Component implements Steppable{
 
     private float moveTimer = 0;
     private boolean lerpTargetChanged = false;
+
+    @Replicated
+    protected Node creator;
+
+    private UnitComponent creatorUnitComponent;
+
+    private boolean shadowCreated;
 
     public SimpleBulletComponent() {
         bullet = new SimpleBullet();
@@ -70,20 +76,37 @@ public class SimpleBulletComponent extends Component implements Steppable{
                     t.setPosition(p.add(bullet.getMoveDirection().cpy().scl(deltaTime)));
                 }
                 bullet.age(deltaTime);
+
+                // add shadow if needed
+                if (!shadowCreated) {
+                    Node n = NodeFactory.makeShadowNode(getParent(), true);
+                    n.getTransform().translate(0, 0, -1.5f + 0.005f);
+                    n.getTransform().setScale(new Vector3(0.3f, 0.3f, 0.3f));
+                    shadowCreated = true;
+                }
             }
         }
     }
 
     protected void checkCollisions() {
-        System.out.println("sbc D:");
         Node2DQuerySystem n2qs = getParent().getScene().findSystem(Node2DQuerySystem.class);
         Objects.requireNonNull(n2qs);
-        // Why is idea grumpy about the type but claims it isn't explicitly necessary
-        Spatial2D s = getParent().<Spatial2D>findComponent(Spatial2D.class);
+        Spatial2D s = getParent().findComponent(Spatial2D.class);
         Objects.requireNonNull(s);
 
-        Set<Node> nodes = n2qs.queryNodesInArea(s.getRectangle());
-        // Do something, if you want
+        Vector3 worldPosition = getParent().getTransform().getWorldPosition();
+
+        Set<Node> nodes = n2qs.queryNodesInArea(s.getRectangle().setCenter(worldPosition.x, worldPosition.y));
+        nodes.stream()
+                .map(n -> n.findComponent(UnitComponent.class))
+                .forEach(c -> {
+                    if (c == null) return;
+                    if (getParent() == null || getParent().getParent() == null) return;
+                    if (c.getFaction() != creatorUnitComponent.getFaction()) {
+                        c.hurt(this, 10);
+                        getParent().getParent().removeChild(getParent());
+                    }
+                });
     }
 
     @Override
@@ -96,4 +119,12 @@ public class SimpleBulletComponent extends Component implements Steppable{
     public Vector3 getMoveDirection() {return bullet.getMoveDirection();}
     public void setMoveDirection(Vector3 v) { bullet.setMoveDirection(v);}
 
+    public Node getCreator() {
+        return creator;
+    }
+
+    public void setCreator(Node creator) {
+        this.creator = creator;
+        this.creatorUnitComponent = creator.findComponent(UnitComponent.class);
+    }
 }

@@ -46,8 +46,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
         componentMap.remove(c.getNetworkID());
     }
 
-    private boolean connecting = false;
-
     private final List<Object> objectsFromServer = new ArrayList<>();
 
     private List<RPCMessage> rpcsToSend = new ArrayList<>();
@@ -59,6 +57,15 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
     private float lastTickTime = 0;
     private float tickDeltaTime = 0;
     private float time = 0;
+
+    private int connectionState = NOT_CONNECTED;
+
+    public static final int AUTHENTICATING = 0;
+    public static final int AUTHENTICATION_SENT = 1;
+    public static final int IN_PLAY = 2;
+    public static final int DISCONNECTED = 3;
+    public static final int CONNECTING = 4;
+    public static final int NOT_CONNECTED = 5; // not kicked/dc'ed, but just hasn't attempted connection yet
 
     private final Object tickLock = new Object();
 
@@ -88,11 +95,13 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
         @Override
         public void connected(Connection connection) {
             Log.info(getClass().getSimpleName(), "Connected");
+            connectionState = AUTHENTICATING;
         }
 
         @Override
         public void disconnected(Connection connection) {
             Log.info(getClass().getSimpleName(), "Disconnected");
+            connectionState = DISCONNECTED;
         }
 
         @Override
@@ -136,6 +145,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     newTickAvailable = true;
                 }
                 processingTick = false;
+                connectionState = IN_PLAY;
                 return;
             }
 
@@ -175,14 +185,9 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
     }
 
     @Override
-    public void processNode(Node n, float deltaTime) {
-
-    }
-
-    @Override
     public void beginProcessing() {
         time += Gdx.graphics.getRawDeltaTime();
-        if (!connecting) {
+        if (connectionState == NOT_CONNECTED) {
             client.start();
             new Thread(() -> {
                 try {
@@ -191,10 +196,10 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     Log.error(KryoClientSceneSystem.class.getSimpleName(), e);
                 }
             }).start();
-            connecting = true;
+            connectionState = CONNECTING;
         }
 
-        if (client.isConnected()) {
+        if (client.isConnected() && connectionState == IN_PLAY) {
             if (newTickAvailable) {
                 // Set tick delta times.
                 lastTickTime = tickDeltaTime;
@@ -225,13 +230,11 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     tickLock.notify();
                 }
 
-                /* Nodes */
-
-                // Attachment
+                // Attachment of Nodes
                 if (nodeAttachList.size() > 0) {
                     List<Node> nodesToAttach = new ArrayList<>();
                     List<Integer> parents = new ArrayList<>();
-                    nodeAttachList.forEach(m -> {
+                    nodeAttachList.stream().sorted(Comparator.comparingInt(NodeAttach::getDepth)).forEach(m -> {
                         Node node = new Node(m.nodeID, false);
                         nodeMap.put(m.nodeID, node);
 
@@ -255,11 +258,11 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     }
                 }
 
-                // Reattachment
+                // Reattachment of Nodes
                 if (nodeReattachList.size() > 0) {
                     List<Node> nodesToReattach = new ArrayList<>();
                     List<Integer> parents = new ArrayList<>();
-                    nodeReattachList.forEach(m -> {
+                    nodeReattachList.stream().sorted(Comparator.comparingInt(NodeReattach::getDepth)).forEach(m -> {
                         Node node = nodeMap.get(m.nodeID);
                         if (node == null) {
                             throw new RuntimeException("server asked a node to reattach, but it couldn't be found");
@@ -285,23 +288,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     }
                 }
 
-                // Detachment
-                if (nodeDetachList.size() > 0) {
-                    List<Node> nodesToDetach = new ArrayList<>();
-                    nodeDetachList.forEach(m -> {
-                        Node node = nodeMap.get(m.nodeID);
-                        if (node == null) {
-                            Log.warn(getClass().getSimpleName(), "The server told us to detach a node but we didn't even know it ever existed.");
-                        }
-                        nodesToDetach.add(node);
-                    });
-                    nodesToDetach.forEach(n -> n.getParent().removeChild(n));
-                }
-
-
-                /* Component Synchronization */
-
-                // Attachment
+                // Attachment of Components
                 if (componentAttachList.size() > 0) {
                     List<Component> componentsToAttach = new ArrayList<>();
                     List<Integer> parents = new ArrayList<>();
@@ -333,7 +320,7 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     }
                 }
 
-                // Reattachment
+                // Reattachment of Components
                 if (componentReattachList.size() > 0) {
                     List<Component> componentsToReattach = new ArrayList<>();
                     List<Integer> parents = new ArrayList<>();
@@ -360,18 +347,6 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                     }
                 }
 
-                // Detachment
-                if (componentDetachList.size() > 0) {
-                    componentDetachList.forEach(m -> {
-                        Component c = componentMap.get(m.componentID);
-                        if (c == null) {
-                            Log.warn(getClass().getSimpleName(), "The server told us to detach a component we didn't know ever existed.");
-                            return;
-                        }
-                        c.getParent().removeComponent(c);
-                    });
-                }
-
                 /* Field Replication */
                 if (fieldReplicateMessageList.size() > 0) {
                     fieldReplicateMessageList.forEach(m -> {
@@ -395,6 +370,34 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                         RepTable.getTableForType(c.getClass()).invokeMethod(c, m.invocation);
                     });
                 }
+
+                // Detachment is done last in order to provide for RPC calls just before removal
+                // i.e. "kill" in killable interface
+
+                // Detachment of Nodes
+                if (nodeDetachList.size() > 0) {
+                    List<Node> nodesToDetach = new ArrayList<>();
+                    nodeDetachList.forEach(m -> {
+                        Node node = nodeMap.get(m.nodeID);
+                        if (node == null) {
+                            Log.warn(getClass().getSimpleName(), "The server told us to detach a node but we didn't even know it ever existed.");
+                        }
+                        nodesToDetach.add(node);
+                    });
+                    nodesToDetach.forEach(n -> n.getParent().removeChild(n));
+                }
+
+                // Detachment of Components
+                if (componentDetachList.size() > 0) {
+                    componentDetachList.forEach(m -> {
+                        Component c = componentMap.get(m.componentID);
+                        if (c == null) {
+                            Log.warn(getClass().getSimpleName(), "The server told us to detach a component we didn't know ever existed.");
+                            return;
+                        }
+                        c.getParent().removeComponent(c);
+                    });
+                }
             }
 
             // Send RPC messages
@@ -402,6 +405,12 @@ public class KryoClientSceneSystem extends NetworkingSceneSystem {
                 rpcsToSend.forEach(client::sendTCP);
                 rpcsToSend.clear();
             }
+        } else if (connectionState == AUTHENTICATING) {
+            // the game version is set implicitly in the initializer block
+            ClientAuthenticate c = new ClientAuthenticate();
+            client.sendTCP(c);
+            Log.info(getClass().getSimpleName(), "Sending authentication");
+            connectionState = AUTHENTICATION_SENT;
         }
     }
 

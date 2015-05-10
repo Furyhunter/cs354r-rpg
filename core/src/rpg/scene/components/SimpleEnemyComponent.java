@@ -17,7 +17,7 @@ import java.util.Optional;
 /**
  * Created by Corin Hill on 5/6/15.
  */
-public class SimpleEnemyComponent extends Component implements Steppable {
+public class SimpleEnemyComponent extends Component implements Steppable, Killable {
     private SimpleEnemy enemy = new SimpleEnemy();
 
     private Vector3 destination = null;
@@ -92,12 +92,13 @@ public class SimpleEnemyComponent extends Component implements Steppable {
         Node bulletNode = new Node();
         getParent().getScene().getRoot().addChild(bulletNode);
 
-        SimpleEnemyBulletComponent s = new SimpleEnemyBulletComponent();
-        s.setMoveDirection(v);
+        SimpleBulletComponent bulletComponent = new SimpleBulletComponent();
+        bulletComponent.setMoveDirection(v);
+        bulletComponent.setCreator(getParent());
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.PINK);
         r.setSize(new Vector2(0.1f, 0.1f));
-        bulletNode.addComponent(s);
+        bulletNode.addComponent(bulletComponent);
         bulletNode.addComponent(r);
 
         Transform tBullet = bulletNode.getTransform();
@@ -105,6 +106,7 @@ public class SimpleEnemyComponent extends Component implements Steppable {
 
         tBullet.setPosition(tSelf.getWorldPosition());
         tBullet.setRotation(tSelf.getWorldRotation());
+        tBullet.translate(0, 0, 0.5f);
     }
 
     private Node getTargetNode() {
@@ -129,8 +131,6 @@ public class SimpleEnemyComponent extends Component implements Steppable {
             return null;
     }
 
-    public void hurt(float damage) {enemy.hurt(damage);}
-
     @Override
     public void onPreApplyReplicateFields() {
         Transform t = getParent().getTransform();
@@ -143,5 +143,10 @@ public class SimpleEnemyComponent extends Component implements Steppable {
     @Override
     public boolean isAlwaysFieldReplicated() {
         return true;
+    }
+
+    @Override
+    public void kill() {
+        getParent().removeFromParent();
     }
 }

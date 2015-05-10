@@ -95,7 +95,8 @@ public class App extends ApplicationAdapter {
 
     @Override
 	public void render() {
-		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		s.update(Gdx.graphics.getRawDeltaTime());
@@ -113,8 +114,9 @@ public class App extends ApplicationAdapter {
 
 	private void setProjectionMatrix() {
 		float aspect = (float) Gdx.graphics.getWidth() / (float) Gdx.graphics.getHeight();
-        rendererSceneSystem.getProjectionMatrix().setToOrtho2D(0, 0, 10 * (aspect), 10).translate(5 * aspect, 5, 0);
-    }
+        //rendererSceneSystem.getProjectionMatrix().setToOrtho2D(0, 0, 10 * (aspect), 10).translate(5 * aspect, 5, 0);
+		rendererSceneSystem.getProjectionMatrix().setToProjection(0.01f, 100f, 55f, aspect);
+	}
 
 	public List<String> getRunArguments() {
 		return runArguments;

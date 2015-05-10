@@ -23,6 +23,10 @@ public final class KryoClassRegisterUtil {
     public static void registerAll(Kryo k) {
         Class<?>[] classes = new Class<?>[]{
 
+                // NEVER MOVE THESE TWO
+                ClientAuthenticate.class,
+                KickMessage.class,
+
                 Vector2.class,
                 Vector3.class,
                 Quaternion.class,
