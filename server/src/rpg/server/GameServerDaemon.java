@@ -184,6 +184,8 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                 n.addComponent(tilemapRendererComponent);
                 n.setStaticReplicant(true);
 
+                tilemapRendererComponent.generateRandomDoodads();
+
                 n.getTransform().translate(iix * width, iiy * height, 0);
 
                 if (iix > -5 && iix < 5 && iiy > -5 && iiy < 5) {
@@ -204,9 +206,9 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
     @Override
     public void render() {
         s.update(Gdx.graphics.getDeltaTime());
-        if (Gdx.graphics.getRawDeltaTime() > (1.f / kryoServerSceneSystem.getReplicationRate())) {
+        if (Gdx.graphics.getDeltaTime() > (1.f / kryoServerSceneSystem.getReplicationRate())) {
             Log.warn(getClass().getSimpleName(), "Network tick time overrun! "
-                    + Gdx.graphics.getRawDeltaTime() + "s to evaluate frame on frame " + Gdx.graphics.getFrameId());
+                    + Gdx.graphics.getDeltaTime() + "s to evaluate frame on frame " + Gdx.graphics.getFrameId());
         }
     }
 

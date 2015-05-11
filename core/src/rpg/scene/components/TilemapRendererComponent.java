@@ -9,9 +9,14 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector3;
+import rpg.scene.Node;
+import rpg.scene.NodeFactory;
 import rpg.scene.RenderItem;
 import rpg.scene.replication.Replicated;
 import rpg.scene.systems.GdxAssetManagerSystem;
+
+import java.util.Random;
 
 public class TilemapRendererComponent extends Component implements Renderable, Spatial2D {
     @Replicated
@@ -129,6 +134,22 @@ public class TilemapRendererComponent extends Component implements Renderable, S
     private void setShaderUniforms(ShaderProgram p) {
         if (p.getUniformLocation("u_texCoord0Matrix") != -1) {
             p.setUniformMatrix("u_texCoord0Matrix", new Matrix3().scale(0.1f, 0.1f));
+        }
+    }
+
+    public void generateRandomDoodads() {
+        Random r = new Random();
+
+        for (int ix = 0; ix <= width; ix++) {
+            for (int iy = 0; iy <= height; iy++) {
+                if (r.nextFloat() > 0.97) {
+                    float pointValue = (float) (((int) values[iy * (width + 1) + ix]) & 0x000000FF) / 255;
+                    if (pointValue > 0.3f && pointValue < 0.7f) {
+                        Node n = NodeFactory.makeGrassDoodad(getParent(), false);
+                        n.getTransform().setPosition(new Vector3((float) ix - ((float) width / 2), (float) iy - ((float) height / 2), 0));
+                    }
+                }
+            }
         }
     }
 }

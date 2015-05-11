@@ -1,6 +1,7 @@
 package rpg.scene;
 
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import rpg.scene.components.Component;
 import rpg.scene.components.DetachAfterDelayComponent;
 import rpg.scene.components.SpriteRenderer;
@@ -52,6 +53,26 @@ public final class NodeFactory {
         DetachAfterDelayComponent detachAfterDelayComponent = Component.createLocalComponent(DetachAfterDelayComponent.class);
         detachAfterDelayComponent.timeRemaining = 60;
         n.addComponent(detachAfterDelayComponent);
+        n.addComponent(spriteRenderer);
+
+        return n;
+    }
+
+    public static Node makeGrassDoodad(Node parent, boolean local) {
+        Node n;
+        if (local) n = Node.createLocalNode();
+        else n = new Node();
+
+        parent.addChild(n);
+
+        SpriteRenderer spriteRenderer;
+        if (local) spriteRenderer = Component.createLocalComponent(SpriteRenderer.class);
+        else spriteRenderer = new SpriteRenderer();
+
+        spriteRenderer.setTexture("sprites/grass.png");
+        spriteRenderer.setOffset(new Vector2(0, 0.5f));
+        n.getTransform().setScale(new Vector3(0.5f, 0.5f, 1));
+
         n.addComponent(spriteRenderer);
 
         return n;
