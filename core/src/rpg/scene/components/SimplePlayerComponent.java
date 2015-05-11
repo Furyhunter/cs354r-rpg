@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.esotericsoftware.minlog.Log;
 import rpg.scene.Node;
+import rpg.scene.NodeFactory;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.RPC;
 import rpg.scene.replication.Replicated;
@@ -281,6 +282,15 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         PlayerSpriteAnimatorComponent p = getParent().findComponent(PlayerSpriteAnimatorComponent.class);
         if (s != null) getParent().removeComponent(s);
         if (p != null) getParent().removeComponent(p);
+
+        Transform t = getParent().getTransform();
+        Node n = NodeFactory.createGravestone(getParent().findRoot(), false);
+        n.getTransform().setPosition(new Vector3(t.getPosition().x, t.getPosition().y, 5));
+        n.getTransform().translate(0, 0, 5);
+
+        FallToGroundComponent f = new FallToGroundComponent();
+        n.addComponent(f);
+
         getParent().removeComponent(this);
     }
 }

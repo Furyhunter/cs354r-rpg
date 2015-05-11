@@ -116,7 +116,7 @@ public class Scene2DUISystem extends AbstractSceneSystem {
     }
 
     public Scene2DUISystem() {
-        stage.setViewport(new FitViewport(800, 600));
+        stage.setViewport(new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()));
         InputProcessor current = Gdx.input.getInputProcessor();
         InputProcessor ip = new WrapperInputProcessor(stage, current);
         Gdx.input.setInputProcessor(ip);
