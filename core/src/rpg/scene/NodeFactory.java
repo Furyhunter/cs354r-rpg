@@ -2,6 +2,7 @@ package rpg.scene;
 
 import com.badlogic.gdx.math.Vector2;
 import rpg.scene.components.Component;
+import rpg.scene.components.DetachAfterDelayComponent;
 import rpg.scene.components.SpriteRenderer;
 
 public final class NodeFactory {
@@ -48,6 +49,9 @@ public final class NodeFactory {
         shadow.findComponent(SpriteRenderer.class).setDimensions(new Vector2(1.8f, 1.8f));
         shadow.getTransform().translate(0, 0, 0.005f);
 
+        DetachAfterDelayComponent detachAfterDelayComponent = Component.createLocalComponent(DetachAfterDelayComponent.class);
+        detachAfterDelayComponent.timeRemaining = 60;
+        n.addComponent(detachAfterDelayComponent);
         n.addComponent(spriteRenderer);
 
         return n;
