@@ -91,8 +91,6 @@ public class App extends ApplicationAdapter {
 		setProjectionMatrix();
 	}
 
-    static float time = 0;
-
     @Override
 	public void render() {
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
@@ -100,11 +98,6 @@ public class App extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		s.update(Gdx.graphics.getRawDeltaTime());
-        time += Gdx.graphics.getRawDeltaTime();
-        if (time > 1) {
-            Gdx.graphics.setTitle(Gdx.graphics.getFramesPerSecond() + "fps");
-            time = 0;
-        }
     }
 
 	@Override
