@@ -32,6 +32,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     private boolean keyS;
     private boolean keyA;
     private boolean keyD;
+    private boolean keyE;
 
     private static float MOVE_SPEED = 4;
     private static float MOVE_SPEED_SQUARED = 16;
@@ -51,6 +52,9 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     @Replicated
     protected PlayerInfoComponent playerInfoComponent;
 
+    @Replicated
+    protected int heldItem = 0;
+
     @Override
     public void processInputEvent(InputEvent event) {
         if (event.getType() == KeyDown) {
@@ -66,6 +70,9 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                     break;
                 case Keys.D:
                     keyD = true;
+                    break;
+                case Keys.E:
+                    keyE = true;
                     break;
                 default:
                     break;
@@ -84,6 +91,9 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                     break;
                 case Keys.D:
                     keyD = false;
+                    break;
+                case Keys.E:
+                    keyE = false;
                     break;
                 default:
                     break;
@@ -125,6 +135,10 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
 
         if (nss == null || (nss.getContext() == Context.Client && getParent().isPossessed())) {
             if (mouseLEFT) {
+                if (keyE) {
+                    // use thing
+                    heldItem = 0;
+                }
                 if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
                     float x = mousePosition.x - (Gdx.graphics.getWidth() / 2);
                     float y = (Gdx.graphics.getHeight() / 2) - mousePosition.y;
@@ -292,5 +306,18 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         n.addComponent(f);
 
         getParent().removeComponent(this);
+    }
+
+    public void getPickup(int type) {
+        switch (type) {
+            case PickupComponent.EXP:
+                UnitComponent unit = getParent().findComponent(UnitComponent.class);
+                // Nice, hardcoded experience pickup
+                if (unit != null) unit.setExperience(unit.getExperience() + 10);
+                break;
+            default:
+                heldItem = type;
+                break;
+        }
     }
 }
