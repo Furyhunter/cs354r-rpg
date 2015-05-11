@@ -18,6 +18,9 @@ public class UnitComponent extends Component implements Hurtable {
     protected float maxEnergy = 100;
 
     @Replicated
+    protected float experience = 0;
+
+    @Replicated
     protected int faction = ENEMY;
 
     public static final int PLAYER = 0;
@@ -90,5 +93,13 @@ public class UnitComponent extends Component implements Hurtable {
 
     public void setFaction(int faction) {
         this.faction = faction;
+    }
+
+    public float getExperience() {
+        return experience;
+    }
+
+    public void setExperience(float experience) {
+        this.experience = experience;
     }
 }

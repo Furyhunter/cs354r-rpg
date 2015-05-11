@@ -9,6 +9,7 @@ import rpg.client.KryoClientSceneSystem;
 import rpg.scene.Node;
 import rpg.scene.Scene;
 import rpg.scene.components.PlayerInfoComponent;
+import rpg.scene.components.UnitComponent;
 import rpg.scene.systems.GdxAssetManagerSystem;
 
 import java.util.List;
@@ -21,7 +22,15 @@ public class InGameUIScreen extends UIScreen {
     private VerticalGroup chatMessageList;
     private ScrollPane chatScrollPane;
 
+    private Label playerNameLabel;
+    private Label healthLabel;
+    private Label expLabel;
+
     private boolean newMessage = false;
+
+    private Node playerNode;
+    private UnitComponent unitComponent;
+    private PlayerInfoComponent playerInfoComponent;
 
     public enum MessageType {
         Say(Color.WHITE),
@@ -44,6 +53,21 @@ public class InGameUIScreen extends UIScreen {
         }
         table.clear();
         table.setSkin(skin);
+
+        // Player HUD
+        Table playerHUDTable = new Table(skin);
+        table.add(playerHUDTable).top().left().width(300).height(200);
+        playerNameLabel = new Label("Player", skin);
+        healthLabel = new Label("HP: ", skin);
+        expLabel = new Label("EXP: ", skin);
+        playerHUDTable.top().left();
+        playerHUDTable.add(playerNameLabel).left();
+        playerHUDTable.row();
+        playerHUDTable.add(healthLabel).left();
+        playerHUDTable.row();
+        playerHUDTable.add(expLabel).left();
+
+
         chatEntry = new TextField("", skin);
         Table chatBox = new Table(skin);
         table.add().expand();
@@ -111,6 +135,27 @@ public class InGameUIScreen extends UIScreen {
             chatScrollPane.setScrollPercentY(1);
             newMessage = false;
             chatScrollPane.layout();
+        }
+
+        if (playerNode == null) {
+            Scene s = getScene();
+            KryoClientSceneSystem c = s.findSystem(KryoClientSceneSystem.class);
+            List<Node> possessedNodes = c.getPossessedNodes();
+            for (Node possessedNode : possessedNodes) {
+                PlayerInfoComponent playerInfoComponent = possessedNode.findComponent(PlayerInfoComponent.class);
+                if (playerInfoComponent != null) {
+                    playerNode = possessedNode;
+                    this.playerInfoComponent = playerInfoComponent;
+                    this.unitComponent = playerNode.findComponent(UnitComponent.class);
+                    break;
+                }
+            }
+        }
+
+        if (playerNode != null && playerNode.getParent() != null) {
+            healthLabel.setText(String.format("HP: %.0f", unitComponent.getHealth()));
+            expLabel.setText(String.format("EXP: %.0f", unitComponent.getExperience()));
+            playerNameLabel.setText(playerInfoComponent.getPlayerName());
         }
     }
 
