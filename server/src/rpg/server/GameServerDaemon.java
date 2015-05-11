@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.HeadlessApplication;
 import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
+import com.badlogic.gdx.math.MathUtils;
 import com.esotericsoftware.minlog.Log;
 import org.cloudcoder.daemon.IDaemon;
 import rpg.game.OpenSimplexNoise;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
 
@@ -148,9 +150,17 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
         }
 
         // Random map generation.
-        OpenSimplexNoise noise = new OpenSimplexNoise(System.currentTimeMillis());
-        for (int iix = -3; iix <= 3; iix++) {
-            for (int iiy = -3; iiy <= 3; iiy++) {
+        generateRandomWorld(System.currentTimeMillis());
+    }
+
+    private void generateRandomWorld(long seed) {
+        Random r = new Random(seed);
+        OpenSimplexNoise noise = new OpenSimplexNoise(r.nextLong());
+        OpenSimplexNoise noiseBig = new OpenSimplexNoise(r.nextLong());
+        OpenSimplexNoise noiseSmall = new OpenSimplexNoise(r.nextLong());
+
+        for (int iix = -5; iix <= 5; iix++) {
+            for (int iiy = -5; iiy <= 5; iiy++) {
                 Node n = new Node();
                 int width = 32;
                 int height = 32;
@@ -163,7 +173,11 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                             IntStream.range(0, height + 1).forEach(iy -> {
                                 double noiseX = ((double) (ix + (finalIIX * width)) / (width * 7) * scaleFactor);
                                 double noiseY = ((double) (iy + (finalIIY * height)) / (height * 7) * scaleFactor);
-                                tilemapRendererComponent.setPointValue(ix, iy, (float) ((noise.eval(noiseX, noiseY) + 1) / 2.f));
+                                float value = (float) noise.eval(noiseX, noiseY) * .8f;
+                                value += noiseBig.eval(noiseX / 20, noiseY / 20) * 1.5f;
+                                value += noiseSmall.eval(noiseX * 10, noiseY * 10) * .1f;
+                                value = MathUtils.clamp(value, -1, 1);
+                                tilemapRendererComponent.setPointValue(ix, iy, (value + 1) / 2.f);
                             });
                         }
                 );
@@ -172,7 +186,7 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
 
                 n.getTransform().translate(iix * width, iiy * height, 0);
 
-                if (iix > -2 && iix < 2 && iiy > -2 && iiy < 2) {
+                if (iix > -5 && iix < 5 && iiy > -5 && iiy < 5) {
                     Node localSpawnNode = Node.createLocalNode();
                     s.getRoot().addChild(localSpawnNode);
                     localSpawnNode.addComponent(Component.createLocalComponent(SimpleEnemySpawnComponent.class));
