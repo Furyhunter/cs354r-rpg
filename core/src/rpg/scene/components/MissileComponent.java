@@ -14,10 +14,10 @@ import java.util.Set;
 /**
  * Created by Corin Hill on 5/6/15.
  */
-public class SimpleBulletComponent extends Component implements Steppable {
+public class MissileComponent extends Component implements Steppable {
 
-    protected static float MOVE_SPEED = 8;
-    protected static float LIFETIME = 2;
+    protected static float MOVE_SPEED = 6;
+    protected static float LIFETIME = 1.5f;
 
     @Replicated
     protected float age = 0;
@@ -37,7 +37,7 @@ public class SimpleBulletComponent extends Component implements Steppable {
 
     private boolean shadowCreated;
 
-    public SimpleBulletComponent() {
+    public MissileComponent() {
 
     }
 
@@ -104,8 +104,10 @@ public class SimpleBulletComponent extends Component implements Steppable {
                     if (c == null) return;
                     if (getParent() == null || getParent().getParent() == null) return;
                     if (c.getFaction() != creatorUnitComponent.getFaction()) {
-                        c.hurt(this, 10);
-                        getParent().getParent().removeChild(getParent());
+                        ExplosionComponent e = new ExplosionComponent();
+                        e.setCreator(creator);
+                        getParent().addComponent(e);
+                        getParent().removeComponent(this);
                     }
                 });
     }

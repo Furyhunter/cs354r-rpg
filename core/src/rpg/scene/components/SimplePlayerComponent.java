@@ -135,14 +135,15 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
 
         if (nss == null || (nss.getContext() == Context.Client && getParent().isPossessed())) {
             if (mouseLEFT) {
-                if (keyE) {
-                    // use thing
-                    heldItem = 0;
-                }
                 if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
                     float x = mousePosition.x - (Gdx.graphics.getWidth() / 2);
                     float y = (Gdx.graphics.getHeight() / 2) - mousePosition.y;
-                    sendRPC("generateBullet", new Vector3(x,y,0));
+                    if (keyE && heldItem == PickupComponent.BOMB) {
+                        heldItem = 0;
+                        sendRPC("generateBomb", new Vector3(x, y, 0));
+                    } else {
+                        sendRPC("generateBullet", new Vector3(x, y, 0));
+                    }
                     shootTimer = 0;
                 }
                 shootTimer += deltaTime;
@@ -239,11 +240,13 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         SimpleBulletComponent bulletComponent = new SimpleBulletComponent();
         bulletComponent.setMoveDirection(v);
         bulletComponent.setCreator(getParent());
+
         SpriteRenderer spriteRenderer = new SpriteRenderer();
         spriteRenderer.setTexture("sprites/bullet-player.png");
         spriteRenderer.setDimensions(new Vector2(0.5f, 0.5f));
         spriteRenderer.setRotation(45f);
         spriteRenderer.setBillboard(false);
+
         bulletNode.addComponent(bulletComponent);
         bulletNode.addComponent(spriteRenderer);
 
@@ -261,6 +264,32 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
             angle = (float) -Math.acos(v.dot(Vector3.Y));
         }
         spriteRenderer.setRotation(-angle * MathUtils.radiansToDegrees - 45f);
+    }
+    @RPC(target = RPC.Target.Server)
+    public void generateBomb(Vector3 v) {
+        heldItem = 0;
+
+        Node bulletNode = new Node();
+        getParent().getScene().getRoot().addChild(bulletNode);
+
+        v.nor();
+
+        MissileComponent missileComponent = new MissileComponent();
+        missileComponent.setMoveDirection(v);
+        missileComponent.setCreator(getParent());
+
+        SpriteRenderer spriteRenderer = new SpriteRenderer();
+        spriteRenderer.setTexture("sprites/orange.png");
+        spriteRenderer.setDimensions(new Vector2(0.4f, 0.4f));
+        spriteRenderer.setBillboard(false);
+        bulletNode.addComponent(missileComponent);
+        bulletNode.addComponent(spriteRenderer);
+
+        Transform tBullet = bulletNode.getTransform();
+        Transform tSelf = getParent().getTransform();
+
+        tBullet.setPosition(tSelf.getWorldPosition());
+        tBullet.translate(0, 0, 0.5f);
     }
 
     @RPC(target = RPC.Target.Server)
@@ -308,16 +337,18 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         getParent().removeComponent(this);
     }
 
-    public void getPickup(int type) {
-        switch (type) {
+    public void pickup(int item) {
+        switch (item) {
             case PickupComponent.EXP:
                 UnitComponent unit = getParent().findComponent(UnitComponent.class);
                 // Nice, hardcoded experience pickup
                 if (unit != null) unit.setExperience(unit.getExperience() + 10);
                 break;
             default:
-                heldItem = type;
+                heldItem = item;
                 break;
         }
     }
+
+    public boolean isHoldingItem() {return heldItem != 0;}
 }

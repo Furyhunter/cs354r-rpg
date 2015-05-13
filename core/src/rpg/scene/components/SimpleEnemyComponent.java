@@ -36,7 +36,7 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
     // Allowed distance from home spawn point
     private static float WANDER_RADIUS = 16;
 
-    private static float DROP_RATE = 0.1f;
+    private static float DROP_RATE = 01f;
 
     // Attention span in seconds, used for wandering
     private static float ATTENTION = 3;
@@ -112,27 +112,17 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
     }
 
     private void generateEXP() {
+        Transform t = getParent().getTransform();
         for (int i = 0; i < MathUtils.random(1,4); ++i) {
-            Node expNode = new Node();
-            getParent().getScene().getRoot().addChild(expNode);
-
-            SpriteRenderer sr = new SpriteRenderer();
-            sr.setTexture("sprites/gold-3.png");
-            sr.setDimensions(new Vector2(0.4f, 0.4f));
-            expNode.addComponent(sr);
+            Node n = NodeFactory.createEXPDrop(getParent().findRoot(),false);
+            n.getTransform().setPosition(new Vector3(t.getWorldPosition().x,t.getWorldPosition().y,0.1f));
 
             PickupComponent p = new PickupComponent();
-            p.setType(PickupComponent.EXP);
-            expNode.addComponent(p);
-
+            p.setItem(PickupComponent.EXP);
             ArcToGroundComponent a = new ArcToGroundComponent();
-            expNode.addComponent(a);
 
-            Transform tEXP = expNode.getTransform();
-            Transform tSelf = getParent().getTransform();
-            tEXP.setPosition(tSelf.getWorldPosition());
-            tEXP.setRotation(tSelf.getWorldRotation());
-            tEXP.translate(0, 0, 0.1f);
+            n.addComponent(p);
+            n.addComponent(a);
         }
     }
 
@@ -146,7 +136,7 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
         dropNode.addComponent(sr);
 
         PickupComponent p = new PickupComponent();
-        p.setType(PickupComponent.BOMB);
+        p.setItem(PickupComponent.BOMB);
         dropNode.addComponent(p);
 
         ArcToGroundComponent a = new ArcToGroundComponent();
@@ -157,7 +147,7 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
 
         tDrop.setPosition(tSelf.getWorldPosition());
         tDrop.setRotation(tSelf.getWorldRotation());
-        tDrop.translate(0, 0, 0.1f);
+        tDrop.translate(0, 0, 0.005f);
     }
 
     private void generateBullet(Vector3 v) {

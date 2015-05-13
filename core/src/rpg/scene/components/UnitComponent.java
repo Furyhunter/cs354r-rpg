@@ -38,6 +38,15 @@ public class UnitComponent extends Component implements Hurtable {
                 return;
             }
         }
+        if (cause instanceof ExplosionComponent) {
+            ExplosionComponent explosionComponent = ((ExplosionComponent) cause);
+            UnitComponent c = explosionComponent.getCreator().findComponent(UnitComponent.class);
+            if (c.getFaction() == getFaction()) {
+                // Same faction, ignore damage.
+                Log.warn(getClass().getSimpleName(), "an attempt to hurt a unit of the same faction was made");
+                return;
+            }
+        }
 
         if (health - baseDamage <= 0) {
             List<Killable> killables = getParent().findComponents(Killable.class);

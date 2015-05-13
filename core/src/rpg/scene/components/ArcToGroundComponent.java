@@ -28,7 +28,7 @@ public class ArcToGroundComponent extends Component implements Steppable {
             t.translate(velocityX* deltaTime,velocityY* deltaTime,velocityZ* deltaTime);
 
         } else if (t.getPosition().z < -0.0001f) {
-            t.translate(0, 0, -t.getPosition().z);
+            t.translate(0, 0, 0.1f-t.getPosition().z);
 
             if (nss.getContext() == Context.Server) {
                 getParent().removeComponent(this);

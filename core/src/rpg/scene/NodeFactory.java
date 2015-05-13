@@ -2,9 +2,7 @@ package rpg.scene;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import rpg.scene.components.Component;
-import rpg.scene.components.DetachAfterDelayComponent;
-import rpg.scene.components.SpriteRenderer;
+import rpg.scene.components.*;
 
 public final class NodeFactory {
     private NodeFactory() {
@@ -74,6 +72,32 @@ public final class NodeFactory {
         n.getTransform().setScale(new Vector3(0.5f, 0.5f, 1));
 
         n.addComponent(spriteRenderer);
+
+        return n;
+    }
+
+    public static Node createEXPDrop(Node parent, boolean local) {
+        Node n;
+        if (local) n = Node.createLocalNode();
+        else n = new Node();
+
+        parent.addChild(n);
+
+        SpriteRenderer sr;
+        if (local) sr = Component.createLocalComponent(SpriteRenderer.class);
+        else sr = new SpriteRenderer();
+        sr.setTexture("sprites/gold-3.png");
+        sr.setDimensions(new Vector2(0.4f, 0.4f));
+
+        DetachAfterDelayComponent d = Component.createLocalComponent(DetachAfterDelayComponent.class);
+        d.timeRemaining = 20;
+
+        Node shadow = makeShadowNode(n, local);
+        shadow.findComponent(SpriteRenderer.class).setDimensions(new Vector2(0.4f, 0.4f));
+        shadow.getTransform().translate(0, 0, 0.005f);
+
+        n.addComponent(sr);
+        n.addComponent(d);
 
         return n;
     }

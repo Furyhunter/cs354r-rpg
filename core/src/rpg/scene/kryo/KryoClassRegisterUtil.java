@@ -34,9 +34,6 @@ public final class KryoClassRegisterUtil {
                 Matrix4.class,
                 Color.class,
 
-                Bullet.class,
-                SimpleBullet.class,
-
                 BitSet.class,
                 RPCInvocation.class,
 
