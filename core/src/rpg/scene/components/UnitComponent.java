@@ -21,6 +21,9 @@ public class UnitComponent extends Component implements Hurtable {
     protected float experience = 0;
 
     @Replicated
+    protected int level = 0;
+
+    @Replicated
     protected int faction = ENEMY;
 
     public static final int PLAYER = 0;
@@ -109,6 +112,15 @@ public class UnitComponent extends Component implements Hurtable {
     }
 
     public void setExperience(float experience) {
+        if (experience >= 100) {
+            int delta = (int)experience / 100;
+            experience = experience % 100;
+            maxHealth += delta * 25;
+            level += delta;
+            health = maxHealth;
+        }
         this.experience = experience;
     }
+
+    public int getLevel() {return level;}
 }
