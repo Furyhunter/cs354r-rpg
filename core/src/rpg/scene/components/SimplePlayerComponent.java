@@ -334,6 +334,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         FallToGroundComponent f = new FallToGroundComponent();
         n.addComponent(f);
 
+        getParent().addComponent(new PlayerRespawnComponent());
         getParent().removeComponent(this);
     }
 

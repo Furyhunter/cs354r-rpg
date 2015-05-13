@@ -103,13 +103,9 @@ public class UnitComponent extends Component implements Hurtable {
         return faction;
     }
 
-    public void setFaction(int faction) {
-        this.faction = faction;
-    }
+    public void setFaction(int faction) {this.faction = faction;}
 
-    public float getExperience() {
-        return experience;
-    }
+    public float getExperience() {return experience;}
 
     public void setExperience(float experience) {
         if (experience >= 100) {
@@ -123,4 +119,13 @@ public class UnitComponent extends Component implements Hurtable {
     }
 
     public int getLevel() {return level;}
+
+    public void reset() {
+        maxHealth = 100;
+        health = maxHealth;
+        maxEnergy = 100;
+        energy = maxEnergy;
+        experience = 0;
+        level = 0;
+    }
 }
