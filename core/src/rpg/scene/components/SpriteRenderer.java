@@ -22,6 +22,9 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
     protected Vector2 offset = new Vector2();
 
     @Replicated
+    protected Color color = Color.WHITE;
+
+    @Replicated
     protected float rotation;
 
     @Replicated
@@ -77,17 +80,17 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
         return dimensions;
     }
 
-    public void setDimensions(Vector2 dimensions) {
-        this.dimensions = new Vector2(dimensions);
-    }
+    public void setDimensions(Vector2 dimensions) {this.dimensions = new Vector2(dimensions);}
 
     public Vector2 getOffset() {
         return offset;
     }
 
-    public void setOffset(Vector2 offset) {
-        this.offset = new Vector2(offset);
-    }
+    public void setOffset(Vector2 offset) {this.offset = new Vector2(offset);}
+
+    public Color getColor() { return color; }
+
+    public void setColor(Color color) { this.color = color; }
 
     public float getRotation() {
         return rotation;
@@ -116,5 +119,6 @@ public class SpriteRenderer extends Component implements Renderable, Spatial2D {
         p.setUniformf("u_billboard", billboard ? 1.0f : 0.0f);
         p.setUniformMatrix("u_spriteRotScale", new Matrix4().rotate(Vector3.Z, rotation).scale(dimensions.x, dimensions.y, 1));
         if (p.getUniformLocation("u_spriteOffset") != -1) p.setUniformf("u_spriteOffset", offset);
+        if (p.getUniformLocation("u_color") != -1) p.setUniformf("u_color", color);
     }
 }
