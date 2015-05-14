@@ -123,7 +123,6 @@ project(":server") {
 
     run {
         args "poke"
-        jvmArgs "-server"
     }
 
     task(stop, type: JavaExec) {
@@ -135,7 +134,8 @@ project(":server") {
     task(runDirect, type: JavaExec) {
         main "rpg.server.GameServerDaemon"
         classpath sourceSets.main.runtimeClasspath
-        jvmArgs "-server"
+        jvmArgs = ["-server", "-XX:+UseConcMarkSweepGC"]
+        maxHeapSize = "1024M"
     }
 
     jar {
