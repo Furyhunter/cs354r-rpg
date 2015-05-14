@@ -32,6 +32,7 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     private boolean keyS;
     private boolean keyA;
     private boolean keyD;
+    private boolean keyE;
 
     private static float MOVE_SPEED = 4;
     private static float MOVE_SPEED_SQUARED = 16;
@@ -51,6 +52,9 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
     @Replicated
     protected PlayerInfoComponent playerInfoComponent;
 
+    @Replicated
+    protected int heldItem = 0;
+
     @Override
     public void processInputEvent(InputEvent event) {
         if (event.getType() == KeyDown) {
@@ -66,6 +70,9 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                     break;
                 case Keys.D:
                     keyD = true;
+                    break;
+                case Keys.E:
+                    keyE = true;
                     break;
                 default:
                     break;
@@ -84,6 +91,9 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
                     break;
                 case Keys.D:
                     keyD = false;
+                    break;
+                case Keys.E:
+                    keyE = false;
                     break;
                 default:
                     break;
@@ -124,26 +134,6 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         }
 
         if (nss == null || (nss.getContext() == Context.Client && getParent().isPossessed())) {
-            if (mouseLEFT) {
-                if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
-                    float x = mousePosition.x - (Gdx.graphics.getWidth() / 2);
-                    float y = (Gdx.graphics.getHeight() / 2) - mousePosition.y;
-                    sendRPC("generateBullet", new Vector3(x,y,0));
-                    shootTimer = 0;
-                }
-                shootTimer += deltaTime;
-            } else {
-                // If the shoot timer is not zero, increment and loop as normal
-                // Prevents mashing producing bullets faster than holding
-                if (shootTimer >= SHOOT_UPDATE_THRESHOLD) {
-                    shootTimer = 0;
-                }
-                if (shootTimer != 0) {
-                    shootTimer += deltaTime;
-                }
-            }
-
-
             Transform t = getParent().getTransform();
             if (clientRealPosition == null) {
                 clientRealPosition = t.getPosition();
@@ -174,6 +164,33 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
             t.setPosition(clientRealPosition);
             this.animMoveDirection.set(moveDirection.x, moveDirection.y);
 
+            if (mouseLEFT) {
+                if (shootTimer >= SHOOT_UPDATE_THRESHOLD || shootTimer == 0) {
+                    float x = mousePosition.x - (Gdx.graphics.getWidth() / 2);
+                    float y = (Gdx.graphics.getHeight() / 2) - mousePosition.y;
+                    if (keyE && heldItem == PickupComponent.BOMB) {
+                        heldItem = 0;
+                        sendRPC("generateBomb", new Vector3(x, y, 0));
+                    } else {
+                        sendRPC("generateBullet", new Vector3(x, y, 0));
+                    }
+                    shootTimer = 0;
+                }
+                shootTimer += deltaTime;
+            } else {
+                // If the shoot timer is not zero, increment and loop as normal
+                // Prevents mashing producing bullets faster than holding
+                if (shootTimer >= SHOOT_UPDATE_THRESHOLD) {
+                    shootTimer = 0;
+                }
+                if (shootTimer != 0) {
+                    shootTimer += deltaTime;
+                }
+            }
+
+            if (keyE && heldItem == PickupComponent.HEAL) {
+                sendRPC("useItem");
+            }
         } else if (nss.getContext() == Context.Server) {
             // Server side
             Transform t = getParent().getTransform();
@@ -216,6 +233,14 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         }
     }
     @RPC(target = RPC.Target.Server)
+    public void useItem() {
+        if (heldItem == PickupComponent.HEAL) {
+            UnitComponent u = getParent().findComponent(UnitComponent.class);
+            u.setHealth(u.getMaxHealth());
+            heldItem = 0;
+        }
+    }
+    @RPC(target = RPC.Target.Server)
     public void generateBullet(Vector3 v) {
         Node bulletNode = new Node();
         getParent().getScene().getRoot().addChild(bulletNode);
@@ -225,11 +250,13 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         SimpleBulletComponent bulletComponent = new SimpleBulletComponent();
         bulletComponent.setMoveDirection(v);
         bulletComponent.setCreator(getParent());
+
         SpriteRenderer spriteRenderer = new SpriteRenderer();
         spriteRenderer.setTexture("sprites/bullet-player.png");
         spriteRenderer.setDimensions(new Vector2(0.5f, 0.5f));
         spriteRenderer.setRotation(45f);
         spriteRenderer.setBillboard(false);
+
         bulletNode.addComponent(bulletComponent);
         bulletNode.addComponent(spriteRenderer);
 
@@ -247,6 +274,32 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
             angle = (float) -Math.acos(v.dot(Vector3.Y));
         }
         spriteRenderer.setRotation(-angle * MathUtils.radiansToDegrees - 45f);
+    }
+    @RPC(target = RPC.Target.Server)
+    public void generateBomb(Vector3 v) {
+        heldItem = 0;
+
+        Node bulletNode = new Node();
+        getParent().getScene().getRoot().addChild(bulletNode);
+
+        v.nor();
+
+        MissileComponent missileComponent = new MissileComponent();
+        missileComponent.setMoveDirection(v);
+        missileComponent.setCreator(getParent());
+
+        SpriteRenderer spriteRenderer = new SpriteRenderer();
+        spriteRenderer.setTexture("sprites/orange.png");
+        spriteRenderer.setDimensions(new Vector2(0.4f, 0.4f));
+        spriteRenderer.setBillboard(false);
+        bulletNode.addComponent(missileComponent);
+        bulletNode.addComponent(spriteRenderer);
+
+        Transform tBullet = bulletNode.getTransform();
+        Transform tSelf = getParent().getTransform();
+
+        tBullet.setPosition(tSelf.getWorldPosition());
+        tBullet.translate(0, 0, 0.5f);
     }
 
     @RPC(target = RPC.Target.Server)
@@ -291,6 +344,22 @@ public class SimplePlayerComponent extends Component implements Steppable, Input
         FallToGroundComponent f = new FallToGroundComponent();
         n.addComponent(f);
 
+        getParent().addComponent(new PlayerRespawnComponent());
         getParent().removeComponent(this);
     }
+
+    public void pickup(int item) {
+        switch (item) {
+            case PickupComponent.EXP:
+                UnitComponent unit = getParent().findComponent(UnitComponent.class);
+                // Nice, hardcoded experience pickup
+                if (unit != null) unit.setExperience(unit.getExperience() + 10);
+                break;
+            default:
+                heldItem = item;
+                break;
+        }
+    }
+
+    public boolean isHoldingItem() {return heldItem != 0;}
 }

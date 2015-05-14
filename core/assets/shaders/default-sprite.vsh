@@ -12,6 +12,7 @@ uniform mat3 u_texCoord0Transform;
 uniform float u_billboard;
 uniform mat4 u_spriteRotScale;
 uniform vec2 u_spriteOffset;
+uniform vec4 u_color;
 
 void main() {
     if (u_billboard == 1.0) {

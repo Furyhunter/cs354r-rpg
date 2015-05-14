@@ -21,6 +21,9 @@ public class UnitComponent extends Component implements Hurtable {
     protected float experience = 0;
 
     @Replicated
+    protected int level = 0;
+
+    @Replicated
     protected int faction = ENEMY;
 
     public static final int PLAYER = 0;
@@ -32,6 +35,15 @@ public class UnitComponent extends Component implements Hurtable {
         if (cause instanceof SimpleBulletComponent) {
             SimpleBulletComponent bulletComponent = ((SimpleBulletComponent) cause);
             UnitComponent c = bulletComponent.getCreator().findComponent(UnitComponent.class);
+            if (c.getFaction() == getFaction()) {
+                // Same faction, ignore damage.
+                Log.warn(getClass().getSimpleName(), "an attempt to hurt a unit of the same faction was made");
+                return;
+            }
+        }
+        if (cause instanceof ExplosionComponent) {
+            ExplosionComponent explosionComponent = ((ExplosionComponent) cause);
+            UnitComponent c = explosionComponent.getCreator().findComponent(UnitComponent.class);
             if (c.getFaction() == getFaction()) {
                 // Same faction, ignore damage.
                 Log.warn(getClass().getSimpleName(), "an attempt to hurt a unit of the same faction was made");
@@ -91,15 +103,29 @@ public class UnitComponent extends Component implements Hurtable {
         return faction;
     }
 
-    public void setFaction(int faction) {
-        this.faction = faction;
-    }
+    public void setFaction(int faction) {this.faction = faction;}
 
-    public float getExperience() {
-        return experience;
-    }
+    public float getExperience() {return experience;}
 
     public void setExperience(float experience) {
+        if (experience >= 100) {
+            int delta = (int)experience / 100;
+            experience = experience % 100;
+            maxHealth += delta * 25;
+            level += delta;
+            health = maxHealth;
+        }
         this.experience = experience;
+    }
+
+    public int getLevel() {return level;}
+
+    public void reset() {
+        maxHealth = 100;
+        health = maxHealth;
+        maxEnergy = 100;
+        energy = maxEnergy;
+        experience = 0;
+        level = 0;
     }
 }

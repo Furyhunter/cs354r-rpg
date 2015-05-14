@@ -24,6 +24,7 @@ public class InGameUIScreen extends UIScreen {
 
     private Label playerNameLabel;
     private Label healthLabel;
+    private Label levelLabel;
     private Label expLabel;
 
     private boolean newMessage = false;
@@ -59,11 +60,14 @@ public class InGameUIScreen extends UIScreen {
         table.add(playerHUDTable).top().left().width(300).height(200);
         playerNameLabel = new Label("Player", skin);
         healthLabel = new Label("HP: ", skin);
+        levelLabel = new Label("Level: ", skin);
         expLabel = new Label("EXP: ", skin);
         playerHUDTable.top().left();
         playerHUDTable.add(playerNameLabel).left();
         playerHUDTable.row();
         playerHUDTable.add(healthLabel).left();
+        playerHUDTable.row();
+        playerHUDTable.add(levelLabel).left();
         playerHUDTable.row();
         playerHUDTable.add(expLabel).left();
 
@@ -154,6 +158,7 @@ public class InGameUIScreen extends UIScreen {
 
         if (playerNode != null && playerNode.getParent() != null) {
             healthLabel.setText(String.format("HP: %.0f", unitComponent.getHealth()));
+            levelLabel.setText(String.format("Level: %d", unitComponent.getLevel()));
             expLabel.setText(String.format("EXP: %.0f", unitComponent.getExperience()));
             playerNameLabel.setText(playerInfoComponent.getPlayerName());
         }

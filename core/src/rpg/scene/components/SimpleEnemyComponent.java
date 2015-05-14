@@ -3,6 +3,7 @@ package rpg.scene.components;
 import com.badlogic.gdx.ai.fsm.DefaultStateMachine;
 import com.badlogic.gdx.ai.fsm.StateMachine;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -34,6 +35,8 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
     private static float ATTACK_RADIUS = 5;
     // Allowed distance from home spawn point
     private static float WANDER_RADIUS = 16;
+
+    private static float DROP_RATE = 0.25f;
 
     // Attention span in seconds, used for wandering
     private static float ATTENTION = 3;
@@ -108,6 +111,43 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
         }
     }
 
+    private void generateEXP() {
+        Transform t = getParent().getTransform();
+        for (int i = 0; i < MathUtils.random(1,4); ++i) {
+            Node n = NodeFactory.createEXPDrop(getParent().findRoot(),false);
+            n.getTransform().setPosition(new Vector3(t.getWorldPosition().x,t.getWorldPosition().y,0.1f));
+
+            PickupComponent p = new PickupComponent();
+            p.setItem(PickupComponent.EXP);
+            ArcToGroundComponent a = new ArcToGroundComponent();
+
+            n.addComponent(p);
+            n.addComponent(a);
+        }
+    }
+
+    private void generateDrop() {
+        Transform t = getParent().getTransform();
+        int item;
+        if (MathUtils.random() < 0.25) {
+            item = PickupComponent.HEAL;
+        } else {
+            item = PickupComponent.BOMB;
+        }
+
+        Node dropNode = NodeFactory.createDrop(getParent().findRoot(),false, item);
+        dropNode.getTransform().setPosition(t.getWorldPosition().cpy());
+        dropNode.getTransform().translate(0, 0, 0.005f);
+
+        PickupComponent p = new PickupComponent();
+        p.setItem(item);
+
+        ArcToGroundComponent a = new ArcToGroundComponent();
+
+        dropNode.addComponent(p);
+        dropNode.addComponent(a);
+    }
+
     private void generateBullet(Vector3 v) {
         Node bulletNode = new Node();
         getParent().getScene().getRoot().addChild(bulletNode);
@@ -115,10 +155,11 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
         SimpleBulletComponent bulletComponent = new SimpleBulletComponent();
         bulletComponent.setMoveDirection(v);
         bulletComponent.setCreator(getParent());
+        bulletNode.addComponent(bulletComponent);
+
         RectangleRenderer r = new RectangleRenderer();
         r.setColor(Color.PINK);
         r.setSize(new Vector2(0.1f, 0.1f));
-        bulletNode.addComponent(bulletComponent);
         bulletNode.addComponent(r);
 
         Transform tBullet = bulletNode.getTransform();
@@ -190,6 +231,10 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
 
     @Override
     public void kill() {
+        generateEXP();
+        if (MathUtils.random() < DROP_RATE) {
+            generateDrop();
+        }
         getParent().removeFromParent();
     }
 }
