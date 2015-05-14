@@ -36,7 +36,7 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
     // Allowed distance from home spawn point
     private static float WANDER_RADIUS = 16;
 
-    private static float DROP_RATE = 0.2f;
+    private static float DROP_RATE = 0.25f;
 
     // Attention span in seconds, used for wandering
     private static float ATTENTION = 3;
