@@ -108,7 +108,7 @@ public class MissileComponent extends Component implements Steppable {
                         e.setCreator(creator);
 
                         getParent().addComponent(e);
-                        getParent().removeFromParent();
+                        getParent().removeComponent(this);
                     }
                 });
     }

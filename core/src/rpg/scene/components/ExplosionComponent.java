@@ -8,7 +8,6 @@ import rpg.scene.replication.Replicated;
 import rpg.scene.systems.NetworkingSceneSystem;
 import rpg.scene.systems.Node2DQuerySystem;
 
-import java.sql.RowIdLifetime;
 import java.util.Set;
 
 /**
@@ -16,12 +15,16 @@ import java.util.Set;
  */
 public class ExplosionComponent extends Component implements Steppable {
     @Replicated
-    protected float scaleRate = 10;
+    protected float scaleRate = 5;
+    public static final float scaleAcceleration = 5;
 
-    public static final float scaleAccel = 10;
+    private float damageTimer = 0;
+    // How often this explosion deals damage
+    private static final float DAMAGE_FREQUENCY = 1f / 5f;
 
     private float age = 0;
     private static float LIFETIME = 2;
+
 
     @Replicated
     protected Node creator;
@@ -29,17 +32,21 @@ public class ExplosionComponent extends Component implements Steppable {
 
     public void step(float deltaTime) {
         NetworkingSceneSystem nss = getParent().getScene().findSystem(NetworkingSceneSystem.class);
-        Transform t = getParent().getTransform();
+        SpriteRenderer sr = getParent().findComponent(SpriteRenderer.class);
 
-        scaleRate -= scaleAccel * deltaTime;
+        scaleRate -= scaleAcceleration * deltaTime;
+        sr.setDimensions(sr.getDimensions().cpy().scl(1f + scaleRate * deltaTime));
 
-        t.setScale(t.getScale().cpy().add(scaleRate * deltaTime, scaleRate * deltaTime, 0));
         if (nss.getContext() == Context.Server) {
-            age += deltaTime;
-            checkCollisions();
+            if (damageTimer > DAMAGE_FREQUENCY) {
+                damageTimer = 0;
+                checkCollisions();
+            }
             if (age > LIFETIME) {
                 getParent().removeFromParent();
             }
+            age += deltaTime;
+            damageTimer += deltaTime;
         }
     }
     protected void checkCollisions() {
