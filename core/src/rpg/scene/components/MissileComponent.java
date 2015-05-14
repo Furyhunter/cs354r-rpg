@@ -1,6 +1,7 @@
 package rpg.scene.components;
 
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.graphics.Color;
 import rpg.scene.Node;
 import rpg.scene.NodeFactory;
 import rpg.scene.replication.Context;
@@ -106,6 +107,8 @@ public class MissileComponent extends Component implements Steppable {
                     if (c.getFaction() != creatorUnitComponent.getFaction()) {
                         ExplosionComponent e = new ExplosionComponent();
                         e.setCreator(creator);
+
+                        getParent().findComponent(SpriteRenderer.class).setColor(new Color(1,1,1,0.5f));
 
                         getParent().addComponent(e);
                         getParent().removeComponent(this);
