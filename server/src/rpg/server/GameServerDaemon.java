@@ -10,9 +10,7 @@ import org.cloudcoder.daemon.IDaemon;
 import rpg.game.OpenSimplexNoise;
 import rpg.scene.Node;
 import rpg.scene.Scene;
-import rpg.scene.components.Component;
-import rpg.scene.components.SimpleEnemySpawnComponent;
-import rpg.scene.components.TilemapRendererComponent;
+import rpg.scene.components.*;
 import rpg.scene.replication.RepTable;
 import rpg.scene.systems.GameLogicSystem;
 import rpg.scene.systems.GdxAssetManagerSystem;
@@ -191,7 +189,12 @@ public class GameServerDaemon implements IDaemon, ApplicationListener {
                 if (iix > -5 && iix < 5 && iiy > -5 && iiy < 5) {
                     Node localSpawnNode = Node.createLocalNode();
                     s.getRoot().addChild(localSpawnNode);
-                    localSpawnNode.addComponent(Component.createLocalComponent(SimpleEnemySpawnComponent.class));
+                    if ((iix == 2 && iiy == 2) || (iix == -2 && iiy == 2)
+                            || (iix == 2 && iiy ==-2) || (iix == -2 && iiy == -2)) {
+                        localSpawnNode.addComponent(Component.createLocalComponent(SimpleBossSpawnComponent.class));
+                    } else {
+                        localSpawnNode.addComponent(Component.createLocalComponent(SimpleEnemySpawnComponent.class));
+                    }
                     localSpawnNode.getTransform().translate(iix * width, iiy * height, 0);
                 }
             }
