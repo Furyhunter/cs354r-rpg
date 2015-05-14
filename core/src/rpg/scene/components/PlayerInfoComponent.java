@@ -46,12 +46,12 @@ public class PlayerInfoComponent extends Component implements InputEventListener
         addMessageToChatbox(String.format("%s: %s", getPlayerName(), message), InGameUIScreen.MessageType.Say);
     }
 
-    @RPC(target = RPC.Target.Multicast)
+    @RPC(target = RPC.Target.Client)
     protected void systemMessage(String message) {
         addMessageToChatbox(message, InGameUIScreen.MessageType.System);
     }
 
-    @RPC(target = RPC.Target.Multicast)
+    @RPC(target = RPC.Target.Client)
     protected void gameMessage(String message) {
         addMessageToChatbox(message, InGameUIScreen.MessageType.Game);
     }
