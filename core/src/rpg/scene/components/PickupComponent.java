@@ -17,7 +17,7 @@ public class PickupComponent extends Component implements Steppable {
 
     public static final int EXP = 0;
     public static final int BOMB = 1;
-    public static final int AREA_HEAL = 2;
+    public static final int HEAL = 2;
 
     @Override
     public void step(float deltaTime) {

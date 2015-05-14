@@ -1,15 +1,14 @@
 package rpg.scene.components;
 
-import com.badlogic.gdx.math.Vector2;
+
 import com.badlogic.gdx.math.Vector3;
 import rpg.scene.Node;
-import rpg.scene.NodeFactory;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.Replicated;
 import rpg.scene.systems.NetworkingSceneSystem;
 import rpg.scene.systems.Node2DQuerySystem;
 
-import java.util.Objects;
+import java.sql.RowIdLifetime;
 import java.util.Set;
 
 /**
@@ -17,10 +16,12 @@ import java.util.Set;
  */
 public class ExplosionComponent extends Component implements Steppable {
     @Replicated
-    protected float scaleRate = 8;
+    protected float scaleRate = 10;
 
     public static final float scaleAccel = 10;
 
+    private float age = 0;
+    private static float LIFETIME = 2;
 
     @Replicated
     protected Node creator;
@@ -31,11 +32,14 @@ public class ExplosionComponent extends Component implements Steppable {
         Transform t = getParent().getTransform();
 
         scaleRate -= scaleAccel * deltaTime;
-        t.setScale(t.getScale().cpy().scl(scaleRate * deltaTime));
 
-        checkCollisions();
-        if (t.getScale().len() < 0.05 && nss.getContext() == Context.Server) {
-            getParent().removeFromParent();
+        t.setScale(t.getScale().cpy().add(scaleRate * deltaTime, scaleRate * deltaTime, 0));
+        if (nss.getContext() == Context.Server) {
+            age += deltaTime;
+            checkCollisions();
+            if (age > LIFETIME) {
+                getParent().removeFromParent();
+            }
         }
     }
     protected void checkCollisions() {

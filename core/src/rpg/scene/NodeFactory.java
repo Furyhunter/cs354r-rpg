@@ -1,5 +1,6 @@
 package rpg.scene;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import rpg.scene.components.*;
@@ -95,6 +96,32 @@ public final class NodeFactory {
         Node shadow = makeShadowNode(n, local);
         shadow.findComponent(SpriteRenderer.class).setDimensions(new Vector2(0.4f, 0.4f));
         shadow.getTransform().translate(0, 0, 0.005f);
+
+        n.addComponent(sr);
+        n.addComponent(d);
+
+        return n;
+    }
+
+    public static Node createDrop(Node parent, boolean local, int item) {
+        Node n;
+        if (local) n = Node.createLocalNode();
+        else n = new Node();
+
+        parent.addChild(n);
+
+        SpriteRenderer sr;
+        if (local) sr = Component.createLocalComponent(SpriteRenderer.class);
+        else sr = new SpriteRenderer();
+        if (item == PickupComponent.BOMB) {
+            sr.setTexture("sprites/orange.png");
+        } else if (item == PickupComponent.HEAL) {
+            sr.setTexture("sprites/red-flask.png");
+        }
+        sr.setDimensions(new Vector2(0.4f, 0.4f));
+
+        DetachAfterDelayComponent d = Component.createLocalComponent(DetachAfterDelayComponent.class);
+        d.timeRemaining = 20;
 
         n.addComponent(sr);
         n.addComponent(d);

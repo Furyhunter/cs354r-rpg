@@ -1,6 +1,7 @@
 package rpg.scene.components;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
 import rpg.scene.replication.Context;
 import rpg.scene.replication.Replicated;
 import rpg.scene.systems.NetworkingSceneSystem;
@@ -22,13 +23,15 @@ public class ArcToGroundComponent extends Component implements Steppable {
         NetworkingSceneSystem nss = getParent().getScene().findSystem(NetworkingSceneSystem.class);
         Transform t = getParent().getTransform();
 
-        if (t.getPosition().z > 0.0001f) {
+        if (t.getPosition().z > 0.001f) {
             velocityZ -= ACCELERATION *deltaTime;
 
             t.translate(velocityX* deltaTime,velocityY* deltaTime,velocityZ* deltaTime);
 
-        } else if (t.getPosition().z < -0.0001f) {
-            t.translate(0, 0, 0.1f-t.getPosition().z);
+        } else if (t.getPosition().z < 0.001f){
+            t.translate(0, 0, -t.getPosition().z);
+            // Still clipping into ground... so "bounce" back up a bit? it's better a bit
+            t.translate(0, 0, 0.3f);
 
             if (nss.getContext() == Context.Server) {
                 getParent().removeComponent(this);

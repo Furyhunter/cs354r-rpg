@@ -36,7 +36,7 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
     // Allowed distance from home spawn point
     private static float WANDER_RADIUS = 16;
 
-    private static float DROP_RATE = 01f;
+    private static float DROP_RATE = 0.2f;
 
     // Attention span in seconds, used for wandering
     private static float ATTENTION = 3;
@@ -127,27 +127,25 @@ public class SimpleEnemyComponent extends Component implements Steppable, Killab
     }
 
     private void generateDrop() {
-        Node dropNode = new Node();
-        getParent().getScene().getRoot().addChild(dropNode);
+        Transform t = getParent().getTransform();
+        int item;
+        if (MathUtils.random() < 0.25) {
+            item = PickupComponent.HEAL;
+        } else {
+            item = PickupComponent.BOMB;
+        }
 
-        SpriteRenderer sr = new SpriteRenderer();
-        sr.setTexture("sprites/orange.png");
-        sr.setDimensions(new Vector2(0.3f, 0.3f));
-        dropNode.addComponent(sr);
+        Node dropNode = NodeFactory.createDrop(getParent().findRoot(),false, item);
+        dropNode.getTransform().setPosition(t.getWorldPosition().cpy());
+        dropNode.getTransform().translate(0, 0, 0.005f);
 
         PickupComponent p = new PickupComponent();
-        p.setItem(PickupComponent.BOMB);
-        dropNode.addComponent(p);
+        p.setItem(item);
 
         ArcToGroundComponent a = new ArcToGroundComponent();
+
+        dropNode.addComponent(p);
         dropNode.addComponent(a);
-
-        Transform tDrop = dropNode.getTransform();
-        Transform tSelf = getParent().getTransform();
-
-        tDrop.setPosition(tSelf.getWorldPosition());
-        tDrop.setRotation(tSelf.getWorldRotation());
-        tDrop.translate(0, 0, 0.005f);
     }
 
     private void generateBullet(Vector3 v) {

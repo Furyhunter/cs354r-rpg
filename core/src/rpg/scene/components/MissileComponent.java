@@ -106,8 +106,9 @@ public class MissileComponent extends Component implements Steppable {
                     if (c.getFaction() != creatorUnitComponent.getFaction()) {
                         ExplosionComponent e = new ExplosionComponent();
                         e.setCreator(creator);
+
                         getParent().addComponent(e);
-                        getParent().removeComponent(this);
+                        getParent().removeFromParent();
                     }
                 });
     }
