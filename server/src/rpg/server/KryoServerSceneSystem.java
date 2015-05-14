@@ -175,6 +175,7 @@ public class KryoServerSceneSystem extends NetworkingSceneSystem {
 
         infoComponent.sendRPC("systemMessage", String.format("Welcome %s! WASD to move, click to shoot.", infoComponent.getPlayerName()));
         infoComponent.sendRPC("systemMessage", "If you die, you lose all your progress.");
+        infoComponent.sendRPC("systemMessage", "Press R to respawn when dead, and E to use items.");
         return playerNode;
     }
 
